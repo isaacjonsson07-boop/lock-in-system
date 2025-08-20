@@ -1,3 +1,5 @@
+import { supabase } from './supabaseClient'
+import { useEffect } from 'react'
 import React, { useEffect, useMemo, useState } from 'react';
 import { Entry, Category, Converter, Task, Goal, TabType } from './types';
 import { DEFAULT_CATEGORIES, DEFAULT_CONVERTERS } from './constants';
@@ -104,7 +106,19 @@ function App() {
   const entriesThisMonth = useMemo(() => {
     return entries.filter(e => {
       const d = new Date(e.date + "T00:00:00");
-      return d >= monthStart && d <= monthEnd;
+return d >= monthStart && d <= monthEnd;
+useEffect(() => {
+  async function testFetch() {
+    const { data, error } = await supabase.from('achievements').select('*')
+    if (error) {
+      console.error('❌ Supabase fetch error:', error)
+    } else {
+      console.log('✅ Supabase data:', data)
+    }
+  }
+
+  testFetch()
+}, [])
     });
   }, [entries, monthStart, monthEnd]);
 
