@@ -2,12 +2,19 @@ import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { createHmac } from 'crypto';
 
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+  const hasSignature = !!(
+    event.headers['x-whop-signature'] ||
+    event.headers['whop-signature'] ||
+    event.headers['x-whop-signature-v1'] ||
+    event.headers['x-whop-signature-v2']
+  );
+
   console.log('[Whop Webhook] Incoming request', {
     method: event.httpMethod,
     headers: {
       'content-type': event.headers['content-type'],
       'user-agent': event.headers['user-agent'],
-      'x-whop-signature': event.headers['x-whop-signature'] ? '[REDACTED]' : undefined,
+      'has-signature': hasSignature ? '[REDACTED]' : 'none',
     },
     bodyLength: event.body?.length || 0,
     timestamp: new Date().toISOString()
@@ -23,12 +30,30 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
   try {
     const rawBody = event.body || '';
-    const signature = event.headers['x-whop-signature'];
+
+    const possibleSignatureHeaders = [
+      'x-whop-signature',
+      'whop-signature',
+      'x-whop-signature-v1',
+      'x-whop-signature-v2'
+    ];
+
+    let signature: string | undefined;
+    let signatureHeaderUsed: string | undefined;
+
+    for (const headerName of possibleSignatureHeaders) {
+      if (event.headers[headerName]) {
+        signature = event.headers[headerName];
+        signatureHeaderUsed = headerName;
+        break;
+      }
+    }
 
     console.log('[Whop Webhook] Request received', {
       bodyLength: rawBody.length,
       hasBody: rawBody.length > 0,
-      hasSignature: !!signature
+      hasSignature: !!signature,
+      signatureHeader: signatureHeaderUsed
     });
 
     const WHOP_WEBHOOK_SECRET = process.env.WHOP_WEBHOOK_SECRET;
@@ -44,7 +69,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     }
 
     if (!signature) {
-      console.log('[Whop Webhook] Missing signature header');
+      const availableHeaders = Object.keys(event.headers || {});
+      console.log('[Whop Webhook] Missing signature header. Available headers:', availableHeaders);
       return {
         statusCode: 401,
         body: JSON.stringify({ error: 'Missing signature' })
