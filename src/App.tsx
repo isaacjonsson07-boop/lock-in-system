@@ -1,7 +1,5 @@
-import { supabase } from './supabaseClient'
-import { useEffect } from 'react'
 import React, { useEffect, useMemo, useState } from 'react';
-import { Entry, Category, Converter, Task, Goal, TabType } from './types';
+import { Entry, Category, Converter, Task, Goal, JournalEntry, ScheduleItem, TabType, Habit, HabitCompletion } from './types';
 import { DEFAULT_CATEGORIES, DEFAULT_CONVERTERS } from './constants';
 import { startOfMonth, endOfMonth, fmtDateISO, uid } from './utils/dateUtils';
 import { loadFromStorage, saveToStorage } from './utils/storage';
@@ -9,19 +7,34 @@ import { saveToCloud, loadFromCloud } from './utils/cloudStorage';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
 import { useCapacitor } from './hooks/useCapacitor';
+import { supabase } from './lib/supabase';
 import { Navigation } from './components/Navigation';
 import { AuthModal } from './components/AuthModal';
 import { MonthSelector } from './components/MonthSelector';
-import { GoalTracker } from './components/GoalTracker';
 import { EntryForm } from './components/EntryForm';
 import { EntryList } from './components/EntryList';
 import { StatsView } from './components/StatsView';
 import { SettingsView } from './components/SettingsView';
 import { HelpView } from './components/HelpView';
-import { TasksView } from './components/TasksView';
+import { HabitsView } from './components/HabitsView';
+import { JournalingView } from './components/JournalingView';
+import { TodayTasksView } from './components/TodayTasksView';
 
 function App() {
-  const { user, loading: authLoading, signIn, signUp, signOut } = useAuth();
+  const {
+    user,
+    loading: authLoading,
+    plan,
+    trialEndsAt,
+    planSource,
+    signIn,
+    signUp,
+    signOut,
+    startTrial,
+    devSetFreePlan,
+    devStartTrial,
+    devSetPaidPlan
+  } = useAuth();
   const { theme } = useTheme();
   useCapacitor();
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -29,6 +42,8 @@ function App() {
   const [converters, setConverters] = useState<Converter[]>(DEFAULT_CONVERTERS);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [month, setMonth] = useState(fmtDateISO(startOfMonth()));
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("ALL");
@@ -36,6 +51,8 @@ function App() {
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [habitCompletions, setHabitCompletions] = useState<HabitCompletion[]>([]);
 
   // Load data from localStorage on mount (fallback)
   useEffect(() => {
@@ -45,6 +62,10 @@ function App() {
     if (data.converters) setConverters(data.converters);
     if (data.tasks) setTasks(data.tasks);
     if (data.goals) setGoals(data.goals);
+    if (data.journalEntries) setJournalEntries(data.journalEntries);
+    if (data.scheduleItems) setScheduleItems(data.scheduleItems);
+    if (data.habits) setHabits(data.habits);
+    if (data.habitCompletions) setHabitCompletions(data.habitCompletions);
     if (data.month) setMonth(data.month);
   }, []);
 
@@ -57,11 +78,11 @@ function App() {
 
   // Save data to both localStorage and cloud when state changes
   useEffect(() => {
-    saveToStorage({ entries, categories, converters, tasks, goals, month });
+    saveToStorage({ entries, categories, converters, tasks, goals, journalEntries, scheduleItems, habits, habitCompletions, month });
     if (user) {
       saveDataToCloud();
     }
-  }, [entries, categories, converters, tasks, goals, month, user]);
+  }, [entries, categories, converters, tasks, goals, journalEntries, scheduleItems, habits, habitCompletions, month, user]);
 
   const loadDataFromCloud = async () => {
     setSyncing(true);
@@ -72,6 +93,7 @@ function App() {
       setConverters(data?.converters || DEFAULT_CONVERTERS);
       setTasks(data?.tasks || []);
       setGoals(data?.goals || []);
+      setScheduleItems(data?.scheduleItems || []);
     } catch (error) {
       console.error('Failed to load from cloud:', error);
     } finally {
@@ -81,11 +103,85 @@ function App() {
 
   const saveDataToCloud = async () => {
     try {
-      await saveToCloud({ entries, categories, converters, tasks, goals });
+      await saveToCloud({ entries, categories, converters, tasks, goals, journalEntries, scheduleItems });
     } catch (error) {
       console.error('Failed to save to cloud:', error);
     }
   };
+
+  const loadHabits = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('habits')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setHabits(data || []);
+    } catch (error) {
+      console.error('Error loading habits:', error);
+    }
+  };
+
+  const loadHabitCompletions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('habit_completions')
+        .select('*')
+        .order('completion_date', { ascending: false });
+
+      if (error) throw error;
+      setHabitCompletions(data || []);
+    } catch (error) {
+      console.error('Error loading habit completions:', error);
+    }
+  };
+
+  const loadGoals = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('goals')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      console.log('📥 Loaded goals from database (raw):', data);
+
+      const transformedGoals: Goal[] = (data || []).map((dbGoal: any) => ({
+        id: dbGoal.id,
+        title: dbGoal.title,
+        description: dbGoal.description,
+        category: dbGoal.category || '',
+        targetAmount: dbGoal.target_amount,
+        currentAmount: dbGoal.current_amount,
+        unit: dbGoal.unit,
+        targetDate: dbGoal.target_date || '',
+        createdAt: dbGoal.created_at,
+        completed: dbGoal.completed,
+        completedAt: dbGoal.completed_at,
+        goalType: dbGoal.goal_type,
+        duration: dbGoal.duration,
+        distance: dbGoal.distance
+      }));
+
+      console.log('📥 Transformed goals:', transformedGoals);
+      setGoals(transformedGoals);
+    } catch (error) {
+      console.error('Error loading goals:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user && !authLoading) {
+      loadHabits();
+      loadHabitCompletions();
+      loadGoals();
+    }
+  }, [user, authLoading, currentTab]);
+
 
   const handleSignOut = async () => {
     await signOut();
@@ -95,6 +191,10 @@ function App() {
     setConverters(DEFAULT_CONVERTERS);
     setTasks([]);
     setGoals([]);
+    setJournalEntries([]);
+    setScheduleItems([]);
+    setHabits([]);
+    setHabitCompletions([]);
     setMonth(fmtDateISO(startOfMonth()));
   };
 
@@ -106,19 +206,7 @@ function App() {
   const entriesThisMonth = useMemo(() => {
     return entries.filter(e => {
       const d = new Date(e.date + "T00:00:00");
-return d >= monthStart && d <= monthEnd;
-useEffect(() => {
-  async function testFetch() {
-    const { data, error } = await supabase.from('achievements').select('*')
-    if (error) {
-      console.error('❌ Supabase fetch error:', error)
-    } else {
-      console.log('✅ Supabase data:', data)
-    }
-  }
-
-  testFetch()
-}, [])
+      return d >= monthStart && d <= monthEnd;
     });
   }, [entries, monthStart, monthEnd]);
 
@@ -175,16 +263,141 @@ useEffect(() => {
     setTasks(prev => prev.filter(t => t.id !== id));
   };
 
-  const handleAddGoal = (goal: Goal) => {
-    setGoals(prev => [...prev, goal]);
+  const handleAddGoal = async (goal: Goal) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { error } = await supabase
+          .from('goals')
+          .insert({
+            id: goal.id,
+            user_id: user.id,
+            title: goal.title,
+            description: goal.description,
+            category: goal.category,
+            target_amount: goal.targetAmount,
+            current_amount: goal.currentAmount,
+            unit: goal.unit,
+            target_date: goal.targetDate,
+            completed: goal.completed,
+            completed_at: goal.completedAt,
+            goal_type: goal.goalType,
+            duration: goal.duration,
+            distance: goal.distance,
+            created_at: goal.createdAt,
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+        console.log('✅ Goal added to database:', goal.title);
+        await loadGoals();
+      } else {
+        setGoals(prev => [...prev, goal]);
+      }
+    } catch (error) {
+      console.error('Error adding goal:', error);
+      setGoals(prev => [...prev, goal]);
+    }
   };
 
-  const handleUpdateGoal = (updatedGoal: Goal) => {
-    setGoals(prev => prev.map(g => g.id === updatedGoal.id ? updatedGoal : g));
+  const handleUpdateGoal = async (updatedGoal: Goal) => {
+    console.log('🎯 App.tsx: handleUpdateGoal called with:', {
+      id: updatedGoal.id,
+      title: updatedGoal.title,
+      currentAmount: updatedGoal.currentAmount,
+      targetAmount: updatedGoal.targetAmount,
+      completed: updatedGoal.completed,
+      timestamp: new Date().toISOString()
+    });
+
+    // Update local state immediately to prevent re-render issues
+    setGoals(prev => {
+      const oldGoal = prev.find(g => g.id === updatedGoal.id);
+      console.log('🔄 App.tsx: Updating goal state. Old value:', oldGoal?.currentAmount, '→ New value:', updatedGoal.currentAmount);
+      return prev.map(g => g.id === updatedGoal.id ? updatedGoal : g);
+    });
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { error } = await supabase
+          .from('goals')
+          .update({
+            title: updatedGoal.title,
+            description: updatedGoal.description,
+            category: updatedGoal.category,
+            target_amount: updatedGoal.targetAmount,
+            current_amount: updatedGoal.currentAmount,
+            unit: updatedGoal.unit,
+            target_date: updatedGoal.targetDate,
+            completed: updatedGoal.completed,
+            completed_at: updatedGoal.completedAt,
+            goal_type: updatedGoal.goalType,
+            duration: updatedGoal.duration,
+            distance: updatedGoal.distance,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', updatedGoal.id);
+
+        if (error) throw error;
+        console.log('💾 Goal saved to database:', {
+          id: updatedGoal.id,
+          title: updatedGoal.title,
+          currentAmount: updatedGoal.currentAmount
+        });
+        // Don't reload goals to prevent re-render loops and double-counting
+        // The state is already updated above
+      }
+    } catch (error) {
+      console.error('❌ Error updating goal:', error);
+      // State already updated above, no need to update again on error
+    }
   };
 
-  const handleDeleteGoal = (id: string) => {
-    setGoals(prev => prev.filter(g => g.id !== id));
+  const handleDeleteGoal = async (id: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { error } = await supabase
+          .from('goals')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        await loadGoals();
+      } else {
+        setGoals(prev => prev.filter(g => g.id !== id));
+      }
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      setGoals(prev => prev.filter(g => g.id !== id));
+    }
+  };
+
+  const handleUpdateJournalEntry = (updatedEntry: JournalEntry) => {
+    setJournalEntries(prev => {
+      const existing = prev.find(e => e.dayNumber === updatedEntry.dayNumber);
+      if (existing) {
+        return prev.map(e => e.dayNumber === updatedEntry.dayNumber ? updatedEntry : e);
+      } else {
+        return [...prev, updatedEntry];
+      }
+    });
+  };
+
+  const handleAddScheduleItem = (item: ScheduleItem) => {
+    setScheduleItems(prev => [...prev, item]);
+  };
+
+  const handleUpdateScheduleItem = (updatedItem: ScheduleItem) => {
+    setScheduleItems(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
+  };
+
+  const handleDeleteScheduleItem = (id: string) => {
+    setScheduleItems(prev => prev.filter(item => item.id !== id));
   };
 
   if (authLoading) {
@@ -209,56 +422,49 @@ useEffect(() => {
         onFilterChange={setFilterCategory}
         categories={categories}
         user={user}
+        plan={plan}
         onSignOut={handleSignOut}
         onShowAuth={() => setShowAuthModal(true)}
+        syncing={syncing}
       />
-      
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSignIn={signIn}
-        onSignUp={signUp}
-      />
-      
-      {syncing && (
-        <div className="bg-blue-50 border-b border-blue-200 px-4 py-2">
-          <div className="max-w-7xl mx-auto flex items-center justify-center">
-            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-            <span className="text-blue-800 text-sm">Syncing your data...</span>
-          </div>
-        </div>
+
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          onSignIn={signIn}
+          onSignUp={signUp}
+        />
       )}
-      
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {currentTab === 'log' && (
-          <>
-            <EntryForm
-              categories={categories}
-              converters={converters}
-              onAddEntry={handleAddEntry}
-              onUpdateCategories={setCategories}
-              editingEntry={editingEntry}
-              onUpdateEntry={handleUpdateEntry}
-              onCancelEdit={handleCancelEdit}
-            />
-            
-            <EntryList
-              entries={filteredEntries}
-              categories={categories}
-              converters={converters}
-              onEditEntry={handleEditEntry}
-              onDeleteEntry={handleDeleteEntry}
-            />
-          </>
+          <TodayTasksView
+            scheduleItems={scheduleItems}
+            goals={goals}
+            converters={converters}
+            onAddScheduleItem={handleAddScheduleItem}
+            onUpdateScheduleItem={handleUpdateScheduleItem}
+            onDeleteScheduleItem={handleDeleteScheduleItem}
+            onUpdateGoal={handleUpdateGoal}
+            onGoalUpdate={loadGoals}
+            onHabitCompletionChange={loadHabitCompletions}
+            allHabits={habits}
+            habitCompletions={habitCompletions}
+            setHabitCompletions={setHabitCompletions}
+          />
         )}
         
         {currentTab === 'stats' && (
           <>
             <StatsView
-              entries={entriesThisMonth}
+              entries={entries}
               categories={categories}
               converters={converters}
               goals={goals}
+              scheduleItems={scheduleItems}
+              habits={habits}
+              habitCompletions={habitCompletions}
+              plan={plan}
               onUpdateCategories={setCategories}
               onAddGoal={handleAddGoal}
               onUpdateGoal={handleUpdateGoal}
@@ -268,20 +474,37 @@ useEffect(() => {
         )}
         
         {currentTab === 'tasks' && (
-          <TasksView
-            tasks={tasks}
-            onAddTask={handleAddTask}
-            onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
+          <HabitsView
+            habits={habits}
+            goals={goals}
+            onHabitsChange={loadHabits}
+            setHabits={setHabits}
+          />
+        )}
+        
+        {currentTab === 'journaling' && (
+          <JournalingView
+            journalEntries={journalEntries}
+            onUpdateJournalEntry={handleUpdateJournalEntry}
+            user={user}
+            plan={plan}
+            trialEndsAt={trialEndsAt}
+            onStartTrial={startTrial}
           />
         )}
         
         {currentTab === 'settings' && (
           <SettingsView
-            categories={categories}
-            converters={converters}
-            onUpdateCategories={setCategories}
-            onUpdateConverters={setConverters}
+            user={user}
+            plan={plan}
+            trialEndsAt={trialEndsAt}
+            planSource={planSource}
+            onSignIn={() => setShowAuthModal(true)}
+            onSignOut={signOut}
+            onStartTrial={startTrial}
+            devSetFreePlan={devSetFreePlan}
+            devStartTrial={devStartTrial}
+            devSetPaidPlan={devSetPaidPlan}
           />
         )}
         

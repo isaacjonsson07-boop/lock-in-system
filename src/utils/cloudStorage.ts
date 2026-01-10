@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import { Entry, Category, Converter, Task, Goal } from '../types'
+import { Entry, Category, Converter, Task, Goal, JournalEntry } from '../types'
 
 export interface CloudStorageData {
   entries: Entry[]
@@ -7,6 +7,7 @@ export interface CloudStorageData {
   converters: Converter[]
   tasks: Task[]
   goals: Goal[]
+  journalEntries: JournalEntry[]
   updated_at: string
 }
 
@@ -16,6 +17,8 @@ export async function saveToCloud(data: {
   converters: Converter[]
   tasks: Task[]
   goals: Goal[]
+  journalEntries: JournalEntry[]
+  scheduleItems: ScheduleItem[]
 }): Promise<{ error?: any }> {
   try {
     const { data: { user } } = await supabase.auth.getUser()

@@ -2,6 +2,17 @@ import { Category, Converter } from './types';
 
 export const STORAGE_KEY = "dj_pro_v3";
 
+export const WHOP_PAID_URL = "https://whop.com/checkout/plan_ASRqZCVTJ0eJe";
+export const WHOP_TRIAL_URL = "https://whop.com/checkout/plan_Wwet4zcOCzriu";
+
+export const openWhopPaid = () => {
+  window.open(WHOP_PAID_URL, "_top");
+};
+
+export const openWhopTrial = () => {
+  window.open(WHOP_TRIAL_URL, "_top");
+};
+
 export const DEFAULT_CONVERTERS: Converter[] = [
   { unit: "Hours", type: "Time", baseUnit: "Hours", factorToBase: 1 },
   { unit: "Minutes", type: "Time", baseUnit: "Hours", factorToBase: 0.017 },

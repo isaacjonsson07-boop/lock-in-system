@@ -28,12 +28,60 @@ export function formatSingleUnit(type: string, valueInBase: number, unit: string
     // For time, always display in natural h/min format regardless of storage unit
     return humanizeTime(valueInBase);
   }
-  
+
   const factor = getFactor(converters, type, unit) || 1;
   const amount = valueInBase / factor;
   const label = UNIT_SHORT[unit as keyof typeof UNIT_SHORT] || unit;
-  
+
   if (type === 'Distance') return `${Math.round(amount * 100) / 100} ${label}`;
   if (type === 'Count') return `${Math.round(amount)}${label === '×' ? '×' : ''}`;
   return `${amount} ${label}`;
+}
+
+export function formatDistanceDisplay(value: string): string {
+  if (!value) return value;
+
+  const trimmed = value.trim();
+  const numericValue = parseFloat(trimmed);
+
+  if (isNaN(numericValue)) {
+    return value;
+  }
+
+  if (trimmed === numericValue.toString()) {
+    if (numericValue >= 1000) {
+      return `${numericValue / 1000}km`;
+    } else {
+      return `${numericValue}m`;
+    }
+  }
+
+  return value;
+}
+
+export function formatDurationDisplay(value: string): string {
+  if (!value) return value;
+
+  const trimmed = value.trim();
+  const numericValue = parseFloat(trimmed);
+
+  if (isNaN(numericValue)) {
+    return value;
+  }
+
+  if (trimmed === numericValue.toString()) {
+    const totalMinutes = numericValue;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (hours === 0) {
+      return `${minutes}min`;
+    } else if (minutes === 0) {
+      return `${hours}h`;
+    } else {
+      return `${hours}h ${minutes}min`;
+    }
+  }
+
+  return value;
 }

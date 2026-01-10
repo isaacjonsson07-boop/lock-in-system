@@ -1,80 +1,164 @@
 import React from 'react';
-import { HelpCircle, Clock, MapPin, Hash } from 'lucide-react';
+import { Info, Target, Calendar, BookOpen, TrendingUp, Mail, Lock, Crown, CheckCircle } from 'lucide-react';
 
 export function HelpView() {
   return (
     <div className="space-y-6">
+      {/* What is the Daily Achievement Tracker */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
-          <HelpCircle className="w-5 h-5 mr-2" />
-          How to Use Daily Achievement Tracker
+          <Info className="w-5 h-5 mr-2" />
+          What is the Daily Achievement Tracker?
         </h3>
-        
-        <div className="prose max-w-none">
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            This app helps you track various activities with intelligent amount parsing. 
-            Simply enter amounts in natural formats and the app will understand them automatically.
+
+        <div className="space-y-3 text-gray-600 dark:text-gray-400">
+          <p className="leading-relaxed">
+            The Daily Achievement Tracker is a structured productivity system designed to help you build momentum through consistent daily action. It combines task execution, habit tracking, goal oversight, and guided reflection into one focused workflow.
           </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <Clock className="w-6 h-6 text-blue-500 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Time Tracking</h4>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                    <p><code className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1 rounded">1h 30m</code> - 1 hour 30 minutes</p>
-                    <p><code className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1 rounded">90min</code> - 90 minutes</p>
-                    <p><code className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1 rounded">1:30</code> - 1 hour 30 minutes</p>
-                    <p><code className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1 rounded">3600s</code> - 3600 seconds</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <MapPin className="w-6 h-6 text-emerald-500 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Distance Tracking</h4>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                    <p><code className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1 rounded">5km</code> - 5 kilometers</p>
-                    <p><code className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1 rounded">3km 250m</code> - 3.25 kilometers</p>
-                    <p><code className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1 rounded">2.1mi</code> - 2.1 miles</p>
-                    <p><code className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1 rounded">5935m</code> - 5935 meters</p>
-                  </div>
-                </div>
-              </div>
+          <p className="leading-relaxed">
+            The tracker is designed to work both as a standalone daily execution tool and as a core component of the Structured Achievement program. You can manage tasks, habits, and goals independently, but the full journaling experience is unlocked only when paired with the program's guided lessons.
+          </p>
+          <p className="leading-relaxed">
+            The problem it solves is simple: scattered effort leads to scattered results. By giving you one clear place to execute your day, track consistency, and measure progress, the Daily Achievement Tracker helps you stay focused and build lasting momentum.
+          </p>
+        </div>
+      </div>
+
+      {/* How the App Works */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+          <CheckCircle className="w-5 h-5 mr-2" />
+          How the App Works
+        </h3>
+
+        <div className="space-y-4">
+          <div className="flex items-start space-x-3">
+            <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+            <div>
+              <h4 className="font-semibold text-gray-800 dark:text-white mb-1">Today's Tasks</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                Your execution layer for the day. Log what you do using flexible tracking for time, distance, or count. This is where action happens and progress is recorded.
+              </p>
             </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <Hash className="w-6 h-6 text-amber-500 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Count Tracking</h4>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                    <p><code className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1 rounded">12</code> - 12 times</p>
-                    <p><code className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1 rounded">5x</code> - 5 times</p>
-                    <p><code className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1 rounded">3 times</code> - 3 times</p>
-                  </div>
-                </div>
-              </div>
+          </div>
+
+          <div className="flex items-start space-x-3">
+            <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-1 flex-shrink-0" />
+            <div>
+              <h4 className="font-semibold text-gray-800 dark:text-white mb-1">Daily Habits</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                Create recurring habits that automatically appear in Today's Tasks on their scheduled days. Habits help you build consistency without needing to plan from scratch every day.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-3">
+            <Target className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-1 flex-shrink-0" />
+            <div>
+              <h4 className="font-semibold text-gray-800 dark:text-white mb-1">Dashboard</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                Your high-level overview. The dashboard shows your active goals, completion rates, and long-term progress. Goals live inside the dashboard and connect your daily actions to bigger outcomes.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-3">
+            <BookOpen className="w-5 h-5 text-violet-600 dark:text-violet-400 mt-1 flex-shrink-0" />
+            <div>
+              <h4 className="font-semibold text-gray-800 dark:text-white mb-1">Journaling (Program-Based)</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                Guided reflection tied directly to the Structured Achievement program. Journaling is not a standalone feature — it unlocks alongside the program's daily lessons to ensure reflection is structured, intentional, and aligned with your goals.
+              </p>
             </div>
           </div>
         </div>
       </div>
-      
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Tips & Features</h3>
+
+      {/* 21-Day Journaling Challenge */}
+      <div className="bg-gradient-to-br from-violet-50 to-blue-50 dark:from-violet-900/20 dark:to-blue-900/20 border border-violet-200 dark:border-violet-800 rounded-lg shadow-md p-6">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+          <TrendingUp className="w-5 h-5 mr-2 text-violet-600 dark:text-violet-400" />
+          21-Day Journaling Challenge
+        </h3>
+
         <div className="space-y-3 text-gray-600 dark:text-gray-400">
-          <p>• <strong>Today's Totals:</strong> See your daily progress at a glance with activity count, time, and distance summaries</p>
-          <p>• <strong>Streak Tracking:</strong> Track consecutive days of activity - your best streak is preserved even when current streaks break</p>
-          <p>• <strong>Activity Records:</strong> Set personal bests by achieving your highest daily total in any category</p>
-          <p>• <strong>Favorites/Habits:</strong> Mark categories as habits with the star icon to keep them visible in statistics</p>
-          <p>• <strong>Smart Filtering:</strong> Use the category filter to focus on specific activities in your log</p>
-          <p>• <strong>Detailed Statistics:</strong> View comprehensive stats including totals, averages, active days, and personal records</p>
-          <p>• <strong>Data Management:</strong> Export your data as JSON for backup or import previous exports to restore history</p>
-          <p>• <strong>Flexible Categories:</strong> Create custom categories with different measurement types (Time, Distance, Count) in Settings</p>
-          <p>• <strong>Quick Entry:</strong> Add activities with natural language - the app understands formats like "1h 30m" or "5km 250m"</p>
-          <p>• <strong>Edit & Delete:</strong> Modify or remove entries directly from the activity log with built-in confirmation</p>
+          <p className="leading-relaxed">
+            The 21-Day Journaling Challenge is a guided reflection system that runs alongside the Structured Achievement program. Each journaling prompt is intentionally paired with daily lessons to reinforce clarity, awareness, and long-term behavioral change.
+          </p>
+          <p className="leading-relaxed">
+            This is not free-form journaling. Prompts are unlocked day by day as part of the program to ensure reflection supports execution — not distraction.
+          </p>
+          <p className="leading-relaxed">
+            <strong className="text-gray-800 dark:text-gray-200">What you gain:</strong> Clarity on what matters, awareness of your patterns,
+            insights into obstacles, and a proven system for consistent self-improvement. Complete the challenge and you'll have built a
+            sustainable practice that keeps you aligned with your goals.
+          </p>
+        </div>
+      </div>
+
+      {/* Access Levels */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+          <Lock className="w-5 h-5 mr-2" />
+          Access Levels
+        </h3>
+
+        <div className="space-y-4">
+          <div className="border-l-4 border-gray-400 dark:border-gray-600 pl-4">
+            <h4 className="font-semibold text-gray-800 dark:text-white mb-1 flex items-center">
+              Free Access
+            </h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              Access to Today's Tasks, Daily Habits, and the Dashboard with limited active goals at a time. This tier is designed for daily execution and habit tracking without guided journaling.
+            </p>
+          </div>
+
+          <div className="border-l-4 border-amber-500 dark:border-amber-600 pl-4">
+            <h4 className="font-semibold text-gray-800 dark:text-white mb-1 flex items-center">
+              <Crown className="w-4 h-4 mr-1 text-amber-600 dark:text-amber-400" />
+              7-Day Trial
+            </h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              Temporary access to the first 7 days of the Structured Achievement program, including the associated journaling prompts (Days 1–7). This allows you to experience how guided reflection integrates with daily execution.
+            </p>
+          </div>
+
+          <div className="border-l-4 border-green-500 dark:border-green-600 pl-4">
+            <h4 className="font-semibold text-gray-800 dark:text-white mb-1 flex items-center">
+              <Crown className="w-4 h-4 mr-1 text-green-600 dark:text-green-400" />
+              Full Access (Paid)
+            </h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              Complete access to the Structured Achievement program, including all 21 days of lessons and journaling prompts. Unlock unlimited goal tracking, full journaling access, and the complete structured system.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Support */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+          <Mail className="w-5 h-5 mr-2" />
+          Support
+        </h3>
+
+        <div className="space-y-3 text-gray-600 dark:text-gray-400">
+          <p className="leading-relaxed">
+            Have questions or need help? We're here to support you on your journey.
+          </p>
+          <p className="leading-relaxed">
+            <strong className="text-gray-800 dark:text-gray-200">Contact:</strong>{' '}
+            <a
+              href="mailto:admin@structuredachievement.com"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              admin@structuredachievement.com
+            </a>
+          </p>
+          <p className="text-sm leading-relaxed">
+            We typically respond within 24 hours. Whether you have a technical question, feature request, or just want to share your progress,
+            we'd love to hear from you.
+          </p>
         </div>
       </div>
     </div>

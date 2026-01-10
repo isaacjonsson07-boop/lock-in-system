@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpenCheck, BarChart3, CheckSquare, Settings, HelpCircle, LogOut, User } from 'lucide-react';
+import { BookOpenCheck, BarChart3, CheckSquare, BookOpen, Calendar, Settings, Info, LogOut, User } from 'lucide-react';
 import { TabType } from '../types';
 
 interface NavigationProps {
@@ -11,6 +11,7 @@ interface NavigationProps {
   onFilterChange: (category: string) => void;
   categories: Array<{ name: string }>;
   user?: { email?: string } | null;
+  plan?: 'free' | 'paid';
   onSignOut?: () => void;
   onShowAuth?: () => void;
 }
@@ -24,15 +25,17 @@ export function Navigation({
   onFilterChange,
   categories,
   user,
+  plan = 'free',
   onSignOut,
   onShowAuth
 }: NavigationProps) {
   const tabs = [
-    { id: 'log' as TabType, label: 'Activity Log', icon: BookOpenCheck },
+    { id: 'log' as TabType, label: "Today's Tasks", icon: CheckSquare },
     { id: 'stats' as TabType, label: 'Dashboard', icon: BarChart3 },
-    { id: 'tasks' as TabType, label: 'Daily Routines', icon: CheckSquare },
+    { id: 'tasks' as TabType, label: 'Daily Habits', icon: Calendar },
+    { id: 'journaling' as TabType, label: 'Journaling', icon: BookOpen },
     { id: 'settings' as TabType, label: 'Settings', icon: Settings },
-    { id: 'help' as TabType, label: 'Help', icon: HelpCircle },
+    { id: 'help' as TabType, label: 'Info', icon: Info },
   ];
 
   return (
@@ -57,7 +60,7 @@ export function Navigation({
                     }`}
                   >
                     <Icon className="w-4 h-4" />
-                    <span>{tab.label}</span>
+                    {tab.id !== 'settings' && tab.id !== 'help' && <span>{tab.label}</span>}
                   </button>
                 );
               })}
@@ -115,22 +118,6 @@ export function Navigation({
         </div>
         
         {/* Search and Filter */}
-        {currentTab === 'log' && (
-          <div className="py-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex justify-end">
-              <select
-                value={filterCategory}
-                onChange={(e) => onFilterChange(e.target.value)}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="ALL">All Categories</option>
-                {categories.map(cat => (
-                  <option key={cat.name} value={cat.name}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

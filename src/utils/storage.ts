@@ -1,5 +1,5 @@
 import { Entry, Category, Converter, Task } from '../types';
-import { Goal } from '../types';
+import { Goal, JournalEntry, ScheduleItem, Habit, HabitCompletion } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_CONVERTERS, STORAGE_KEY } from '../constants';
 
 export interface StorageData {
@@ -8,6 +8,10 @@ export interface StorageData {
   converters: Converter[];
   tasks: Task[];
   goals: Goal[];
+  journalEntries: JournalEntry[];
+  scheduleItems: ScheduleItem[];
+  habits: Habit[];
+  habitCompletions: HabitCompletion[];
   month: string;
 }
 
@@ -22,6 +26,10 @@ export function loadFromStorage(): Partial<StorageData> {
       if (p.converters) result.converters = p.converters;
       if (p.tasks) result.tasks = p.tasks;
       if (p.goals) result.goals = p.goals;
+      if (p.journalEntries) result.journalEntries = p.journalEntries;
+      if (p.scheduleItems) result.scheduleItems = p.scheduleItems;
+      if (p.habits) result.habits = p.habits;
+      if (p.habitCompletions) result.habitCompletions = p.habitCompletions;
       if (p.month) result.month = p.month;
       if (p.categories) {
         if (Array.isArray(p.categories) && typeof p.categories[0] === 'string') {
@@ -43,6 +51,10 @@ export function loadFromStorage(): Partial<StorageData> {
       if (p.converters) result.converters = p.converters;
       if (p.tasks) result.tasks = p.tasks;
       if (p.goals) result.goals = p.goals;
+      if (p.journalEntries) result.journalEntries = p.journalEntries;
+      if (p.scheduleItems) result.scheduleItems = p.scheduleItems;
+      if (p.habits) result.habits = p.habits;
+      if (p.habitCompletions) result.habitCompletions = p.habitCompletions;
       if (p.month) result.month = p.month;
       if (p.categories) {
         if (Array.isArray(p.categories) && typeof p.categories[0] === 'string') {

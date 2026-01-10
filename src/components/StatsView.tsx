@@ -1,37 +1,123 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { BarChart3, TrendingUp, Clock, Target, Star, StarOff, ChevronDown, ChevronRight, Plus, Edit3, Trash2, CheckCircle, Calendar } from 'lucide-react';
-import { Entry, Category, Converter, Goal } from '../types';
+import { Entry, Category, Converter, Goal, ScheduleItem, Habit, HabitCompletion } from '../types';
 import { formatSingleUnit, humanizeTime, humanizeDistance } from '../utils/formatting';
 import { formatDisplayDate, uid, fmtDateISO } from '../utils/dateUtils';
 import { parseAmountByType, amountPlaceholderByType } from '../utils/parsing';
+import { UpgradePrompt } from './UpgradePrompt';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 interface StatsViewProps {
   entries: Entry[];
   categories: Category[];
   converters: Converter[];
   goals: Goal[];
+  scheduleItems: ScheduleItem[];
+  habits: Habit[];
+  habitCompletions: HabitCompletion[];
+  plan?: 'free' | 'paid';
   onUpdateCategories: (categories: Category[]) => void;
   onAddGoal: (goal: Goal) => void;
   onUpdateGoal: (goal: Goal) => void;
   onDeleteGoal: (id: string) => void;
 }
 
-export function StatsView({ entries, categories, converters, goals, onUpdateCategories, onAddGoal, onUpdateGoal, onDeleteGoal }: StatsViewProps) {
+export function StatsView({ entries, categories, converters, goals, scheduleItems, habits, habitCompletions, plan = 'free', onUpdateCategories, onAddGoal, onUpdateGoal, onDeleteGoal }: StatsViewProps) {
   const [expandedCategory, setExpandedCategory] = React.useState<string | null>(null);
   const [showAddGoalForm, setShowAddGoalForm] = React.useState(false);
   const [editingGoal, setEditingGoal] = React.useState<Goal | null>(null);
   const [retryingGoal, setRetryingGoal] = React.useState<string | null>(null);
   const [newRetryDate, setNewRetryDate] = React.useState('');
+  const [allTimeFilter, setAllTimeFilter] = React.useState<'latest' | 'by-type' | 'most-completed'>('latest');
+  const [deletingGoalId, setDeletingGoalId] = React.useState<string | null>(null);
   const [newGoal, setNewGoal] = React.useState({
     title: '',
     description: '',
-    category: categories[0]?.name || '',
     targetAmount: '',
-    targetDate: ''
+    targetDate: '',
+    goalType: 'task' as 'task' | 'time' | 'distance',
+    duration: '',
+    distance: ''
   });
-  
+  const [targetAmountError, setTargetAmountError] = React.useState<string>('');
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [newGoal.description, showAddGoalForm]);
+
   const isOverdue = (targetDate: string): boolean => {
     return new Date(targetDate) < new Date();
+  };
+
+  const sanitizeWholeNumber = (raw: string): string => {
+    return raw.replace(/[^0-9]/g, '');
+  };
+
+  const isCountGoal = newGoal.goalType === 'task';
+
+  const handleTargetAmountChange = (value: string) => {
+    if (isCountGoal) {
+      const sanitized = sanitizeWholeNumber(value);
+      setNewGoal({ ...newGoal, targetAmount: sanitized });
+      setTargetAmountError('');
+    } else {
+      setNewGoal({ ...newGoal, targetAmount: value });
+      setTargetAmountError('');
+    }
+  };
+
+  const handleTargetAmountBlur = () => {
+    if (isCountGoal && newGoal.targetAmount) {
+      const numValue = parseInt(newGoal.targetAmount, 10);
+      if (!Number.isInteger(numValue) || numValue <= 0 || newGoal.targetAmount === '0') {
+        setTargetAmountError('Target amount must be a whole number greater than 0.');
+      }
+    }
+  };
+
+  const normalizeActivityName = (name: string): string => {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/ing$/, '')
+      .replace(/s$/, '')
+      .replace(/ed$/, '');
+  };
+
+  const findMatchingCategory = (name: string) => {
+    const normalizedName = normalizeActivityName(name);
+    return categories.find(cat => {
+      const normalizedCatName = normalizeActivityName(cat.name);
+      return normalizedCatName === normalizedName ||
+             normalizedCatName.includes(normalizedName) ||
+             normalizedName.includes(normalizedCatName);
+    });
+  };
+
+  const findOrCreateCategoryName = (name: string, existingCategories: Map<string, string>): string => {
+    const normalizedName = normalizeActivityName(name);
+
+    // Check if we have a matching existing category in the persistent categories list
+    const matchingCategory = findMatchingCategory(name);
+    if (matchingCategory) {
+      return matchingCategory.name;
+    }
+
+    // Check if we already have a similar name in our temporary map
+    for (const [existingName] of existingCategories) {
+      const normalizedExisting = normalizeActivityName(existingName);
+      if (normalizedExisting === normalizedName) {
+        return existingName;
+      }
+    }
+
+    // Return the original name if no match found
+    return name;
   };
 
   // Helper function to calculate current streak and activity record for a category
@@ -114,28 +200,63 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
   // Calculate current progress for each goal based on entries
   const goalsWithProgress = useMemo(() => {
     return goals.map(goal => {
-      const categoryEntries = entries.filter(entry => entry.category === goal.category);
-      const totalAmount = categoryEntries.reduce((sum, entry) => sum + entry.amount, 0);
-      const progress = goal.targetAmount > 0 ? Math.min((totalAmount / goal.targetAmount) * 100, 100) : 0;
-      const isCompleted = totalAmount >= goal.targetAmount;
-      
+      // Check if this goal is linked to any tasks or habits
+      const hasLinkedTasks = scheduleItems.some(item => item.linkedGoalId === goal.id);
+      const hasLinkedHabits = habits.some(habit => habit.linked_goal_id === goal.id);
+
+      let currentAmount = Number(goal.currentAmount) || 0;
+
+      // Only calculate from entries if the goal is NOT linked to tasks or habits
+      // Task/habit-linked goals use currentAmount as source of truth (updated in TodayTasksView)
+      if (!hasLinkedTasks && !hasLinkedHabits) {
+        const categoryEntries = entries.filter(entry =>
+          entry.category === goal.category &&
+          new Date(entry.date) >= new Date(goal.createdAt)
+        );
+        currentAmount = categoryEntries.reduce((sum, entry) => sum + entry.amount, 0);
+      }
+
+      const target = Number(goal.targetAmount) || 0;
+      const progress = target > 0 ? Math.min((currentAmount / target) * 100, 100) : 0;
+      const isGoalCompleted = currentAmount >= target && target > 0;
+
+      console.log('[GOAL PROGRESS - StatsView]', {
+        goalId: goal.id,
+        goalTitle: goal.title,
+        hasLinkedTasks,
+        hasLinkedHabits,
+        currentAmount,
+        targetAmount: target,
+        usedStoredAmount: hasLinkedTasks || hasLinkedHabits,
+        isCompleted: goal.completed,
+        wouldComplete: isGoalCompleted
+      });
+
       // Auto-complete goal if target is reached
-      if (isCompleted && !goal.completed) {
-        const updatedGoal = { 
-          ...goal, 
-          completed: true, 
+      if (isGoalCompleted && !goal.completed) {
+        console.log('[GOAL AUTO-COMPLETE - StatsView]', {
+          goalId: goal.id,
+          goalTitle: goal.title,
+          currentAmount,
+          targetAmount: target,
+          ratio: target ? currentAmount / target : null
+        });
+
+        const updatedGoal = {
+          ...goal,
+          completed: true,
           completedAt: new Date().toISOString(),
-          currentAmount: goal.targetAmount // Cap at target amount when completing
+          currentAmount: Math.min(currentAmount, target)
         };
         onUpdateGoal(updatedGoal);
         return updatedGoal;
       }
-      
+
       // For completed goals, don't let current amount exceed target
-      const displayAmount = goal.completed ? goal.targetAmount : totalAmount;
-      return { ...goal, currentAmount: displayAmount, progress, isCompleted };
+      const displayAmount = goal.completed ? target : Math.min(currentAmount, target);
+      return { ...goal, currentAmount: displayAmount, progress, isCompleted: isGoalCompleted };
     });
-  }, [goals, entries, onUpdateGoal]);
+  }, [goals, entries, scheduleItems, habits, habitCompletions, converters, onUpdateGoal]);
 
   const activeGoals = goalsWithProgress.filter(goal => !goal.completed);
   const completedGoals = goalsWithProgress.filter(goal => goal.completed);
@@ -144,74 +265,177 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
 
   const handleAddGoal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newGoal.title.trim() || !newGoal.targetAmount) return;
+    if (!newGoal.title.trim()) return;
 
-    const category = categories.find(c => c.name === newGoal.category);
-    const categoryType = category?.type || 'Time';
-    const parsed = parseAmountByType(newGoal.targetAmount, categoryType, converters);
-    
+    // Validate required fields based on goal type
+    if (newGoal.goalType === 'time' && !newGoal.duration.trim()) {
+      alert('Please enter a duration for time-based goals');
+      return;
+    }
+
+    if (newGoal.goalType === 'distance' && !newGoal.distance.trim()) {
+      alert('Please enter a distance for distance-based goals');
+      return;
+    }
+
+    if (newGoal.goalType === 'task' && !newGoal.targetAmount.trim()) {
+      alert('Please enter a target amount for task-based goals');
+      return;
+    }
+
+    // For task goals, enforce whole number validation
+    if (newGoal.goalType === 'task') {
+      const numValue = parseInt(newGoal.targetAmount, 10);
+      if (!Number.isFinite(numValue) || numValue <= 0) {
+        setTargetAmountError('Target amount must be a whole number greater than 0.');
+        return;
+      }
+    }
+
+    // Parse based on goal type
+    let parsed;
+    if (newGoal.goalType === 'time') {
+      parsed = parseAmountByType(newGoal.duration, 'Time', converters);
+    } else if (newGoal.goalType === 'distance') {
+      parsed = parseAmountByType(newGoal.distance, 'Distance', converters);
+    } else {
+      // Task type - try Count first (for plain numbers), then other types
+      parsed = parseAmountByType(newGoal.targetAmount, 'Count', converters) ||
+               parseAmountByType(newGoal.targetAmount, 'Distance', converters) ||
+               parseAmountByType(newGoal.targetAmount, 'Time', converters);
+    }
+
     if (!parsed) {
       alert('Could not parse target amount. Please check the format.');
       return;
+    }
+
+    // Final check: ensure task goals store integers
+    if (newGoal.goalType === 'task') {
+      const intVal = parseInt(newGoal.targetAmount, 10);
+      if (!Number.isFinite(intVal) || intVal <= 0) {
+        setTargetAmountError('Target amount must be a whole number greater than 0.');
+        return;
+      }
+      parsed.value = intVal;
     }
 
     const goal: Goal = {
       id: uid(),
       title: newGoal.title.trim(),
       description: newGoal.description.trim() || undefined,
-      category: newGoal.category,
+      category: 'General', // Default category since we removed the selector
       targetAmount: parsed.value,
       currentAmount: 0,
       unit: parsed.unit,
       targetDate: newGoal.targetDate,
       createdAt: new Date().toISOString(),
-      completed: false
+      completed: false,
+      goalType: newGoal.goalType,
+      duration: newGoal.goalType === 'time' ? newGoal.duration.trim() : undefined,
+      distance: newGoal.goalType === 'distance' ? newGoal.distance.trim() : undefined
     };
 
     onAddGoal(goal);
     setNewGoal({
       title: '',
       description: '',
-      category: categories[0]?.name || '',
       targetAmount: '',
-      targetDate: ''
+      targetDate: '',
+      goalType: 'task',
+      duration: '',
+      distance: ''
     });
+    setTargetAmountError('');
     setShowAddGoalForm(false);
   };
 
   const handleEditGoal = (goal: Goal) => {
     setEditingGoal(goal);
+    const targetAmountStr = goal.goalType === 'task'
+      ? String(Math.trunc(goal.targetAmount))
+      : goal.targetAmount.toString();
+
     setNewGoal({
       title: goal.title,
       description: goal.description || '',
-      category: goal.category,
-      targetAmount: goal.targetAmount.toString(),
-      targetDate: goal.targetDate
+      targetAmount: goal.goalType === 'task' ? targetAmountStr : '',
+      targetDate: goal.targetDate,
+      goalType: goal.goalType || 'task',
+      duration: goal.duration || '',
+      distance: goal.distance || ''
     });
+    setTargetAmountError('');
     setShowAddGoalForm(true);
   };
 
   const handleUpdateGoal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingGoal || !newGoal.title.trim() || !newGoal.targetAmount) return;
+    if (!editingGoal || !newGoal.title.trim()) return;
 
-    const category = categories.find(c => c.name === newGoal.category);
-    const categoryType = category?.type || 'Time';
-    const parsed = parseAmountByType(newGoal.targetAmount, categoryType, converters);
-    
+    // Validate required fields based on goal type
+    if (newGoal.goalType === 'time' && !newGoal.duration.trim()) {
+      alert('Please enter a duration for time-based goals');
+      return;
+    }
+
+    if (newGoal.goalType === 'distance' && !newGoal.distance.trim()) {
+      alert('Please enter a distance for distance-based goals');
+      return;
+    }
+
+    if (newGoal.goalType === 'task' && !newGoal.targetAmount.trim()) {
+      alert('Please enter a target amount for task-based goals');
+      return;
+    }
+
+    // For task goals, enforce whole number validation
+    if (newGoal.goalType === 'task') {
+      const numValue = parseInt(newGoal.targetAmount, 10);
+      if (!Number.isFinite(numValue) || numValue <= 0) {
+        setTargetAmountError('Target amount must be a whole number greater than 0.');
+        return;
+      }
+    }
+
+    // Parse based on goal type
+    let parsed;
+    if (newGoal.goalType === 'time') {
+      parsed = parseAmountByType(newGoal.duration, 'Time', converters);
+    } else if (newGoal.goalType === 'distance') {
+      parsed = parseAmountByType(newGoal.distance, 'Distance', converters);
+    } else {
+      // Task type - try Count first (for plain numbers), then other types
+      parsed = parseAmountByType(newGoal.targetAmount, 'Count', converters) ||
+               parseAmountByType(newGoal.targetAmount, 'Distance', converters) ||
+               parseAmountByType(newGoal.targetAmount, 'Time', converters);
+    }
+
     if (!parsed) {
       alert('Could not parse target amount. Please check the format.');
       return;
+    }
+
+    // Final check: ensure task goals store integers
+    if (newGoal.goalType === 'task') {
+      const intVal = parseInt(newGoal.targetAmount, 10);
+      if (!Number.isFinite(intVal) || intVal <= 0) {
+        setTargetAmountError('Target amount must be a whole number greater than 0.');
+        return;
+      }
+      parsed.value = intVal;
     }
 
     const updatedGoal: Goal = {
       ...editingGoal,
       title: newGoal.title.trim(),
       description: newGoal.description.trim() || undefined,
-      category: newGoal.category,
       targetAmount: parsed.value,
       unit: parsed.unit,
-      targetDate: newGoal.targetDate
+      targetDate: newGoal.targetDate,
+      goalType: newGoal.goalType,
+      duration: newGoal.goalType === 'time' ? newGoal.duration.trim() : undefined,
+      distance: newGoal.goalType === 'distance' ? newGoal.distance.trim() : undefined
     };
 
     onUpdateGoal(updatedGoal);
@@ -219,10 +443,13 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
     setNewGoal({
       title: '',
       description: '',
-      category: categories[0]?.name || '',
       targetAmount: '',
-      targetDate: ''
+      targetDate: '',
+      goalType: 'task',
+      duration: '',
+      distance: ''
     });
+    setTargetAmountError('');
     setShowAddGoalForm(false);
   };
 
@@ -255,32 +482,185 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
   };
 
   const formatGoalAmount = (goal: Goal): string => {
-    const categoryType = getCategoryType(goal.category);
-    return formatSingleUnit(categoryType, goal.targetAmount, goal.unit, converters);
+    // For goals with duration/distance, display the original input
+    if (goal.goalType === 'time' && goal.duration) {
+      return goal.duration;
+    }
+    if (goal.goalType === 'distance' && goal.distance) {
+      return goal.distance;
+    }
+    // For task-based goals, use the parsed unit
+    return formatSingleUnit('Count', goal.targetAmount, goal.unit, converters);
   };
 
   const formatCurrentAmount = (goal: Goal): string => {
-    const categoryType = getCategoryType(goal.category);
-    return formatSingleUnit(categoryType, goal.currentAmount, goal.unit, converters);
+    // For goals with duration/distance, format based on goal type
+    if (goal.goalType === 'time') {
+      return formatSingleUnit('Time', goal.currentAmount, goal.unit, converters);
+    }
+    if (goal.goalType === 'distance') {
+      return formatSingleUnit('Distance', goal.currentAmount, goal.unit, converters);
+    }
+    // For task-based goals, use the parsed unit
+    return formatSingleUnit('Count', goal.currentAmount, goal.unit, converters);
   };
 
   const stats = useMemo(() => {
     const categoryTotals = new Map<string, number>();
     const categoryTypes = new Map<string, string>();
     const categoryDays = new Map<string, Set<string>>();
-    
+    const categoryUniqueActivities = new Map<string, Set<string>>();
+
     categories.forEach(cat => {
       categoryTypes.set(cat.name, cat.type);
       categoryDays.set(cat.name, new Set());
+      categoryUniqueActivities.set(cat.name, new Set());
     });
     
+    // Process regular entries
     entries.forEach(entry => {
       const current = categoryTotals.get(entry.category) || 0;
       categoryTotals.set(entry.category, current + entry.amount);
-      
+
       const days = categoryDays.get(entry.category) || new Set();
       days.add(entry.date);
       categoryDays.set(entry.category, days);
+
+      const uniqueActivities = categoryUniqueActivities.get(entry.category) || new Set();
+      uniqueActivities.add(`entry-${entry.id}`);
+      categoryUniqueActivities.set(entry.category, uniqueActivities);
+    });
+    
+    // Process completed tasks and add them to stats
+    scheduleItems.forEach(task => {
+      task.completedDates.forEach(completedDate => {
+        // Infer type from task properties - this takes precedence
+        let categoryType = 'Count'; // Default type for tasks
+        let inferredFromTask = false;
+
+        if (task.duration) {
+          categoryType = 'Time';
+          inferredFromTask = true;
+        } else if (task.distance) {
+          categoryType = 'Distance';
+          inferredFromTask = true;
+        }
+
+        // Use task's original name if it has explicit duration/distance
+        let categoryName = task.title;
+
+        // Only normalize to match other categories if no explicit type was set
+        if (!inferredFromTask) {
+          categoryName = findOrCreateCategoryName(task.title, categoryTypes);
+
+          // Use category's type if it exists
+          const matchingCategory = findMatchingCategory(task.title);
+          if (matchingCategory) {
+            categoryType = matchingCategory.type;
+          } else if (categoryTypes.has(categoryName)) {
+            categoryType = categoryTypes.get(categoryName)!;
+          }
+        }
+
+        // Initialize category if it doesn't exist
+        if (!categoryTypes.has(categoryName)) {
+          categoryTypes.set(categoryName, categoryType);
+          categoryDays.set(categoryName, new Set());
+          categoryUniqueActivities.set(categoryName, new Set());
+        }
+
+        // Get the actual completion count for this date
+        const completionCount = task.completedCounts?.[completedDate] || 1;
+
+        // Add task completion to totals
+        const current = categoryTotals.get(categoryName) || 0;
+        let amountToAdd = completionCount; // Use actual completion count
+
+        // Parse duration or distance if available and multiply by completion count
+        if (task.duration && categoryType === 'Time') {
+          const parsed = parseAmountByType(task.duration, 'Time', converters);
+          if (parsed) amountToAdd = parsed.value * completionCount;
+        } else if (task.distance && categoryType === 'Distance') {
+          const parsed = parseAmountByType(task.distance, 'Distance', converters);
+          if (parsed) amountToAdd = parsed.value * completionCount;
+        }
+
+        categoryTotals.set(categoryName, current + amountToAdd);
+
+        // Add to days and unique activities
+        const days = categoryDays.get(categoryName) || new Set();
+        days.add(completedDate);
+        categoryDays.set(categoryName, days);
+
+        const uniqueActivities = categoryUniqueActivities.get(categoryName) || new Set();
+        uniqueActivities.add(`task-${task.id}`);
+        categoryUniqueActivities.set(categoryName, uniqueActivities);
+      });
+    });
+
+    // Process completed habits and add them to stats
+    habitCompletions.forEach(completion => {
+      const habit = habits.find(h => h.id === completion.habit_id);
+      if (!habit) return;
+
+      // Infer type from habit properties - this takes precedence
+      let categoryType = 'Count';
+      let inferredFromHabit = false;
+
+      if (habit.duration) {
+        categoryType = 'Time';
+        inferredFromHabit = true;
+      } else if (habit.distance) {
+        categoryType = 'Distance';
+        inferredFromHabit = true;
+      }
+
+      // Use habit's original name if it has explicit duration/distance
+      let categoryName = habit.name;
+
+      // Only normalize to match other categories if no explicit type was set
+      if (!inferredFromHabit) {
+        categoryName = findOrCreateCategoryName(habit.name, categoryTypes);
+
+        // Use category's type if it exists
+        const matchingCategory = findMatchingCategory(habit.name);
+        if (matchingCategory) {
+          categoryType = matchingCategory.type;
+        } else if (categoryTypes.has(categoryName)) {
+          categoryType = categoryTypes.get(categoryName)!;
+        }
+      }
+
+      // Initialize category if it doesn't exist
+      if (!categoryTypes.has(categoryName)) {
+        categoryTypes.set(categoryName, categoryType);
+        categoryDays.set(categoryName, new Set());
+        categoryUniqueActivities.set(categoryName, new Set());
+      }
+
+      // Add habit completion to totals
+      const current = categoryTotals.get(categoryName) || 0;
+      let amountToAdd = habit.target_number;
+
+      // Parse duration or distance if available
+      if (habit.duration && categoryType === 'Time') {
+        const parsed = parseAmountByType(habit.duration, 'Time', converters);
+        if (parsed) amountToAdd = parsed.value;
+      } else if (habit.distance && categoryType === 'Distance') {
+        const parsed = parseAmountByType(habit.distance, 'Distance', converters);
+        if (parsed) amountToAdd = parsed.value;
+      }
+
+      categoryTotals.set(categoryName, current + amountToAdd);
+
+      // Add to days and unique activities
+      const days = categoryDays.get(categoryName) || new Set();
+      days.add(completion.completion_date);
+      categoryDays.set(categoryName, days);
+
+      const uniqueActivities = categoryUniqueActivities.get(categoryName) || new Set();
+      uniqueActivities.add(`habit-${habit.id}`);
+      categoryUniqueActivities.set(categoryName, uniqueActivities);
     });
     
     const categoryStats = Array.from(categoryTotals.entries()).map(([name, total]) => {
@@ -291,13 +671,14 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
       const avgPerDay = activeDays > 0 ? total / activeDays : 0;
       const bestStreak = calculateBestStreak(name);
       const activityRecord = category?.activityRecord || 0;
-      
+      const uniqueActivities = categoryUniqueActivities.get(name) || new Set();
+
       return {
         name,
         type,
         total,
         baseUnit,
-        entryCount: entries.filter(e => e.category === name).length,
+        entryCount: uniqueActivities.size,
         formattedTotal: formatSingleUnit(type, total, baseUnit, converters),
         isHabit: category?.isHabit || false,
         activeDays,
@@ -340,8 +721,8 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
       if (!a.isHabit && b.isHabit) return 1;
       return b.total - a.total;
     });
-    
-  }, [entries, categories, converters]);
+
+  }, [entries, categories, converters, scheduleItems, habits, habitCompletions]);
 
   const goalStats = {
     total: goals.length,
@@ -358,40 +739,242 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
   const allTimeStats = useMemo(() => {
     const categoryTotals = new Map<string, number>();
     const categoryTypes = new Map<string, string>();
-    
+    const categoryEntries = new Map<string, any[]>();
+    const categoryUniqueActivities = new Map<string, Set<string>>();
+
     categories.forEach(cat => {
       categoryTypes.set(cat.name, cat.type);
+      categoryEntries.set(cat.name, []);
+      categoryUniqueActivities.set(cat.name, new Set());
     });
     
+    // Process regular entries
     entries.forEach(entry => {
       const current = categoryTotals.get(entry.category) || 0;
       categoryTotals.set(entry.category, current + entry.amount);
+
+      const entryList = categoryEntries.get(entry.category) || [];
+      entryList.push(entry);
+      categoryEntries.set(entry.category, entryList);
+
+      const uniqueActivities = categoryUniqueActivities.get(entry.category) || new Set();
+      uniqueActivities.add(`entry-${entry.id}`);
+      categoryUniqueActivities.set(entry.category, uniqueActivities);
     });
     
+    // Process completed tasks
+    scheduleItems.forEach(task => {
+      task.completedDates.forEach(completedDate => {
+        // Infer type from task properties - this takes precedence
+        let categoryType = 'Count';
+        let inferredFromTask = false;
+
+        if (task.duration) {
+          categoryType = 'Time';
+          inferredFromTask = true;
+        } else if (task.distance) {
+          categoryType = 'Distance';
+          inferredFromTask = true;
+        }
+
+        let categoryName = task.title;
+
+        // Only check for matching category if type wasn't inferred from task
+        if (!inferredFromTask) {
+          const matchingCategory = categories.find(cat =>
+            cat.name.toLowerCase() === task.title.toLowerCase() ||
+            cat.name.toLowerCase().includes(task.title.toLowerCase()) ||
+            task.title.toLowerCase().includes(cat.name.toLowerCase())
+          );
+
+          if (matchingCategory) {
+            categoryName = matchingCategory.name;
+            categoryType = matchingCategory.type;
+          }
+        }
+
+        // Initialize category if it doesn't exist
+        if (!categoryTypes.has(categoryName)) {
+          categoryTypes.set(categoryName, categoryType);
+          categoryEntries.set(categoryName, []);
+          categoryUniqueActivities.set(categoryName, new Set());
+        }
+
+        // Get the actual completion count for this date
+        const completionCount = task.completedCounts?.[completedDate] || 1;
+
+        // Add task completion to totals
+        const current = categoryTotals.get(categoryName) || 0;
+        let amountToAdd = completionCount;
+
+        // Parse duration or distance if available and multiply by completion count
+        if (task.duration && categoryType === 'Time') {
+          const parsed = parseAmountByType(task.duration, 'Time', converters);
+          if (parsed) amountToAdd = parsed.value * completionCount;
+        } else if (task.distance && categoryType === 'Distance') {
+          const parsed = parseAmountByType(task.distance, 'Distance', converters);
+          if (parsed) amountToAdd = parsed.value * completionCount;
+        }
+
+        categoryTotals.set(categoryName, current + amountToAdd);
+
+        // Create a pseudo-entry for the completed task
+        const taskEntry = {
+          id: `task-${task.id}-${completedDate}`,
+          date: completedDate,
+          category: categoryName,
+          amount: amountToAdd,
+          unit: categoryType === 'Time' ? 'Hours' : categoryType === 'Distance' ? 'Km' : 'Times',
+          note: `Completed task: ${task.title}${task.description ? ` - ${task.description}` : ''}`
+        };
+
+        const entryList = categoryEntries.get(categoryName) || [];
+        entryList.push(taskEntry);
+        categoryEntries.set(categoryName, entryList);
+
+        const uniqueActivities = categoryUniqueActivities.get(categoryName) || new Set();
+        uniqueActivities.add(`task-${task.id}`);
+        categoryUniqueActivities.set(categoryName, uniqueActivities);
+      });
+    });
+
+    // Process completed habits
+    habitCompletions.forEach(completion => {
+      const habit = habits.find(h => h.id === completion.habit_id);
+      if (!habit) return;
+
+      // Infer type from habit properties - this takes precedence
+      let categoryType = 'Count';
+      let inferredFromHabit = false;
+
+      if (habit.duration) {
+        categoryType = 'Time';
+        inferredFromHabit = true;
+      } else if (habit.distance) {
+        categoryType = 'Distance';
+        inferredFromHabit = true;
+      }
+
+      const categoryName = habit.name;
+
+      // Only check for matching category if type wasn't inferred from habit
+      if (!inferredFromHabit) {
+        const matchingCategory = categories.find(cat =>
+          cat.name.toLowerCase() === habit.name.toLowerCase() ||
+          cat.name.toLowerCase().includes(habit.name.toLowerCase()) ||
+          habit.name.toLowerCase().includes(cat.name.toLowerCase())
+        );
+
+        if (matchingCategory) {
+          categoryType = matchingCategory.type;
+        }
+      }
+
+      // Initialize category if it doesn't exist
+      if (!categoryTypes.has(categoryName)) {
+        categoryTypes.set(categoryName, categoryType);
+        categoryEntries.set(categoryName, []);
+        categoryUniqueActivities.set(categoryName, new Set());
+      }
+
+      // Add habit completion to totals
+      const current = categoryTotals.get(categoryName) || 0;
+      let amountToAdd = habit.target_number;
+
+      // Parse duration or distance if available
+      if (habit.duration && categoryType === 'Time') {
+        const parsed = parseAmountByType(habit.duration, 'Time', converters);
+        if (parsed) amountToAdd = parsed.value;
+      } else if (habit.distance && categoryType === 'Distance') {
+        const parsed = parseAmountByType(habit.distance, 'Distance', converters);
+        if (parsed) amountToAdd = parsed.value;
+      }
+
+      categoryTotals.set(categoryName, current + amountToAdd);
+
+      // Create a pseudo-entry for the completed habit
+      const habitEntry = {
+        id: `habit-${habit.id}-${completion.completion_date}`,
+        date: completion.completion_date,
+        category: categoryName,
+        amount: amountToAdd,
+        unit: categoryType === 'Time' ? 'Hours' : categoryType === 'Distance' ? 'Km' : 'Times',
+        note: `Completed habit: ${habit.name}${habit.description ? ` - ${habit.description}` : ''}`
+      };
+
+      const entryList = categoryEntries.get(categoryName) || [];
+      entryList.push(habitEntry);
+      categoryEntries.set(categoryName, entryList);
+
+      const uniqueActivities = categoryUniqueActivities.get(categoryName) || new Set();
+      uniqueActivities.add(`habit-${habit.id}`);
+      categoryUniqueActivities.set(categoryName, uniqueActivities);
+    });
+
     const categoryStats = Array.from(categoryTotals.entries()).map(([name, total]) => {
       const type = categoryTypes.get(name) || 'Time';
       const baseUnit = type === 'Time' ? 'Hours' : type === 'Distance' ? 'Km' : 'Times';
-      const categoryEntries = entries.filter(e => e.category === name);
+      const allCategoryEntries = categoryEntries.get(name) || [];
+      const uniqueActivities = categoryUniqueActivities.get(name) || new Set();
       return {
         name,
         type,
         total,
         baseUnit,
-        entryCount: categoryEntries.length,
+        entryCount: uniqueActivities.size,
         formattedTotal: formatSingleUnit(type, total, baseUnit, converters),
-        entries: categoryEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        entries: allCategoryEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       };
     });
 
     return categoryStats.sort((a, b) => b.total - a.total);
-  }, [entries, categories, converters]);
+  }, [entries, categories, converters, scheduleItems, habits, habitCompletions]);
+
+  const filteredAllTimeStats = useMemo(() => {
+    let filtered = [...allTimeStats];
+
+    switch (allTimeFilter) {
+      case 'latest':
+        return filtered.sort((a, b) => {
+          const latestA = Math.max(...a.entries.map(e => new Date(e.date).getTime()));
+          const latestB = Math.max(...b.entries.map(e => new Date(e.date).getTime()));
+          return latestB - latestA;
+        });
+      case 'by-type':
+        return filtered.sort((a, b) => {
+          if (a.type === b.type) {
+            return b.total - a.total;
+          }
+          return a.type.localeCompare(b.type);
+        });
+      case 'most-completed':
+        return filtered.sort((a, b) => b.entryCount - a.entryCount);
+      default:
+        return filtered;
+    }
+  }, [allTimeStats, allTimeFilter]);
+
   const toggleHabit = (categoryName: string) => {
-    const updatedCategories = categories.map(cat => 
-      cat.name === categoryName 
-        ? { ...cat, isHabit: !cat.isHabit }
-        : cat
-    );
-    onUpdateCategories(updatedCategories);
+    const existingCategory = categories.find(cat => cat.name === categoryName);
+
+    if (existingCategory) {
+      const updatedCategories = categories.map(cat =>
+        cat.name === categoryName
+          ? { ...cat, isHabit: !cat.isHabit }
+          : cat
+      );
+      onUpdateCategories(updatedCategories);
+    } else {
+      const stat = stats.find(s => s.name === categoryName);
+      const newCategory: Category = {
+        id: uid(),
+        name: categoryName,
+        type: stat?.type || 'Count',
+        isHabit: true,
+        activityRecord: 0
+      };
+      onUpdateCategories([...categories, newCategory]);
+    }
   };
 
   const toggleCategoryExpansion = (categoryName: string) => {
@@ -442,16 +1025,27 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
           </h3>
           <button
             onClick={() => {
+              const activeGoalCount = goals.filter(g => !g.completed).length;
+              const canAddGoal = plan === 'paid' || activeGoalCount < 2;
+
+              if (!canAddGoal && !showAddGoalForm) {
+                setShowAddGoalForm(true);
+                return;
+              }
+
               setShowAddGoalForm(!showAddGoalForm);
               if (showAddGoalForm) {
                 setEditingGoal(null);
                 setNewGoal({
                   title: '',
                   description: '',
-                  category: categories[0]?.name || '',
                   targetAmount: '',
-                  targetDate: ''
+                  targetDate: '',
+                  goalType: 'task',
+                  duration: '',
+                  distance: ''
                 });
+                setTargetAmountError('');
               }
             }}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center"
@@ -461,9 +1055,24 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
           </button>
         </div>
 
-        {showAddGoalForm && (
+        {showAddGoalForm && (() => {
+          const activeGoalCount = goals.filter(g => !g.completed).length;
+          const canAddGoal = plan === 'paid' || activeGoalCount < 2;
+
+          if (!canAddGoal && !editingGoal) {
+            return (
+              <div className="border-t pt-4">
+                <UpgradePrompt
+                  feature="Unlimited Goals"
+                  description="Free users can have up to 2 active goals. Upgrade to the paid plan to create unlimited goals and track all your ambitions."
+                />
+              </div>
+            );
+          }
+
+          return (
           <form onSubmit={editingGoal ? handleUpdateGoal : handleAddGoal} className="space-y-4 border-t pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Goal Title</label>
                 <input
@@ -471,48 +1080,90 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
                   value={newGoal.title}
                   onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })}
                   placeholder="e.g., Run 100km this month"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Goal Type</label>
                 <select
-                  value={newGoal.category}
-                  onChange={(e) => setNewGoal({ ...newGoal, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
+                  value={newGoal.goalType}
+                  onChange={(e) => {
+                    setNewGoal({ ...newGoal, goalType: e.target.value as 'task' | 'time' | 'distance' });
+                    setTargetAmountError('');
+                  }}
+                  className="w-full px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {categories.map(cat => (
-                    <option key={cat.name} value={cat.name}>{cat.name}</option>
-                  ))}
+                  <option value="task">Task</option>
+                  <option value="time">Time-based</option>
+                  <option value="distance">Distance-based</option>
                 </select>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Target Amount ({getCategoryType(newGoal.category)})
-                </label>
-                <input
-                  type="text"
-                  value={newGoal.targetAmount}
-                  onChange={(e) => setNewGoal({ ...newGoal, targetAmount: e.target.value })}
-                  placeholder={amountPlaceholderByType(getCategoryType(newGoal.category))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
+              {newGoal.goalType === 'task' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Target Amount
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={newGoal.targetAmount}
+                    onChange={(e) => handleTargetAmountChange(e.target.value)}
+                    onBlur={handleTargetAmountBlur}
+                    placeholder="e.g., 100km, 50h, 30 times"
+                    className={`w-full px-2 py-2 text-sm border ${targetAmountError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 ${targetAmountError ? 'focus:ring-red-500' : 'focus:ring-blue-500'}`}
+                    required
+                  />
+                  {targetAmountError && (
+                    <p className="text-red-500 text-xs mt-1">{targetAmountError}</p>
+                  )}
+                </div>
+              )}
+
+              {newGoal.goalType === 'time' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration</label>
+                  <input
+                    type="text"
+                    value={newGoal.duration}
+                    onChange={(e) => setNewGoal({ ...newGoal, duration: e.target.value })}
+                    placeholder="e.g., 30min, 1h 15m, 2 hours"
+                    className="w-full px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Examples: 30min, 1h 30m, 2 hours
+                  </p>
+                </div>
+              )}
               
+              {newGoal.goalType === 'distance' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Distance</label>
+                  <input
+                    type="text"
+                    value={newGoal.distance}
+                    onChange={(e) => setNewGoal({ ...newGoal, distance: e.target.value })}
+                    placeholder="e.g., 5km, 3 miles, 2000m"
+                    className="w-full px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Examples: 5km, 3 miles, 2000m
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Date</label>
                 <input
                   type="date"
                   value={newGoal.targetDate}
                   onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -521,11 +1172,18 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (optional)</label>
               <textarea
+                ref={textareaRef}
                 value={newGoal.description}
                 onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
                 placeholder="Describe your goal..."
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={1}
+                style={{ minHeight: '2.5rem', resize: 'none' }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = target.scrollHeight + 'px';
+                }}
+                className="w-full px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -537,7 +1195,8 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
               {editingGoal ? 'Update Goal' : 'Create Goal'}
             </button>
           </form>
-        )}
+          );
+        })()}
       </div>
 
       {/* Active Goals */}
@@ -555,10 +1214,9 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
                   <div className="flex-1">
                     <h4 className="font-semibold text-gray-800 dark:text-white">{goal.title}</h4>
                     {goal.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{goal.description}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap">{goal.description}</p>
                     )}
                     <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                      <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{goal.category}</span>
                       <span className="flex items-center">
                         <Calendar className="w-4 h-4 mr-1" />
                         {new Date(goal.targetDate).toLocaleDateString()}
@@ -574,11 +1232,7 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
                       <Edit3 className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => {
-                        if (confirm('Are you sure you want to delete this goal?')) {
-                          onDeleteGoal(goal.id);
-                        }
-                      }}
+                      onClick={() => setDeletingGoalId(goal.id)}
                       className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded-md transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -610,63 +1264,63 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
         </div>
       )}
 
-
-
       {/* Today's Achievements */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
-            <Target className="w-5 h-5 mr-2" />
-            Today's Achievements
-          </h3>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            <Star className="w-4 h-4 inline mr-1" />
-            Habits stay visible
-          </div>
-        </div>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-6 flex items-center">
+          <TrendingUp className="w-5 h-5 mr-2" />
+          Today's Achievements
+        </h3>
         
         {stats.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400 text-center py-8">No data to display yet.</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center py-8">No activities recorded yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {stats.map(stat => (
-              <div key={stat.name} className="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-600 transition-all hover:shadow-md">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">{stat.name}</span>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-400 dark:text-gray-500">{stat.entryCount} entries</span>
-                    <button
-                      onClick={() => toggleHabit(stat.name)}
-                      className={`p-1 rounded transition-colors ${
-                        stat.isHabit 
-                          ? 'text-amber-500 bg-amber-100 hover:text-amber-600 hover:bg-amber-200' 
-                          : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50'
-                      }`}
-                      title={stat.isHabit ? 'Remove from habits' : 'Add to habits'}
-                    >
-                      {stat.isHabit ? <Star className="w-4 h-4 fill-current" /> : <StarOff className="w-4 h-4" />}
-                    </button>
-                  </div>
+              <div key={stat.name} className="p-4 rounded-lg border-2 transition-all border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-gray-800 dark:text-white">{stat.name}</h4>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleHabit(stat.name);
+                    }}
+                    className="text-gray-400 hover:text-yellow-500 transition-colors"
+                    title={stat.isHabit ? 'Remove from habits' : 'Mark as habit'}
+                  >
+                    <Star
+                      className={`w-4 h-4 ${stat.isHabit ? 'text-yellow-500' : ''}`}
+                      fill={stat.isHabit ? "currentColor" : "none"}
+                    />
+                  </button>
                 </div>
                 
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                  {stat.formattedTotal} <span className="text-sm font-normal text-gray-500 dark:text-gray-400">({stat.formattedAvgPerDay}/day)</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {stat.activeDays} active days
-                  </span>
-                  <div className="flex flex-col items-end space-y-1">
-                    <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
-                      🔥 {stat.bestStreak} best streak
-                    </span>
-                    {stat.activityRecord > 0 && (
-                      <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
-                        🎯 {stat.formattedRecord} record
-                      </span>
-                    )}
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Total:</span>
+                    <span className="font-medium text-gray-800 dark:text-white">{stat.formattedTotal}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Activities:</span>
+                    <span className="font-medium text-gray-800 dark:text-white">{stat.entryCount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Active Days:</span>
+                    <span className="font-medium text-gray-800 dark:text-white">{stat.activeDays}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Avg/Day:</span>
+                    <span className="font-medium text-gray-800 dark:text-white">{stat.formattedAvgPerDay}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Best Streak:</span>
+                    <span className="font-medium text-blue-600">{stat.bestStreak} days</span>
+                  </div>
+                  {stat.activityRecord > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Record:</span>
+                      <span className="font-medium text-green-600">{stat.formattedRecord}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -676,12 +1330,23 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
 
       {/* All Time Achievements */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-6 flex items-center">
-          <BarChart3 className="w-5 h-5 mr-2" />
-          All Time Achievements
-        </h3>
-        
-        {allTimeStats.length === 0 ? (
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center">
+            <BarChart3 className="w-5 h-5 mr-2" />
+            All Time Achievements
+          </h3>
+          <select
+            value={allTimeFilter}
+            onChange={(e) => setAllTimeFilter(e.target.value as 'latest' | 'by-type' | 'most-completed')}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="latest">Latest First</option>
+            <option value="by-type">By Type</option>
+            <option value="most-completed">Most Completed</option>
+          </select>
+        </div>
+
+        {filteredAllTimeStats.length === 0 ? (
           <p className="text-gray-500 dark:text-gray-400 text-center py-8">No activities recorded yet.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -696,7 +1361,7 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
                 </tr>
               </thead>
               <tbody>
-            {allTimeStats.map(stat => (
+            {filteredAllTimeStats.map(stat => (
               <React.Fragment key={stat.name}>
                 <tr className="border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="py-3 px-4">
@@ -783,10 +1448,9 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
                       {goal.title}
                     </h4>
                     {goal.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 ml-6">{goal.description}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 ml-6 whitespace-pre-wrap">{goal.description}</p>
                     )}
                     <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500 dark:text-gray-400 ml-6">
-                      <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{goal.category}</span>
                       <span>{formatCurrentAmount(goal)} / {formatGoalAmount(goal)}</span>
                       {goal.completedAt && (
                         <span className="text-green-600 dark:text-green-400 font-medium">
@@ -797,11 +1461,7 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
                   </div>
                   
                   <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to delete this completed goal?')) {
-                        onDeleteGoal(goal.id);
-                      }
-                    }}
+                    onClick={() => setDeletingGoalId(goal.id)}
                     className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded-md transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -865,10 +1525,9 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
                       <div className="flex-1">
                         <h4 className="font-semibold text-gray-800 dark:text-white">{goal.title}</h4>
                         {goal.description && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{goal.description}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap">{goal.description}</p>
                         )}
                         <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                          <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{goal.category}</span>
                           <span className="flex items-center text-red-600 dark:text-red-400 font-medium">
                             <Calendar className="w-4 h-4 mr-1" />
                             Overdue: {new Date(goal.targetDate).toLocaleDateString()}
@@ -884,11 +1543,7 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
                           Give it another try
                         </button>
                         <button
-                          onClick={() => {
-                            if (confirm('Are you sure you want to permanently delete this goal?')) {
-                              onDeleteGoal(goal.id);
-                            }
-                          }}
+                          onClick={() => setDeletingGoalId(goal.id)}
                           className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded-md transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -926,6 +1581,17 @@ export function StatsView({ entries, categories, converters, goals, onUpdateCate
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Create your first goal to start tracking your progress!</p>
         </div>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={deletingGoalId !== null}
+        onConfirm={() => {
+          if (deletingGoalId) {
+            onDeleteGoal(deletingGoalId);
+            setDeletingGoalId(null);
+          }
+        }}
+        onCancel={() => setDeletingGoalId(null)}
+      />
     </div>
   );
 }

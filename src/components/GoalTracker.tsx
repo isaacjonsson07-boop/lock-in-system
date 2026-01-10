@@ -1,31 +1,39 @@
 import React, { useState, useMemo } from 'react';
 import { Target, Plus, Edit3, Trash2, CheckCircle, Clock, TrendingUp, Calendar } from 'lucide-react';
-import { Goal, Entry, Category, Converter } from '../types';
+import { Goal, Entry, Category, Converter, ScheduleItem, Habit, HabitCompletion } from '../types';
 import { formatSingleUnit } from '../utils/formatting';
 import { uid, fmtDateISO } from '../utils/dateUtils';
 import { parseAmountByType, amountPlaceholderByType } from '../utils/parsing';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 interface GoalTrackerProps {
   goals: Goal[];
   entries: Entry[];
   categories: Category[];
   converters: Converter[];
+  scheduleItems: ScheduleItem[];
+  habits: Habit[];
+  habitCompletions: HabitCompletion[];
   onAddGoal: (goal: Goal) => void;
   onUpdateGoal: (goal: Goal) => void;
   onDeleteGoal: (id: string) => void;
 }
 
-export function GoalTracker({ 
-  goals, 
-  entries, 
-  categories, 
-  converters, 
-  onAddGoal, 
-  onUpdateGoal, 
-  onDeleteGoal 
+export function GoalTracker({
+  goals,
+  entries,
+  categories,
+  converters,
+  scheduleItems,
+  habits,
+  habitCompletions,
+  onAddGoal,
+  onUpdateGoal,
+  onDeleteGoal
 }: GoalTrackerProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
   const [newGoal, setNewGoal] = useState({
     title: '',
     description: '',
@@ -33,34 +41,63 @@ export function GoalTracker({
     targetAmount: '',
     targetDate: ''
   });
+  const [targetAmountError, setTargetAmountError] = useState<string>('');
 
   const isOverdue = (targetDate: string): boolean => {
     return new Date(targetDate) < new Date();
   };
 
-  // Calculate current progress for each goal based on entries
+  // Calculate current progress for each goal based on entries or task/habit completions
   const goalsWithProgress = useMemo(() => {
     return goals.map(goal => {
-      const categoryEntries = entries.filter(entry => entry.category === goal.category);
-      const totalAmount = categoryEntries.reduce((sum, entry) => sum + entry.amount, 0);
-      const progress = goal.targetAmount > 0 ? Math.min((totalAmount / goal.targetAmount) * 100, 100) : 0;
-      const isCompleted = totalAmount >= goal.targetAmount;
-      
+      // Check if this goal is linked to any tasks or habits
+      const hasLinkedTasks = scheduleItems.some(item => item.linkedGoalId === goal.id);
+      const hasLinkedHabits = habits.some(habit => habit.linked_goal_id === goal.id);
+
+      let currentAmount = goal.currentAmount;
+
+      // Only calculate from entries if the goal is NOT linked to tasks or habits
+      // Task/habit-linked goals are updated directly when tasks/habits are completed
+      if (!hasLinkedTasks && !hasLinkedHabits) {
+        const categoryEntries = entries.filter(entry =>
+          entry.category === goal.category &&
+          new Date(entry.date) >= new Date(goal.createdAt)
+        );
+        currentAmount = categoryEntries.reduce((sum, entry) => sum + entry.amount, 0);
+      }
+
+      const target = Number(goal.targetAmount) || 0;
+      const current = Number(currentAmount) || 0;
+      const progress = target > 0 ? Math.min((current / target) * 100, 100) : 0;
+      const isGoalCompleted = current >= target && target > 0;
+
       // Auto-complete goal if target is reached
-      if (isCompleted && !goal.completed) {
-        const updatedGoal = { 
-          ...goal, 
-          completed: true, 
+      if (isGoalCompleted && !goal.completed) {
+        console.log('[GOAL AUTO-COMPLETE DEBUG - GoalTracker]', {
+          goalId: goal.id,
+          goalTitle: goal.title,
+          goalUnit: goal.unit,
+          currentAmount: current,
+          targetAmount: target,
+          hasLinkedTasks,
+          hasLinkedHabits,
+          isGoalCompleted,
+          ratio: target ? current / target : null
+        });
+
+        const updatedGoal = {
+          ...goal,
+          completed: true,
           completedAt: new Date().toISOString(),
-          currentAmount: totalAmount 
+          currentAmount: Math.min(current, target)
         };
         onUpdateGoal(updatedGoal);
         return updatedGoal;
       }
-      
-      return { ...goal, currentAmount: totalAmount, progress, isCompleted };
+
+      return { ...goal, currentAmount: current, progress, isCompleted: isGoalCompleted };
     });
-  }, [goals, entries, onUpdateGoal]);
+  }, [goals, entries, scheduleItems, habits, onUpdateGoal]);
 
   const activeGoals = goalsWithProgress.filter(goal => !goal.completed);
   const completedGoals = goalsWithProgress.filter(goal => goal.completed);
@@ -71,10 +108,23 @@ export function GoalTracker({
 
     const category = categories.find(c => c.name === newGoal.category);
     const categoryType = category?.type || 'Time';
+
+    if (categoryType === 'Count') {
+      if (!validateTaskAmount(newGoal.targetAmount)) {
+        setTargetAmountError('Target amount must be a whole number greater than 0.');
+        return;
+      }
+    }
+
     const parsed = parseAmountByType(newGoal.targetAmount, categoryType, converters);
-    
+
     if (!parsed) {
       alert('Could not parse target amount. Please check the format.');
+      return;
+    }
+
+    if (categoryType === 'Count' && (!Number.isInteger(parsed.value) || parsed.value <= 0)) {
+      setTargetAmountError('Target amount must be a whole number greater than 0.');
       return;
     }
 
@@ -88,7 +138,10 @@ export function GoalTracker({
       unit: parsed.unit,
       targetDate: newGoal.targetDate,
       createdAt: new Date().toISOString(),
-      completed: false
+      completed: false,
+      goalType: categoryType === 'Distance' ? 'distance' : categoryType === 'Time' ? 'time' : 'task',
+      distance: categoryType === 'Distance' ? newGoal.targetAmount : undefined,
+      duration: categoryType === 'Time' ? newGoal.targetAmount : undefined
     };
 
     onAddGoal(goal);
@@ -99,18 +152,25 @@ export function GoalTracker({
       targetAmount: '',
       targetDate: ''
     });
+    setTargetAmountError('');
     setShowAddForm(false);
   };
 
   const handleEditGoal = (goal: Goal) => {
     setEditingGoal(goal);
+    const categoryType = getCategoryType(goal.category, goal);
+    const targetAmountStr = categoryType === 'Count'
+      ? String(Math.trunc(goal.targetAmount))
+      : goal.targetAmount.toString();
+
     setNewGoal({
       title: goal.title,
       description: goal.description || '',
       category: goal.category,
-      targetAmount: goal.targetAmount.toString(),
+      targetAmount: targetAmountStr,
       targetDate: goal.targetDate
     });
+    setTargetAmountError('');
     setShowAddForm(true);
   };
 
@@ -120,10 +180,23 @@ export function GoalTracker({
 
     const category = categories.find(c => c.name === newGoal.category);
     const categoryType = category?.type || 'Time';
+
+    if (categoryType === 'Count') {
+      if (!validateTaskAmount(newGoal.targetAmount)) {
+        setTargetAmountError('Target amount must be a whole number greater than 0.');
+        return;
+      }
+    }
+
     const parsed = parseAmountByType(newGoal.targetAmount, categoryType, converters);
-    
+
     if (!parsed) {
       alert('Could not parse target amount. Please check the format.');
+      return;
+    }
+
+    if (categoryType === 'Count' && (!Number.isInteger(parsed.value) || parsed.value <= 0)) {
+      setTargetAmountError('Target amount must be a whole number greater than 0.');
       return;
     }
 
@@ -134,7 +207,10 @@ export function GoalTracker({
       category: newGoal.category,
       targetAmount: parsed.value,
       unit: parsed.unit,
-      targetDate: newGoal.targetDate
+      targetDate: newGoal.targetDate,
+      goalType: categoryType === 'Distance' ? 'distance' : categoryType === 'Time' ? 'time' : 'task',
+      distance: categoryType === 'Distance' ? newGoal.targetAmount : undefined,
+      duration: categoryType === 'Time' ? newGoal.targetAmount : undefined
     };
 
     onUpdateGoal(updatedGoal);
@@ -146,21 +222,78 @@ export function GoalTracker({
       targetAmount: '',
       targetDate: ''
     });
+    setTargetAmountError('');
     setShowAddForm(false);
   };
 
-  const getCategoryType = (categoryName: string): string => {
+  const getCategoryType = (categoryName: string, goal?: Goal): string => {
     const cat = categories.find(c => c.name === categoryName);
-    return cat?.type || 'Time';
+    const categoryType = cat?.type || 'Time';
+
+    if (goal) {
+      if (goal.distance) return 'Distance';
+      if (goal.duration) return 'Time';
+      if (goal.goalType === 'distance') return 'Distance';
+      if (goal.goalType === 'time') return 'Time';
+      if (goal.goalType === 'task') return 'Count';
+    }
+
+    return categoryType;
+  };
+
+  const isTaskGoal = (categoryName: string): boolean => {
+    return getCategoryType(categoryName) === 'Count';
+  };
+
+  const validateTaskAmount = (value: string): boolean => {
+    if (!value.trim()) return false;
+    const numValue = parseInt(value, 10);
+    return Number.isInteger(numValue) && numValue > 0 && /^\d+$/.test(value.trim());
+  };
+
+  const handleTargetAmountChange = (value: string) => {
+    const categoryType = getCategoryType(newGoal.category);
+
+    if (categoryType === 'Count') {
+      const digitsOnly = value.replace(/\D/g, '');
+      setNewGoal({ ...newGoal, targetAmount: digitsOnly });
+      setTargetAmountError('');
+    } else {
+      setNewGoal({ ...newGoal, targetAmount: value });
+      setTargetAmountError('');
+    }
+  };
+
+  const handleTargetAmountBlur = () => {
+    const categoryType = getCategoryType(newGoal.category);
+
+    if (categoryType === 'Count') {
+      if (!newGoal.targetAmount || newGoal.targetAmount === '0') {
+        setTargetAmountError('Target amount must be a whole number greater than 0.');
+      } else if (!validateTaskAmount(newGoal.targetAmount)) {
+        setTargetAmountError('Target amount must be a whole number.');
+      }
+    }
+  };
+
+  const isFormValid = (): boolean => {
+    if (!newGoal.title.trim() || !newGoal.targetAmount || !newGoal.targetDate) return false;
+
+    const categoryType = getCategoryType(newGoal.category);
+    if (categoryType === 'Count') {
+      return validateTaskAmount(newGoal.targetAmount);
+    }
+
+    return true;
   };
 
   const formatGoalAmount = (goal: Goal): string => {
-    const categoryType = getCategoryType(goal.category);
+    const categoryType = getCategoryType(goal.category, goal);
     return formatSingleUnit(categoryType, goal.targetAmount, goal.unit, converters);
   };
 
   const formatCurrentAmount = (goal: Goal): string => {
-    const categoryType = getCategoryType(goal.category);
+    const categoryType = getCategoryType(goal.category, goal);
     return formatSingleUnit(categoryType, goal.currentAmount, goal.unit, converters);
   };
 
@@ -235,6 +368,7 @@ export function GoalTracker({
                   targetAmount: '',
                   targetDate: ''
                 });
+                setTargetAmountError('');
               }
             }}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center"
@@ -263,7 +397,10 @@ export function GoalTracker({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
                 <select
                   value={newGoal.category}
-                  onChange={(e) => setNewGoal({ ...newGoal, category: e.target.value })}
+                  onChange={(e) => {
+                    setNewGoal({ ...newGoal, category: e.target.value });
+                    setTargetAmountError('');
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
@@ -281,12 +418,18 @@ export function GoalTracker({
                 </label>
                 <input
                   type="text"
+                  inputMode={isTaskGoal(newGoal.category) ? "numeric" : undefined}
+                  pattern={isTaskGoal(newGoal.category) ? "[0-9]*" : undefined}
                   value={newGoal.targetAmount}
-                  onChange={(e) => setNewGoal({ ...newGoal, targetAmount: e.target.value })}
+                  onChange={(e) => handleTargetAmountChange(e.target.value)}
+                  onBlur={handleTargetAmountBlur}
                   placeholder={amountPlaceholderByType(getCategoryType(newGoal.category))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full px-3 py-2 border ${targetAmountError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 ${targetAmountError ? 'focus:ring-red-500' : 'focus:ring-blue-500'}`}
                   required
                 />
+                {targetAmountError && (
+                  <p className="text-red-500 text-sm mt-1">{targetAmountError}</p>
+                )}
               </div>
               
               <div>
@@ -314,7 +457,12 @@ export function GoalTracker({
 
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+              disabled={!isFormValid()}
+              className={`w-full py-2 px-4 rounded-md transition-colors flex items-center justify-center ${
+                isFormValid()
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+              }`}
             >
               <Target className="w-4 h-4 mr-2" />
               {editingGoal ? 'Update Goal' : 'Create Goal'}
@@ -360,11 +508,7 @@ export function GoalTracker({
                       <Edit3 className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => {
-                        if (confirm('Are you sure you want to delete this goal?')) {
-                          onDeleteGoal(goal.id);
-                        }
-                      }}
+                      onClick={() => setDeletingGoalId(goal.id)}
                       className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded-md transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -428,11 +572,7 @@ export function GoalTracker({
                   </div>
                   
                   <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to delete this completed goal?')) {
-                        onDeleteGoal(goal.id);
-                      }
-                    }}
+                    onClick={() => setDeletingGoalId(goal.id)}
                     className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded-md transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -452,6 +592,17 @@ export function GoalTracker({
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Create your first goal to start tracking your progress!</p>
         </div>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={deletingGoalId !== null}
+        onConfirm={() => {
+          if (deletingGoalId) {
+            onDeleteGoal(deletingGoalId);
+            setDeletingGoalId(null);
+          }
+        }}
+        onCancel={() => setDeletingGoalId(null)}
+      />
     </div>
   );
 }

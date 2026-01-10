@@ -1,273 +1,210 @@
-import React, { useState } from 'react';
-import { Settings, PlusCircle, Trash2, Edit3, Save, X, ChevronDown, ChevronRight, Clock, MapPin, Hash, Moon, Sun } from 'lucide-react';
-import { Category, Converter } from '../types';
-import { TYPES, DEFAULT_CONVERTERS } from '../constants';
-import { uid } from '../utils/dateUtils';
-import { useTheme } from '../hooks/useTheme';
+import React from 'react';
+import { Settings, Crown, Shield, Wrench, LogIn, LogOut } from 'lucide-react';
+import { getTrialDaysRemaining } from '../utils/trialUtils';
+import { isDevEnvironment } from '../utils/devUtils';
+import { openWhopPaid, openWhopTrial } from '../constants';
 
 interface SettingsViewProps {
-  categories: Category[];
-  converters: Converter[];
-  onUpdateCategories: (categories: Category[]) => void;
-  onUpdateConverters: (converters: Converter[]) => void;
+  user?: { id?: string } | null;
+  plan?: 'free' | 'paid';
+  trialEndsAt?: string | null;
+  planSource?: 'profile' | 'dev-override';
+  onSignIn?: () => void;
+  onSignOut?: () => void;
+  onStartTrial?: () => Promise<void>;
+  devSetFreePlan?: () => Promise<any>;
+  devStartTrial?: () => Promise<any>;
+  devSetPaidPlan?: () => Promise<any>;
 }
 
-export function SettingsView({ categories, converters, onUpdateCategories, onUpdateConverters }: SettingsViewProps) {
-  const { theme, toggleTheme } = useTheme();
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
-  const [showConverters, setShowConverters] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: '', type: 'Time', displayUnit: 'Auto' });
+export function SettingsView({
+  user,
+  plan = 'free',
+  trialEndsAt = null,
+  planSource = 'profile',
+  onSignIn,
+  onSignOut,
+  onStartTrial,
+  devSetFreePlan,
+  devStartTrial,
+  devSetPaidPlan
+}: SettingsViewProps) {
+  const trialDaysRemaining = getTrialDaysRemaining(trialEndsAt);
+  const isTrialActive = trialDaysRemaining > 0;
+  const isDevMode = isDevEnvironment();
+  const showDevTools = isDevMode && devSetFreePlan && devStartTrial && devSetPaidPlan;
 
-  const addCategory = () => {
-    if (!newCategory.name.trim()) return;
-    
-    const updated = [...categories, { ...newCategory, name: newCategory.name.trim() }];
-    onUpdateCategories(updated);
-    setNewCategory({ name: '', type: 'Time', displayUnit: 'Auto' });
-  };
-
-  const updateCategory = (index: number, category: Category) => {
-    const updated = [...categories];
-    updated[index] = category;
-    onUpdateCategories(updated);
-    setEditingCategoryId(null);
-  };
-
-  const deleteCategory = (index: number) => {
-    if (confirm('Are you sure you want to delete this category?')) {
-      const updated = categories.filter((_, i) => i !== index);
-      onUpdateCategories(updated);
-    }
-  };
-
-  const resetConverters = () => {
-    if (confirm('Reset all unit converters to defaults?')) {
-      onUpdateConverters(DEFAULT_CONVERTERS);
-    }
+  const handleManageSubscription = () => {
+    window.open('https://yoursite.com/manage', '_blank');
   };
 
   return (
     <div className="space-y-6">
-      {/* Appearance Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
-          {theme === 'dark' ? <Moon className="w-5 h-5 mr-2" /> : <Sun className="w-5 h-5 mr-2" />}
-          Appearance
-        </h3>
-        
-        <div className="flex items-center justify-between">
-          <div>
-            <h4 className="font-medium text-gray-700 dark:text-gray-300">Dark Mode</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Switch between light and dark themes</p>
-          </div>
-          
-          <button
-            onClick={toggleTheme}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-              theme === 'dark' ? 'bg-blue-600' : 'bg-gray-200'
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
-        </div>
-      </div>
-      
-      {/* Categories Section */}
+      {/* Account Section */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
           <Settings className="w-5 h-5 mr-2" />
-          Categories
+          Account
         </h3>
-        
-        {/* Add New Category */}
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
-          <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-3">Add New Category</h4>
+
+        <div className="space-y-4">
+          {/* Plan Status */}
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Current Plan</span>
+              <span className={`text-lg font-bold ${
+                plan === 'paid' ? 'text-green-600 dark:text-green-400' :
+                isTrialActive ? 'text-amber-600 dark:text-amber-400' :
+                'text-gray-600 dark:text-gray-400'
+              }`}>
+                {plan === 'paid' ? 'Paid' : isTrialActive ? 'Trial' : 'Free'}
+              </span>
+            </div>
+            {isTrialActive && (
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Trial: {trialDaysRemaining} {trialDaysRemaining === 1 ? 'day' : 'days'} remaining
+              </p>
+            )}
+          </div>
+
+          {/* Primary CTA */}
+          <div>
+            {plan === 'free' && !isTrialActive && onStartTrial && (
+              <button
+                onClick={openWhopTrial}
+                className="w-full px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg inline-flex items-center justify-center"
+              >
+                <Crown className="w-5 h-5 mr-2" />
+                Start 7-Day Free Trial
+              </button>
+            )}
+            {plan === 'free' && isTrialActive && (
+              <button
+                onClick={openWhopPaid}
+                className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg inline-flex items-center justify-center"
+              >
+                <Crown className="w-5 h-5 mr-2" />
+                Upgrade to Full Access
+              </button>
+            )}
+            {plan === 'paid' && (
+              <button
+                onClick={handleManageSubscription}
+                className="w-full px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-all shadow-md hover:shadow-lg inline-flex items-center justify-center"
+              >
+                <Settings className="w-5 h-5 mr-2" />
+                Manage Subscription
+              </button>
+            )}
+          </div>
+
+          {/* Sign In/Out */}
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+            {user ? (
+              <button
+                onClick={onSignOut}
+                className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors inline-flex items-center justify-center"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </button>
+            ) : (
+              <button
+                onClick={onSignIn}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center justify-center"
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Dev Tools Section */}
+      {showDevTools && (
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-300 dark:border-purple-700 rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold text-purple-900 dark:text-purple-200 mb-4 flex items-center">
+            <Wrench className="w-5 h-5 mr-2" />
+            Dev Tools
+            <span className="ml-3 text-xs bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-full">
+              Development Only
+            </span>
+          </h3>
+
+          {!user && (
+            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700">
+              <p className="text-sm text-amber-800 dark:text-amber-300">
+                <strong>Note:</strong> You are not signed in. Changes will be stored locally in dev override mode.
+              </p>
+            </div>
+          )}
+
+          <div className="mb-4 p-3 bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-700">
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+              <strong>Current Status:</strong>
+            </p>
+            <div className="flex items-center space-x-4 text-sm">
+              <span className="text-gray-600 dark:text-gray-400">
+                Plan: <strong className={plan === 'paid' ? 'text-green-600' : 'text-blue-600'}>{plan.toUpperCase()}</strong>
+              </span>
+              {trialEndsAt && isTrialActive && (
+                <span className="text-gray-600 dark:text-gray-400">
+                  Trial: <strong className="text-amber-600">{trialDaysRemaining} days remaining</strong>
+                </span>
+              )}
+            </div>
+            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Source: {planSource === 'dev-override' ? 'Dev Override (localStorage)' : 'User Profile (database)'}
+            </div>
+          </div>
+
+          <p className="text-sm text-purple-800 dark:text-purple-300 mb-4">
+            {user ? 'Quickly switch between access levels for testing:' : 'Test different access levels without signing in:'}
+          </p>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input
-              type="text"
-              value={newCategory.name}
-              onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-              placeholder="Category name"
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <select
-              value={newCategory.type}
-              onChange={(e) => setNewCategory({ ...newCategory, type: e.target.value })}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {TYPES.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
             <button
-              onClick={addCategory}
-              disabled={!newCategory.name.trim()}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              onClick={async () => {
+                await devSetFreePlan();
+                window.location.reload();
+              }}
+              className="flex items-center justify-center px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all shadow-md hover:shadow-lg"
             >
-              <PlusCircle className="w-4 h-4 mr-2" />
-              Add
+              <Shield className="w-4 h-4 mr-2" />
+              Set FREE Plan
+            </button>
+
+            <button
+              onClick={async () => {
+                await devStartTrial();
+                window.location.reload();
+              }}
+              className="flex items-center justify-center px-4 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all shadow-md hover:shadow-lg"
+            >
+              <Crown className="w-4 h-4 mr-2" />
+              Start 7-Day Trial
+            </button>
+
+            <button
+              onClick={async () => {
+                await devSetPaidPlan();
+                window.location.reload();
+              }}
+              className="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg"
+            >
+              <Crown className="w-4 h-4 mr-2" />
+              Set PAID Plan
             </button>
           </div>
+
+          <p className="text-xs text-purple-700 dark:text-purple-400 mt-4 italic">
+            {user
+              ? 'These buttons update your user profile in the database.'
+              : 'These buttons store overrides in localStorage for testing without authentication.'}
+          </p>
         </div>
-        
-        {/* Category List */}
-        <div className="space-y-2">
-          {categories.map((category, index) => (
-            <CategoryRow
-              key={`${category.name}-${index}`}
-              category={category}
-              index={index}
-              isEditing={editingCategoryId === `${category.name}-${index}`}
-              onEdit={() => setEditingCategoryId(`${category.name}-${index}`)}
-              onSave={(updatedCategory) => updateCategory(index, updatedCategory)}
-              onCancel={() => setEditingCategoryId(null)}
-              onDelete={() => deleteCategory(index)}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Converters Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => setShowConverters(!showConverters)}
-            className="text-lg font-semibold text-gray-800 dark:text-white flex items-center hover:text-blue-600 transition-colors"
-          >
-            <Settings className="w-5 h-5 mr-2" />
-            Unit Converters
-            {showConverters ? <ChevronDown className="w-5 h-5 ml-2" /> : <ChevronRight className="w-5 h-5 ml-2" />}
-          </button>
-        </div>
-        
-        {showConverters && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-gray-600 dark:text-gray-400">Configure unit conversion factors</p>
-              <button
-                onClick={resetConverters}
-                className="text-sm bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center"
-              >
-                <Settings className="w-4 h-4 mr-1" />
-                Reset to Defaults
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {TYPES.map(type => (
-                <div key={type} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                  <h5 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center">
-                    {type === 'Time' && <Clock className="w-4 h-4 mr-2 text-blue-500" />}
-                    {type === 'Distance' && <MapPin className="w-4 h-4 mr-2 text-emerald-500" />}
-                    {type === 'Count' && <Hash className="w-4 h-4 mr-2 text-amber-500" />}
-                    {type}
-                  </h5>
-                  <div className="space-y-2">
-                    {converters
-                      .filter(c => c.type === type)
-                      .map(converter => (
-                        <div key={converter.unit} className="flex justify-between items-center text-sm bg-white dark:bg-gray-800 rounded px-3 py-2 border border-gray-100 dark:border-gray-600">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">{converter.unit}</span>
-                          <span className="text-gray-500 dark:text-gray-400">
-                            {converter.factorToBase}× {converter.baseUnit}
-                          </span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-interface CategoryRowProps {
-  category: Category;
-  index: number;
-  isEditing: boolean;
-  onEdit: () => void;
-  onSave: (category: Category) => void;
-  onCancel: () => void;
-  onDelete: () => void;
-}
-
-function CategoryRow({ category, index, isEditing, onEdit, onSave, onCancel, onDelete }: CategoryRowProps) {
-  const [editName, setEditName] = useState(category.name);
-  const [editType, setEditType] = useState(category.type);
-  const [editDisplayUnit, setEditDisplayUnit] = useState(category.displayUnit);
-
-  const handleSave = () => {
-    if (!editName.trim()) return;
-    onSave({
-      name: editName.trim(),
-      type: editType,
-      displayUnit: editDisplayUnit
-    });
-  };
-
-  if (isEditing) {
-    return (
-      <div className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
-        <input
-          type="text"
-          value={editName}
-          onChange={(e) => setEditName(e.target.value)}
-          className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-        <select
-          value={editType}
-          onChange={(e) => setEditType(e.target.value)}
-          className="px-2 py-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          {TYPES.map(type => (
-            <option key={type} value={type}>{type}</option>
-          ))}
-        </select>
-        <button
-          onClick={handleSave}
-          className="p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
-        >
-          <Save className="w-4 h-4" />
-        </button>
-        <button
-          onClick={onCancel}
-          className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center justify-between p-3 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-      <div className="flex-1">
-        <span className="font-medium text-gray-800 dark:text-white">{category.name}</span>
-        <span className="ml-3 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md">
-          {category.type}
-        </span>
-      </div>
-      <div className="flex space-x-2">
-        <button
-          onClick={onEdit}
-          className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-        >
-          <Edit3 className="w-4 h-4" />
-        </button>
-        <button
-          onClick={onDelete}
-          className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
+      )}
     </div>
   );
 }

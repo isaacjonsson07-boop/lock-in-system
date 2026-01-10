@@ -47,6 +47,59 @@ export interface Goal {
   createdAt: string;
   completed: boolean;
   completedAt?: string;
+  goalType?: 'task' | 'time' | 'distance';
+  duration?: string;
+  distance?: string;
 }
 
-export type TabType = 'log' | 'stats' | 'tasks' | 'settings' | 'help';
+export interface JournalEntry {
+  id: string;
+  dayNumber: number;
+  title: string;
+  content: string;
+  answers?: { [key: string]: string }; // For structured journal entries with multiple questions
+  lastModified: string;
+  userId?: string;
+}
+
+export type TabType = 'log' | 'stats' | 'tasks' | 'journaling' | 'settings' | 'help';
+
+export interface ScheduleItem {
+  id: string;
+  day: string; // 'monday', 'tuesday', etc.
+  time: string; // '09:00'
+  title: string;
+  description?: string;
+  targetNumber?: number; // For task-based items, how many times to complete
+  duration?: string; // For time-based tasks like "30min", "1h 30m"
+  distance?: string; // For distance-based tasks like "5km", "3 miles"
+  linkedGoalId?: string; // Link to a Goal ID to auto-update progress
+  completed: boolean; // This will track completion for the current week
+  completedDates: string[]; // Track which specific dates this was completed
+  completedCounts?: { [date: string]: number }; // Track how many times completed on each date
+  createdAt: string;
+}
+
+export interface Habit {
+  id: string;
+  user_id: string;
+  name: string;
+  target_number: number;
+  days_of_week: number[]; // 0=Sunday, 1=Monday, 2=Tuesday, etc.
+  time: string;
+  description?: string;
+  duration?: string;
+  distance?: string;
+  linked_goal_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HabitCompletion {
+  id: string;
+  habit_id: string;
+  user_id: string;
+  completion_date: string;
+  completed_number: number;
+  created_at: string;
+}

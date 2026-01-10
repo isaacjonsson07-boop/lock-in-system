@@ -1,16 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { CheckSquare, Plus, Trash2, Check, Square, Calendar, Target, Clock, BookOpen as Edit3, Save, X } from 'lucide-react';
-import { Task, ScheduleItem } from '../types';
+import { Calendar, Plus, Trash2, BookOpen as Edit3, Save, X } from 'lucide-react';
+import { ScheduleItem, Goal } from '../types';
 import { fmtDateISO, uid } from '../utils/dateUtils';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { QuickGuide } from './QuickGuide';
 
-interface TasksViewProps {
-  tasks: Task[];
+interface WeeklyScheduleViewProps {
   scheduleItems: ScheduleItem[];
-  onAddTask: (task: Task) => void;
-  onUpdateTask: (task: Task) => void;
-  onDeleteTask: (id: string) => void;
+  goals: Goal[];
   onAddScheduleItem: (item: ScheduleItem) => void;
   onUpdateScheduleItem: (item: ScheduleItem) => void;
   onDeleteScheduleItem: (id: string) => void;
@@ -26,18 +23,13 @@ const DAYS = [
   { key: 'sunday', label: 'Sunday' }
 ];
 
-export function TasksView({ 
-  tasks, 
-  scheduleItems, 
-  onAddTask, 
-  onUpdateTask, 
-  onDeleteTask,
+export function WeeklyScheduleView({
+  scheduleItems,
+  goals,
   onAddScheduleItem,
   onUpdateScheduleItem,
   onDeleteScheduleItem
-}: TasksViewProps) {
-  const [currentSlide, setCurrentSlide] = useState<'today' | 'weekly'>('today');
-  const [selectedDayForToday, setSelectedDayForToday] = useState(getCurrentDay());
+}: WeeklyScheduleViewProps) {
   const [selectedDay, setSelectedDay] = useState('monday');
   const [showAddScheduleForm, setShowAddScheduleForm] = useState(false);
   const [editingScheduleItem, setEditingScheduleItem] = useState<ScheduleItem | null>(null);
@@ -45,7 +37,11 @@ export function TasksView({
   const [newScheduleItem, setNewScheduleItem] = useState({
     time: '09:00',
     title: '',
-    description: ''
+    description: '',
+    linkedGoalId: '',
+    targetNumber: '',
+    duration: '',
+    distance: ''
   });
   
   const today = fmtDateISO(new Date());
@@ -59,35 +55,6 @@ export function TasksView({
     return dayMap[adjustedIndex];
   }
 
-  const currentDay = selectedDayForToday;
-
-  // Navigation functions for day switching
-  const goToPreviousDay = () => {
-    const currentIndex = DAYS.findIndex(day => day.key === selectedDayForToday);
-    const previousIndex = currentIndex === 0 ? DAYS.length - 1 : currentIndex - 1;
-    setSelectedDayForToday(DAYS[previousIndex].key);
-  };
-
-  const goToNextDay = () => {
-    const currentIndex = DAYS.findIndex(day => day.key === selectedDayForToday);
-    const nextIndex = currentIndex === DAYS.length - 1 ? 0 : currentIndex + 1;
-    setSelectedDayForToday(DAYS[nextIndex].key);
-  };
-
-  const goToToday = () => {
-    setSelectedDayForToday(getCurrentDay());
-  };
-  // Get today's tasks from the weekly schedule
-  const todaysTasks = useMemo(() => {
-    return scheduleItems
-      .filter(item => item.day === currentDay)
-      .map(item => ({
-        ...item,
-        completed: item.completedDates.includes(today)
-      }))
-      .sort((a, b) => a.time.localeCompare(b.time));
-  }, [scheduleItems, currentDay, today]);
-
   // Group schedule items by day for weekly view
   const itemsByDay = useMemo(() => {
     const grouped: { [key: string]: ScheduleItem[] } = {};
@@ -99,15 +66,6 @@ export function TasksView({
     return grouped;
   }, [scheduleItems]);
 
-  // Calculate completion stats for today's tasks
-  const todayStats = useMemo(() => {
-    const total = todaysTasks.length;
-    const completed = todaysTasks.filter(task => task.completed).length;
-    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-    
-    return { total, completed, percentage };
-  }, [todaysTasks]);
-
   // Calculate weekly schedule stats
   const weeklyStats = useMemo(() => {
     const totalItems = scheduleItems.length;
@@ -116,24 +74,6 @@ export function TasksView({
     
     return { total: totalItems, completed: completedItems, percentage: completionRate };
   }, [scheduleItems, today]);
-
-  const handleToggleTodayTask = (item: ScheduleItem) => {
-    const isCompletedToday = item.completedDates.includes(today);
-    let newCompletedDates;
-    
-    if (isCompletedToday) {
-      // Remove today from completed dates
-      newCompletedDates = item.completedDates.filter(date => date !== today);
-    } else {
-      // Add today to completed dates
-      newCompletedDates = [...item.completedDates, today];
-    }
-    
-    onUpdateScheduleItem({ 
-      ...item, 
-      completedDates: newCompletedDates
-    });
-  };
 
   const handleAddScheduleItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,6 +85,10 @@ export function TasksView({
       time: newScheduleItem.time,
       title: newScheduleItem.title.trim(),
       description: newScheduleItem.description.trim() || undefined,
+      linkedGoalId: newScheduleItem.linkedGoalId || undefined,
+      targetNumber: newScheduleItem.targetNumber ? parseInt(newScheduleItem.targetNumber) : undefined,
+      duration: newScheduleItem.duration.trim() || undefined,
+      distance: newScheduleItem.distance.trim() || undefined,
       completed: false,
       completedDates: [],
       completedCounts: {},
@@ -152,7 +96,7 @@ export function TasksView({
     };
 
     onAddScheduleItem(item);
-    setNewScheduleItem({ time: '09:00', title: '', description: '' });
+    setNewScheduleItem({ time: '09:00', title: '', description: '', linkedGoalId: '', targetNumber: '', duration: '', distance: '' });
     setShowAddScheduleForm(false);
   };
 
@@ -161,7 +105,11 @@ export function TasksView({
     setNewScheduleItem({
       time: item.time,
       title: item.title,
-      description: item.description || ''
+      description: item.description || '',
+      linkedGoalId: item.linkedGoalId || '',
+      targetNumber: item.targetNumber?.toString() || '',
+      duration: item.duration || '',
+      distance: item.distance || ''
     });
     setSelectedDay(item.day);
     setShowAddScheduleForm(true);
@@ -176,12 +124,16 @@ export function TasksView({
       day: selectedDay,
       time: newScheduleItem.time,
       title: newScheduleItem.title.trim(),
-      description: newScheduleItem.description.trim() || undefined
+      description: newScheduleItem.description.trim() || undefined,
+      linkedGoalId: newScheduleItem.linkedGoalId || undefined,
+      targetNumber: newScheduleItem.targetNumber ? parseInt(newScheduleItem.targetNumber) : undefined,
+      duration: newScheduleItem.duration.trim() || undefined,
+      distance: newScheduleItem.distance.trim() || undefined
     };
 
     onUpdateScheduleItem(updatedItem);
     setEditingScheduleItem(null);
-    setNewScheduleItem({ time: '09:00', title: '', description: '' });
+    setNewScheduleItem({ time: '09:00', title: '', description: '', linkedGoalId: '', targetNumber: '', duration: '', distance: '' });
     setShowAddScheduleForm(false);
   };
 
@@ -191,9 +143,11 @@ export function TasksView({
 
   const handleCancelScheduleEdit = () => {
     setEditingScheduleItem(null);
-    setNewScheduleItem({ time: '09:00', title: '', description: '' });
+    setNewScheduleItem({ time: '09:00', title: '', description: '', linkedGoalId: '', targetNumber: '', duration: '', distance: '' });
     setShowAddScheduleForm(false);
   };
+
+  const currentDay = getCurrentDay();
 
   return (
     <div className="space-y-6">
@@ -235,7 +189,7 @@ export function TasksView({
             </h4>
             
             <form onSubmit={editingScheduleItem ? handleUpdateScheduleItem : handleAddScheduleItem} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time</label>
                   <input
@@ -253,7 +207,7 @@ export function TasksView({
                     type="text"
                     value={newScheduleItem.title}
                     onChange={(e) => setNewScheduleItem({ ...newScheduleItem, title: e.target.value })}
-                    placeholder="e.g., Morning workout, Team meeting, Grocery shopping"
+                    placeholder="e.g., Morning workout, Team meeting"
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
@@ -284,6 +238,59 @@ export function TasksView({
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Link to Goal (optional)</label>
+                  <select
+                    value={newScheduleItem.linkedGoalId}
+                    onChange={(e) => setNewScheduleItem({ ...newScheduleItem, linkedGoalId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">No Goal</option>
+                    {goals.map(goal => (
+                      <option key={goal.id} value={goal.id}>
+                        {goal.title} ({goal.currentAmount}/{goal.targetAmount} {goal.unit})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Count/Reps (optional)</label>
+                  <input
+                    type="number"
+                    value={newScheduleItem.targetNumber}
+                    onChange={(e) => setNewScheduleItem({ ...newScheduleItem, targetNumber: e.target.value })}
+                    placeholder="e.g., 5 for 5 games"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration (optional)</label>
+                  <input
+                    type="text"
+                    value={newScheduleItem.duration}
+                    onChange={(e) => setNewScheduleItem({ ...newScheduleItem, duration: e.target.value })}
+                    placeholder="e.g., 30min, 1h 30m"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Distance (optional)</label>
+                  <input
+                    type="text"
+                    value={newScheduleItem.distance}
+                    onChange={(e) => setNewScheduleItem({ ...newScheduleItem, distance: e.target.value })}
+                    placeholder="e.g., 5km, 3 miles"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
               <div className="flex space-x-3">
                 <button
                   type="submit"
@@ -309,11 +316,7 @@ export function TasksView({
         {/* All Days Schedule Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
           {DAYS.map(day => (
-            <div key={day.key} className={`bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border-2 transition-all ${
-              day.key === currentDay 
-                ? 'border-green-300 dark:border-green-600 bg-green-50 dark:bg-green-900' 
-                : 'border-gray-200 dark:border-gray-600'
-            }`}>
+            <div key={day.key} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border-2 transition-all border-gray-200 dark:border-gray-600">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-semibold text-gray-800 dark:text-white text-sm">
                   {day.label}
@@ -383,8 +386,8 @@ export function TasksView({
         <QuickGuide
           title="Quick Guide"
           tips={[
-            'Add tasks to specific days with scheduled times',
-            'View all tasks across your week in one place',
+            'Schedule tasks for specific days and times',
+            'View and manage your entire week at a glance',
             'Switch to "Today\'s Tasks" for daily focus'
           ]}
         />
