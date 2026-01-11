@@ -97,7 +97,8 @@ export const handler: Handler = async (event) => {
   console.log("[Whop Webhook] Signature verified");
 
   const payload = JSON.parse(rawBody);
-  console.log("[Whop Webhook] Event type:// --- AUTO-UPGRADE USER PLAN IN SUPABASE ---
+console.log("[Whop Webhook] Event type:", payload.type || payload.event_type);
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -105,9 +106,6 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.log("[Whop Webhook] Supabase env vars missing, skipping plan update");
   return { statusCode: 200, body: "ok" };
 }
-
-const payload = JSON.parse(rawBody);
-const eventType = payload.type || payload.event_type;
 
 // Try to pull an email from common locations in the payload
 const email =
