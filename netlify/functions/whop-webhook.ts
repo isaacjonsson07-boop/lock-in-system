@@ -97,10 +97,51 @@ export const handler: Handler = async (event) => {
   console.log("[Whop Webhook] Signature verified");
 
   const payload = JSON.parse(rawBody);
-  console.log("[Whop Webhook] Event type:", payload.type || payload.event_type);
+  console.log("[Whop Webhook] Event type:// --- AUTO-UPGRADE USER PLAN IN SUPABASE ---
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  return {
-    statusCode: 200,
-    body: "ok",
-  };
-};
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.log("[Whop Webhook] Supabase env vars missing, skipping plan update");
+  return { statusCode: 200, body: "ok" };
+}
+
+const payload = JSON.parse(rawBody);
+const eventType = payload.type || payload.event_type;
+
+// Try to pull an email from common locations in the payload
+const email =
+  payload?.data?.user?.email ||
+  payload?.data?.customer?.email ||
+  payload?.data?.email ||
+  payload?.user?.email ||
+  payload?.customer?.email;
+
+if (!email) {
+  console.log("[Whop Webhook] No email in payload, skipping plan update");
+  return { statusCode: 200, body: "ok" };
+}
+
+let plan: "free" | "paid" = "free";
+if (eventType === "membership.activated" || eventType === "invoice.paid") plan = "paid";
+if (eventType === "membership.deactivated" || eventType === "membership.canceled") plan = "free";
+
+console.log("[Whop Webhook] Updating plan", { email, plan, eventType });
+
+await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?email=eq.${encodeURIComponent(email)}`, {
+  method: "PATCH",
+  headers: {
+    apikey: SUPABASE_SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+    "Content-Type": "application/json",
+    Prefer: "return=representation",
+  },
+  body: JSON.stringify({
+    plan,
+    trial_ends_at: null,
+    updated_at: new Date().toISOString(),
+  }),
+});
+
+return { statusCode: 200, body: "ok" };
+
