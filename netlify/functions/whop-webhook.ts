@@ -97,6 +97,7 @@ export const handler: Handler = async (event) => {
   console.log("[Whop Webhook] Signature verified");
 
   const payload = JSON.parse(rawBody);
+  const eventType = payload.type || payload.event_type;
 console.log("[Whop Webhook] FULL PAYLOAD:", JSON.stringify(payload));
 console.log("[Whop Webhook] Event type:", payload.type || payload.event_type);
 
