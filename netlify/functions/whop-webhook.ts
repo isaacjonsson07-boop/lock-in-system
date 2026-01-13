@@ -109,12 +109,14 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 }
 
 // Try to pull an email from common locations in the payload
-const email =
-  payload?.data?.user?.email ||
-  payload?.data?.customer?.email ||
-  payload?.data?.email ||
-  payload?.user?.email ||
-  payload?.customer?.email;
+const whopUserId =
+  payload?.data?.user?.id ||
+  payload?.user?.id;
+
+if (!whopUserId) {
+  console.log("[Whop Webhook] No Whop user id in payload, skipping update");
+  return { statusCode: 200, body: "ok" };
+}
 
 if (!email) {
   console.log("[Whop Webhook] No email in payload, skipping plan update");
@@ -127,20 +129,22 @@ if (eventType === "membership.deactivated" || eventType === "membership.canceled
 
 console.log("[Whop Webhook] Updating plan", { email, plan, eventType });
 
-await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?email=eq.${encodeURIComponent(email)}`, {
-  method: "PATCH",
-  headers: {
-    apikey: SUPABASE_SERVICE_ROLE_KEY,
-    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-    "Content-Type": "application/json",
-    Prefer: "return=representation",
-  },
-  body: JSON.stringify({
-    plan,
-    trial_ends_at: null,
-    updated_at: new Date().toISOString(),
-  }),
-});
+await fetch(
+  `${SUPABASE_URL}/rest/v1/user_data?whop_user_id=eq.${encodeURIComponent(whopUserId)}`,
+  {
+    method: "PATCH",
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify({
+      updated_at: new Date().toISOString(),
+    }),
+  }
+);
+
 
 return { statusCode: 200, body: "ok" };
 };
