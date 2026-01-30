@@ -4,8 +4,8 @@ import { X, Mail, Lock, User, AlertCircle } from 'lucide-react'
 interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
-  onSignIn: (email: string, password: string) => Promise<{ error: any }>
-  onSignUp: (email: string, password: string) => Promise<{ error: any }>
+  onSignIn: (email: string, password: string) => Promise<{ data?: any; error: any }>
+  onSignUp: (email: string, password: string) => Promise<{ data?: any; error: any }>
 }
 
 export function AuthModal({ isOpen, onClose, onSignIn, onSignUp }: AuthModalProps) {
@@ -23,19 +23,29 @@ const handleSubmit = async (e: React.FormEvent) => {
   setError('')
 
     try {
-      const { error } = isSignUp 
+      const result = isSignUp
         ? await onSignUp(email, password)
         : await onSignIn(email, password)
 
-      if (error) {
-        setError(error.message)
+      if (result.error) {
+        if (result.error.message === 'Invalid login credentials') {
+          setError('Invalid email or password. Please check your credentials or sign up if you don\'t have an account.')
+        } else if (result.error.message.includes('Email not confirmed')) {
+          setError('Please check your email and confirm your account before signing in.')
+        } else {
+          setError(result.error.message)
+        }
       } else {
-        onClose()
-        // Reset form after successful auth
-        resetForm()
+        if (isSignUp && result.data?.user && !result.data?.session) {
+          setError('Please check your email to confirm your account before signing in.')
+        } else {
+          onClose()
+          resetForm()
+        }
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      console.error('Auth error:', err)
+      setError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }

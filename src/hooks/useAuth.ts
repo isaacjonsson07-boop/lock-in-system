@@ -98,6 +98,15 @@ export function useAuth() {
         data: {}
       }
     })
+
+    if (error) {
+      console.error('Sign up error:', error)
+    }
+
+    if (!error && data.user) {
+      console.log('User created successfully:', data.user.id)
+    }
+
     return { data, error }
   }
 
@@ -109,13 +118,18 @@ export function useAuth() {
     password,
   })
 
+  if (error) {
+    console.error('Sign in error:', error)
+  }
+
   if (!error && data.session) {
     setSession(data.session)
     setUser(data.session.user)
+    await loadUserPlan(data.session.user.id)
   }
 
   setLoading(false)
-  return { error }
+  return { data, error }
 }
 
   const signOut = async () => {
