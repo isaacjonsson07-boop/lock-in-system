@@ -2,7 +2,7 @@ import { Category, Converter } from './types';
 
 export const STORAGE_KEY = "dj_pro_v3";
 
-export const WHOP_PAID_URL = "https://whop.com/checkout/plan_ASRqZCVTJ0eJe";
+export const WHOP_PAID_URL = "https://whop.com/checkout/plan_2XmKrYfV9RrsB";
 export const WHOP_TRIAL_URL = "https://whop.com/checkout/plan_Wwet4zcOCzriu";
 
 export const openWhopPaid = () => {
