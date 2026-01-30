@@ -52,14 +52,14 @@ export function Navigation({
 
             <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white whitespace-nowrap">Daily Achievement Tracker</h1>
 
-            <nav className="hidden md:flex space-x-1 lg:space-x-4 overflow-hidden">
+            <nav className="hidden md:flex space-x-0.5 lg:space-x-2 overflow-hidden">
               {tabs.map(tab => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => onTabChange(tab.id)}
-                    className={`px-2 lg:px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 whitespace-nowrap ${
+                    className={`px-1.5 lg:px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-1.5 whitespace-nowrap ${
                       currentTab === tab.id
                         ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
                         : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
