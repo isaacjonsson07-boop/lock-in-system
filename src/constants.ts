@@ -10,7 +10,7 @@ export const openWhopPaid = () => {
 };
 
 export const openWhopTrial = () => {
-  window.open(WHOP_TRIAL_URL, "_top");
+  window.open(WHOP_TRIAL_URL, "_blank");
 };
 
 export const DEFAULT_CONVERTERS: Converter[] = [
