@@ -47,19 +47,19 @@ export function Navigation({
     <div className="bg-white dark:bg-gray-800 shadow-md border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Navigation */}
-        <div className="flex items-center h-16 justify-between">
-          <div className="flex items-center gap-4 lg:gap-10 min-w-0">
+        <div className="flex items-center h-16 justify-between gap-4">
+          <div className="flex items-center gap-2 lg:gap-10 min-w-0 overflow-hidden">
 
-            <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white whitespace-nowrap flex-shrink-0">Daily Achievement Tracker</h1>
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white whitespace-nowrap">Daily Achievement Tracker</h1>
 
-            <nav className="hidden md:flex space-x-2 lg:space-x-4 flex-shrink-0">
+            <nav className="hidden md:flex space-x-1 lg:space-x-4 overflow-hidden">
               {tabs.map(tab => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => onTabChange(tab.id)}
-                    className={`px-3 lg:px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 whitespace-nowrap ${
+                    className={`px-2 lg:px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 whitespace-nowrap ${
                       currentTab === tab.id
                         ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
                         : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -72,9 +72,9 @@ export function Navigation({
               })}
             </nav>
           </div>
-          
+
           {/* Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-shrink-0">
             {user ? (
               <div className="hidden sm:flex items-center gap-3">
                 {/* Plan Badge */}
