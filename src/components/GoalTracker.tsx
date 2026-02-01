@@ -105,7 +105,16 @@ export function GoalTracker({
 
   const handleAddGoal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newGoal.title.trim() || !newGoal.targetAmount) return;
+
+    if (!newGoal.title.trim()) {
+      alert('Please enter a goal title.');
+      return;
+    }
+
+    if (!newGoal.targetAmount) {
+      alert('Please enter a target amount.');
+      return;
+    }
 
     const category = categories.find(c => c.name === newGoal.category);
     const categoryType = category?.type || 'Time';
@@ -177,7 +186,18 @@ export function GoalTracker({
 
   const handleUpdateGoal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingGoal || !newGoal.title.trim() || !newGoal.targetAmount) return;
+
+    if (!editingGoal) return;
+
+    if (!newGoal.title.trim()) {
+      alert('Please enter a goal title.');
+      return;
+    }
+
+    if (!newGoal.targetAmount) {
+      alert('Please enter a target amount.');
+      return;
+    }
 
     const category = categories.find(c => c.name === newGoal.category);
     const categoryType = category?.type || 'Time';
@@ -380,7 +400,7 @@ export function GoalTracker({
         </div>
 
         {showAddForm && (
-          <form onSubmit={editingGoal ? handleUpdateGoal : handleAddGoal} className="space-y-4 border-t pt-4">
+          <form onSubmit={editingGoal ? handleUpdateGoal : handleAddGoal} noValidate className="space-y-4 border-t pt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Goal Title</label>
