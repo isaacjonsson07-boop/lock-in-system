@@ -48,6 +48,17 @@ export function GoalTracker({
     return new Date(targetDate) < new Date();
   };
 
+  const getDaysUntil = (targetDate: string): number => {
+    if (!targetDate) return 0;
+    const target = new Date(targetDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    target.setHours(0, 0, 0, 0);
+    const diffTime = target.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   // Calculate current progress for each goal based on entries or task/habit completions
   const goalsWithProgress = useMemo(() => {
     return goals.map(goal => {
@@ -531,8 +542,14 @@ export function GoalTracker({
                         {goal.targetDate ? (
                           <>
                             {new Date(goal.targetDate).toLocaleDateString()}
-                            {isOverdue(goal.targetDate) && (
-                              <span className="ml-2 text-red-500 font-medium">Overdue</span>
+                            {isOverdue(goal.targetDate) ? (
+                              <span className="ml-2 text-red-500 font-medium">
+                                Overdue ({Math.abs(getDaysUntil(goal.targetDate))} days ago)
+                              </span>
+                            ) : (
+                              <span className="ml-2 text-blue-600 dark:text-blue-400 font-medium">
+                                ({getDaysUntil(goal.targetDate)} days left)
+                              </span>
                             )}
                           </>
                         ) : (
