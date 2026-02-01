@@ -461,6 +461,22 @@ export function GoalTracker({
                   onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {[7, 14, 30, 60, 90].map(days => (
+                    <button
+                      key={days}
+                      type="button"
+                      onClick={() => {
+                        const date = new Date();
+                        date.setDate(date.getDate() + days);
+                        setNewGoal({ ...newGoal, targetDate: date.toISOString().split('T')[0] });
+                      }}
+                      className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                    >
+                      +{days} days
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
