@@ -1635,15 +1635,17 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                     <span className="text-gray-600 dark:text-gray-400">Avg/Day:</span>
                     <span className="font-medium text-gray-800 dark:text-white">{stat.formattedAvgPerDay}</span>
                   </div>
-                  {stat.currentStreak > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Current Streak:</span>
-                      <span className="font-medium text-green-600">{stat.currentStreak} {stat.currentStreak === 1 ? 'day' : 'days'}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Current Streak:</span>
+                    <span className={`font-medium ${stat.currentStreak > 0 ? 'text-green-600' : 'text-gray-400 dark:text-gray-500'}`}>
+                      {stat.currentStreak > 0 ? `${stat.currentStreak} ${stat.currentStreak === 1 ? 'day' : 'days'}` : '—'}
+                    </span>
+                  </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Best Streak:</span>
-                    <span className="font-medium text-blue-600">{stat.bestStreak} {stat.bestStreak === 1 ? 'day' : 'days'}</span>
+                    <span className={`font-medium ${stat.bestStreak > 0 ? 'text-blue-600' : 'text-gray-400 dark:text-gray-500'}`}>
+                      {stat.bestStreak > 0 ? `${stat.bestStreak} ${stat.bestStreak === 1 ? 'day' : 'days'}` : '—'}
+                    </span>
                   </div>
                   {stat.activityRecord > 0 && (
                     <div className="flex justify-between">
