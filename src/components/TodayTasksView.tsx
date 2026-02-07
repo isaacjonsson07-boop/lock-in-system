@@ -444,6 +444,18 @@ export function TodayTasksView({
       return;
     }
 
+    let validatedLinkedGoalId = newScheduleItem.linkedGoalId;
+    if (newScheduleItem.linkedGoalId) {
+      const linkedGoal = goals.find(g => g.id === newScheduleItem.linkedGoalId);
+      if (!linkedGoal) {
+        alert('The selected goal no longer exists. Please select a different goal or leave it unlinked.');
+        return;
+      } else if (linkedGoal.goalType !== newScheduleItem.type) {
+        alert('The selected goal type does not match this task type. Please select a matching goal or leave it unlinked.');
+        return;
+      }
+    }
+
     const item: ScheduleItem = {
       id: uid(),
       day: currentDay,
@@ -453,7 +465,7 @@ export function TodayTasksView({
       targetNumber: newScheduleItem.type === 'task' ? parseInt(newScheduleItem.targetNumber) : undefined,
       duration: newScheduleItem.type === 'time' ? newScheduleItem.duration.trim() : undefined,
       distance: newScheduleItem.type === 'distance' ? newScheduleItem.distance.trim() : undefined,
-      linkedGoalId: newScheduleItem.linkedGoalId || undefined,
+      linkedGoalId: validatedLinkedGoalId || undefined,
       completed: false,
       completedDates: [],
       completedCounts: {},
@@ -500,6 +512,18 @@ export function TodayTasksView({
       return;
     }
 
+    let validatedLinkedGoalId = newScheduleItem.linkedGoalId;
+    if (newScheduleItem.linkedGoalId) {
+      const linkedGoal = goals.find(g => g.id === newScheduleItem.linkedGoalId);
+      if (!linkedGoal) {
+        alert('The selected goal no longer exists. Please select a different goal or leave it unlinked.');
+        return;
+      } else if (linkedGoal.goalType !== newScheduleItem.type) {
+        alert('The selected goal type does not match this task type. Please select a matching goal or leave it unlinked.');
+        return;
+      }
+    }
+
     const updatedItem: ScheduleItem = {
       ...editingScheduleItem,
       day: currentDay,
@@ -509,7 +533,7 @@ export function TodayTasksView({
       targetNumber: newScheduleItem.type === 'task' ? parseInt(newScheduleItem.targetNumber) : undefined,
       duration: newScheduleItem.type === 'time' ? newScheduleItem.duration.trim() : undefined,
       distance: newScheduleItem.type === 'distance' ? newScheduleItem.distance.trim() : undefined,
-      linkedGoalId: newScheduleItem.linkedGoalId || undefined
+      linkedGoalId: validatedLinkedGoalId || undefined
     };
 
     onUpdateScheduleItem(updatedItem);
@@ -561,7 +585,12 @@ export function TodayTasksView({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit</label>
             <select
               value={newScheduleItem.type}
-              onChange={(e) => setNewScheduleItem({ ...newScheduleItem, type: e.target.value as 'task' | 'time' | 'distance' })}
+              onChange={(e) => {
+                const newType = e.target.value as 'task' | 'time' | 'distance';
+                const linkedGoal = goals.find(g => g.id === newScheduleItem.linkedGoalId);
+                const newLinkedGoalId = linkedGoal && linkedGoal.goalType === newType ? newScheduleItem.linkedGoalId : '';
+                setNewScheduleItem({ ...newScheduleItem, type: newType, linkedGoalId: newLinkedGoalId });
+              }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="task">Task</option>
@@ -637,7 +666,7 @@ export function TodayTasksView({
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">No linked goal</option>
-            {goals.filter(g => !g.completed).map(goal => (
+            {goals.filter(g => !g.completed && g.goalType === newScheduleItem.type).map(goal => (
               <option key={goal.id} value={goal.id}>
                 {goal.title} ({goal.currentAmount}/{goal.targetAmount} {goal.unit})
               </option>

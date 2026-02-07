@@ -79,13 +79,28 @@ export function WeeklyScheduleView({
     e.preventDefault();
     if (!newScheduleItem.title.trim()) return;
 
+    let validatedLinkedGoalId = newScheduleItem.linkedGoalId;
+    if (newScheduleItem.linkedGoalId) {
+      const linkedGoal = goals.find(g => g.id === newScheduleItem.linkedGoalId);
+      if (!linkedGoal) {
+        alert('The selected goal no longer exists. Please select a different goal or leave it unlinked.');
+        return;
+      }
+
+      const taskType = newScheduleItem.duration ? 'time' : newScheduleItem.distance ? 'distance' : 'task';
+      if (linkedGoal.goalType !== taskType) {
+        alert('The selected goal type does not match this task type. Please select a matching goal or leave it unlinked.');
+        return;
+      }
+    }
+
     const item: ScheduleItem = {
       id: uid(),
       day: selectedDay,
       time: newScheduleItem.time,
       title: newScheduleItem.title.trim(),
       description: newScheduleItem.description.trim() || undefined,
-      linkedGoalId: newScheduleItem.linkedGoalId || undefined,
+      linkedGoalId: validatedLinkedGoalId || undefined,
       targetNumber: newScheduleItem.targetNumber ? parseInt(newScheduleItem.targetNumber) : undefined,
       duration: newScheduleItem.duration.trim() || undefined,
       distance: newScheduleItem.distance.trim() || undefined,
@@ -119,13 +134,28 @@ export function WeeklyScheduleView({
     e.preventDefault();
     if (!editingScheduleItem || !newScheduleItem.title.trim()) return;
 
+    let validatedLinkedGoalId = newScheduleItem.linkedGoalId;
+    if (newScheduleItem.linkedGoalId) {
+      const linkedGoal = goals.find(g => g.id === newScheduleItem.linkedGoalId);
+      if (!linkedGoal) {
+        alert('The selected goal no longer exists. Please select a different goal or leave it unlinked.');
+        return;
+      }
+
+      const taskType = newScheduleItem.duration ? 'time' : newScheduleItem.distance ? 'distance' : 'task';
+      if (linkedGoal.goalType !== taskType) {
+        alert('The selected goal type does not match this task type. Please select a matching goal or leave it unlinked.');
+        return;
+      }
+    }
+
     const updatedItem: ScheduleItem = {
       ...editingScheduleItem,
       day: selectedDay,
       time: newScheduleItem.time,
       title: newScheduleItem.title.trim(),
       description: newScheduleItem.description.trim() || undefined,
-      linkedGoalId: newScheduleItem.linkedGoalId || undefined,
+      linkedGoalId: validatedLinkedGoalId || undefined,
       targetNumber: newScheduleItem.targetNumber ? parseInt(newScheduleItem.targetNumber) : undefined,
       duration: newScheduleItem.duration.trim() || undefined,
       distance: newScheduleItem.distance.trim() || undefined
@@ -247,7 +277,12 @@ export function WeeklyScheduleView({
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">No Goal</option>
-                    {goals.map(goal => (
+                    {goals.filter(goal => {
+                      if (newScheduleItem.duration) return goal.goalType === 'time';
+                      if (newScheduleItem.distance) return goal.goalType === 'distance';
+                      if (newScheduleItem.targetNumber) return goal.goalType === 'task';
+                      return true;
+                    }).map(goal => (
                       <option key={goal.id} value={goal.id}>
                         {goal.title} ({goal.currentAmount}/{goal.targetAmount} {goal.unit})
                       </option>

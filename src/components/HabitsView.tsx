@@ -87,10 +87,14 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
 
     let validatedLinkedGoalId = formData.linkedGoalId;
     if (formData.linkedGoalId) {
-      const goalExists = goals.find(g => g.id === formData.linkedGoalId);
-      if (!goalExists) {
+      const linkedGoal = goals.find(g => g.id === formData.linkedGoalId);
+      if (!linkedGoal) {
         console.warn('⚠️ Selected goal not found. Clearing linked goal.');
         alert('The selected goal no longer exists. Please select a different goal or leave it unlinked.');
+        validatedLinkedGoalId = '';
+      } else if (linkedGoal.goalType !== formData.type) {
+        console.warn('⚠️ Goal type mismatch. Clearing linked goal.');
+        alert('The selected goal type does not match this habit type. Please select a matching goal or leave it unlinked.');
         validatedLinkedGoalId = '';
       }
     }
@@ -177,10 +181,14 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
 
     let validatedLinkedGoalId = formData.linkedGoalId;
     if (formData.linkedGoalId) {
-      const goalExists = goals.find(g => g.id === formData.linkedGoalId);
-      if (!goalExists) {
+      const linkedGoal = goals.find(g => g.id === formData.linkedGoalId);
+      if (!linkedGoal) {
         console.warn('⚠️ Selected goal not found. Clearing linked goal.');
         alert('The selected goal no longer exists. Please select a different goal or leave it unlinked.');
+        validatedLinkedGoalId = '';
+      } else if (linkedGoal.goalType !== formData.type) {
+        console.warn('⚠️ Goal type mismatch. Clearing linked goal.');
+        alert('The selected goal type does not match this habit type. Please select a matching goal or leave it unlinked.');
         validatedLinkedGoalId = '';
       }
     }
@@ -396,7 +404,12 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit</label>
               <select
                 value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value as 'task' | 'time' | 'distance' })}
+                onChange={(e) => {
+                  const newType = e.target.value as 'task' | 'time' | 'distance';
+                  const linkedGoal = goals.find(g => g.id === formData.linkedGoalId);
+                  const newLinkedGoalId = linkedGoal && linkedGoal.goalType === newType ? formData.linkedGoalId : '';
+                  setFormData({ ...formData, type: newType, linkedGoalId: newLinkedGoalId });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="task">Task</option>
@@ -495,7 +508,7 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">No linked goal</option>
-              {goals.filter(g => !g.completed).map(goal => (
+              {goals.filter(g => !g.completed && g.goalType === formData.type).map(goal => (
                 <option key={goal.id} value={goal.id}>
                   {goal.title} ({goal.currentAmount}/{goal.targetAmount} {goal.unit})
                 </option>
