@@ -48,14 +48,19 @@ export const formatTargetDatePreview = (
   weeks: number,
   months: number
 ): string | null => {
+  if (!Number.isFinite(days) || !Number.isFinite(weeks) || !Number.isFinite(months)) return null;
   if (days === 0 && weeks === 0 && months === 0) return null;
-  const dateStr = calculateTargetDateFromDuration(days, weeks, months);
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  try {
+    const dateStr = calculateTargetDateFromDuration(days, weeks, months);
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  } catch {
+    return null;
+  }
 };
 
 export const isOverdue = (targetDate: string): boolean => {
@@ -63,13 +68,17 @@ export const isOverdue = (targetDate: string): boolean => {
 };
 
 export const calculateDurationFromTargetDate = (targetDate: string): { days: number; weeks: number; months: number } => {
-  const now = new Date();
-  const target = new Date(targetDate + 'T00:00:00');
-  const diffMs = target.getTime() - now.getTime();
+  const zero = { days: 0, weeks: 0, months: 0 };
+  if (!targetDate) return zero;
 
-  if (diffMs < 0) {
-    return { days: 0, weeks: 0, months: 0 };
-  }
+  const now = new Date();
+  const dateStr = targetDate.includes('T') ? targetDate.split('T')[0] : targetDate;
+  const target = new Date(dateStr + 'T00:00:00');
+
+  if (isNaN(target.getTime())) return zero;
+
+  const diffMs = target.getTime() - now.getTime();
+  if (diffMs < 0) return zero;
 
   let totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
