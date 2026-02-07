@@ -167,12 +167,38 @@ export const calculateScheduleAwareStreak = (
         }
       }
 
-      // Count forwards (for future completions)
+      // Count forwards through scheduled dates
+      let reachedEndOfSchedule = true;
+      let lastCountedScheduledIndex = anchorIndex;
       for (let i = anchorIndex + 1; i < scheduledDates.length; i++) {
         if (completedSet.has(scheduledDates[i])) {
           current++;
+          lastCountedScheduledIndex = i;
         } else {
+          reachedEndOfSchedule = false;
           break;
+        }
+      }
+
+      // If we completed all scheduled dates, also count consecutive future completions
+      if (reachedEndOfSchedule) {
+        const lastScheduled = scheduledDates[lastCountedScheduledIndex];
+        const sortedCompletions = [...completedSet].sort();
+        const lastCompletedDate = sortedCompletions[sortedCompletions.length - 1];
+
+        if (lastCompletedDate > lastScheduled) {
+          let cursor = new Date(lastScheduled + 'T00:00:00');
+          cursor.setDate(cursor.getDate() + 1);
+
+          while (cursor.toISOString().split('T')[0] <= lastCompletedDate) {
+            const cursorStr = cursor.toISOString().split('T')[0];
+            if (completedSet.has(cursorStr)) {
+              current++;
+              cursor.setDate(cursor.getDate() + 1);
+            } else {
+              break;
+            }
+          }
         }
       }
     }
