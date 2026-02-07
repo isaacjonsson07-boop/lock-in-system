@@ -127,19 +127,22 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       .filter(entry => entry.category === categoryName)
       .map(entry => entry.date)
       .sort((a, b) => new Date(a).getTime() - new Date(b).getTime()); // Sort ascending for chronological order
-    
+
     if (categoryEntries.length === 0) return 0;
-    
+
     const uniqueDates = [...new Set(categoryEntries)].sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-    
-    let maxStreak = 0;
+
+    // Single day counts as 1 day streak
+    if (uniqueDates.length === 1) return 1;
+
+    let maxStreak = 1;
     let currentStreak = 1;
-    
+
     for (let i = 1; i < uniqueDates.length; i++) {
       const prevDate = new Date(uniqueDates[i - 1]);
       const currentDate = new Date(uniqueDates[i]);
       const daysDiff = Math.floor((currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
-      
+
       if (daysDiff === 1) {
         // Consecutive day
         currentStreak++;
@@ -149,10 +152,10 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         currentStreak = 1;
       }
     }
-    
+
     // Don't forget to check the final streak
     maxStreak = Math.max(maxStreak, currentStreak);
-    
+
     return maxStreak;
   };
 
