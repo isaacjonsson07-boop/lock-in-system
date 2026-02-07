@@ -208,6 +208,10 @@ export const calculateScheduleAwareStreak = (
     current = 1;
   }
 
+  if (current > best) {
+    best = current;
+  }
+
   return { current, best };
 };
 
