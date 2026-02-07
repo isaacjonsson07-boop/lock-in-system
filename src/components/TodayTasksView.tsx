@@ -811,13 +811,7 @@ export function TodayTasksView({
                             🎯 {linkedGoal.title}
                           </span>
                         </div>
-                      ) : (
-                        <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900 px-2 py-0.5 rounded">
-                            ⚠️ Linked goal not found
-                          </span>
-                        </div>
-                      );
+                      ) : null;
                     })()}
 
                     {expandedHabit === habit.id && habit.description && (

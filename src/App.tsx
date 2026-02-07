@@ -375,6 +375,11 @@ function App() {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
+        await supabase
+          .from('habits')
+          .update({ linked_goal_id: null })
+          .eq('linked_goal_id', id);
+
         const { error } = await supabase
           .from('goals')
           .delete()
@@ -382,9 +387,15 @@ function App() {
 
         if (error) throw error;
         await loadGoals();
+        await loadHabits();
       } else {
         setGoals(prev => prev.filter(g => g.id !== id));
+        setHabits(prev => prev.map(h => h.linked_goal_id === id ? { ...h, linked_goal_id: undefined } : h));
       }
+
+      setScheduleItems(prev => prev.map(item =>
+        item.linkedGoalId === id ? { ...item, linkedGoalId: undefined } : item
+      ));
     } catch (error) {
       console.error('Error deleting goal:', error);
       setGoals(prev => prev.filter(g => g.id !== id));
