@@ -1185,9 +1185,12 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                           >
                             <ChevronUp className="w-5 h-5" />
                           </button>
-                          <span className="text-2xl font-bold text-gray-800 dark:text-white tabular-nums py-1">
-                            {value}
-                          </span>
+                          <div className="flex items-baseline gap-1.5 py-1">
+                            <span className="text-2xl font-bold text-gray-800 dark:text-white tabular-nums">
+                              {value}
+                            </span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">{label.toLowerCase()}</span>
+                          </div>
                           <button
                             type="button"
                             onClick={() => set(Math.max(0, value - 1))}
@@ -1195,7 +1198,6 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                           >
                             <ChevronDown className="w-5 h-5" />
                           </button>
-                          <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">{label}</span>
                         </div>
                       ))}
                     </div>
