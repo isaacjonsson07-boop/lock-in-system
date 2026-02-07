@@ -131,21 +131,25 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
     // Single day counts as 1 day streak
     if (uniqueDates.length === 1) return 1;
 
-    let maxStreak = 1;
-    let currentStreak = 1;
+    let maxStreak = 0;
+    let currentStreak = 0;
 
-    for (let i = 1; i < uniqueDates.length; i++) {
-      const prevDate = new Date(uniqueDates[i - 1]);
-      const currentDate = new Date(uniqueDates[i]);
-      const daysDiff = Math.floor((currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
-
-      if (daysDiff === 1) {
-        // Consecutive day
-        currentStreak++;
-      } else {
-        // Gap in streak
-        maxStreak = Math.max(maxStreak, currentStreak);
+    for (let i = 0; i < uniqueDates.length; i++) {
+      if (i === 0) {
         currentStreak = 1;
+      } else {
+        const prevDate = new Date(uniqueDates[i - 1]);
+        const currentDate = new Date(uniqueDates[i]);
+        const daysDiff = Math.floor((currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (daysDiff === 1) {
+          // Consecutive day
+          currentStreak++;
+        } else {
+          // Gap in streak
+          maxStreak = Math.max(maxStreak, currentStreak);
+          currentStreak = 1;
+        }
       }
     }
 
