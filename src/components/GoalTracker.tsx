@@ -5,6 +5,7 @@ import { formatSingleUnit } from '../utils/formatting';
 import { uid, fmtDateISO } from '../utils/dateUtils';
 import { parseAmountByType, amountPlaceholderByType } from '../utils/parsing';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { formatCountdown, calculateTargetDate, isOverdue } from '../utils/goalUtils';
 
 interface GoalTrackerProps {
   goals: Goal[];
@@ -42,10 +43,9 @@ export function GoalTracker({
     targetDate: ''
   });
   const [targetAmountError, setTargetAmountError] = useState<string>('');
-
-  const isOverdue = (targetDate: string): boolean => {
-    return new Date(targetDate) < new Date();
-  };
+  const [deadlineMode, setDeadlineMode] = useState<'exact' | 'fromNow'>('fromNow');
+  const [selectedPreset, setSelectedPreset] = useState<string>('1week');
+  const [customDays, setCustomDays] = useState<string>('');
 
   // Calculate current progress for each goal based on entries or task/habit completions
   const goalsWithProgress = useMemo(() => {
@@ -106,6 +106,20 @@ export function GoalTracker({
     e.preventDefault();
     if (!newGoal.title.trim() || !newGoal.targetAmount) return;
 
+    let targetDate = newGoal.targetDate;
+    if (deadlineMode === 'fromNow') {
+      if (selectedPreset === 'custom' && !customDays.trim()) {
+        alert('Please enter the number of days');
+        return;
+      }
+      targetDate = calculateTargetDate(selectedPreset, customDays);
+    }
+
+    if (!targetDate) {
+      alert('Please select a target date');
+      return;
+    }
+
     const category = categories.find(c => c.name === newGoal.category);
     const categoryType = category?.type || 'Time';
 
@@ -136,7 +150,7 @@ export function GoalTracker({
       targetAmount: parsed.value,
       currentAmount: 0,
       unit: parsed.unit,
-      targetDate: newGoal.targetDate,
+      targetDate: targetDate,
       createdAt: new Date().toISOString(),
       completed: false,
       goalType: categoryType === 'Distance' ? 'distance' : categoryType === 'Time' ? 'time' : 'task',
@@ -153,6 +167,9 @@ export function GoalTracker({
       targetDate: ''
     });
     setTargetAmountError('');
+    setDeadlineMode('fromNow');
+    setSelectedPreset('1week');
+    setCustomDays('');
     setShowAddForm(false);
   };
 
@@ -171,6 +188,7 @@ export function GoalTracker({
       targetDate: goal.targetDate
     });
     setTargetAmountError('');
+    setDeadlineMode('exact');
     setShowAddForm(true);
   };
 
@@ -223,6 +241,9 @@ export function GoalTracker({
       targetDate: ''
     });
     setTargetAmountError('');
+    setDeadlineMode('fromNow');
+    setSelectedPreset('1week');
+    setCustomDays('');
     setShowAddForm(false);
   };
 
@@ -277,7 +298,10 @@ export function GoalTracker({
   };
 
   const isFormValid = (): boolean => {
-    if (!newGoal.title.trim() || !newGoal.targetAmount || !newGoal.targetDate) return false;
+    if (!newGoal.title.trim() || !newGoal.targetAmount) return false;
+
+    if (deadlineMode === 'exact' && !newGoal.targetDate) return false;
+    if (deadlineMode === 'fromNow' && selectedPreset === 'custom' && !customDays.trim()) return false;
 
     const categoryType = getCategoryType(newGoal.category);
     if (categoryType === 'Count') {
@@ -369,6 +393,9 @@ export function GoalTracker({
                   targetDate: ''
                 });
                 setTargetAmountError('');
+                setDeadlineMode('fromNow');
+                setSelectedPreset('1week');
+                setCustomDays('');
               }
             }}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center"
@@ -411,29 +438,132 @@ export function GoalTracker({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Target Amount ({getCategoryType(newGoal.category)})
-                </label>
-                <input
-                  type="text"
-                  inputMode={isTaskGoal(newGoal.category) ? "numeric" : undefined}
-                  pattern={isTaskGoal(newGoal.category) ? "[0-9]*" : undefined}
-                  value={newGoal.targetAmount}
-                  onChange={(e) => handleTargetAmountChange(e.target.value)}
-                  onBlur={handleTargetAmountBlur}
-                  placeholder={amountPlaceholderByType(getCategoryType(newGoal.category))}
-                  className={`w-full px-3 py-2 border ${targetAmountError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 ${targetAmountError ? 'focus:ring-red-500' : 'focus:ring-blue-500'}`}
-                  required
-                />
-                {targetAmountError && (
-                  <p className="text-red-500 text-sm mt-1">{targetAmountError}</p>
-                )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Target Amount ({getCategoryType(newGoal.category)})
+              </label>
+              <input
+                type="text"
+                inputMode={isTaskGoal(newGoal.category) ? "numeric" : undefined}
+                pattern={isTaskGoal(newGoal.category) ? "[0-9]*" : undefined}
+                value={newGoal.targetAmount}
+                onChange={(e) => handleTargetAmountChange(e.target.value)}
+                onBlur={handleTargetAmountBlur}
+                placeholder={amountPlaceholderByType(getCategoryType(newGoal.category))}
+                className={`w-full px-3 py-2 border ${targetAmountError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 ${targetAmountError ? 'focus:ring-red-500' : 'focus:ring-blue-500'}`}
+                required
+              />
+              {targetAmountError && (
+                <p className="text-red-500 text-sm mt-1">{targetAmountError}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Deadline</label>
+
+              <div className="flex space-x-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setDeadlineMode('fromNow')}
+                  className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    deadlineMode === 'fromNow'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Time from now
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeadlineMode('exact')}
+                  className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    deadlineMode === 'exact'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Exact date
+                </button>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Date</label>
+
+              {deadlineMode === 'fromNow' ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPreset('1day')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        selectedPreset === '1day'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      1 day
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPreset('1week')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        selectedPreset === '1week'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      1 week
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPreset('1month')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        selectedPreset === '1month'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      1 month
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPreset('1year')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        selectedPreset === '1year'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      1 year
+                    </button>
+                  </div>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPreset('custom')}
+                      className={`w-full px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        selectedPreset === 'custom'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      Custom
+                    </button>
+                    {selectedPreset === 'custom' && (
+                      <div className="mt-2 flex items-center space-x-2">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">In</span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={customDays}
+                          onChange={(e) => setCustomDays(e.target.value)}
+                          placeholder="0"
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">days</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
                 <input
                   type="date"
                   value={newGoal.targetDate}
@@ -441,7 +571,7 @@ export function GoalTracker({
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
-              </div>
+              )}
             </div>
 
             <div>
@@ -490,12 +620,9 @@ export function GoalTracker({
                     )}
                     <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
                       <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{goal.category}</span>
-                      <span className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        {new Date(goal.targetDate).toLocaleDateString()}
-                        {isOverdue(goal.targetDate) && (
-                          <span className="ml-2 text-red-500 font-medium">Overdue</span>
-                        )}
+                      <span className={`flex items-center font-medium ${isOverdue(goal.targetDate) ? 'text-red-500' : 'text-blue-600 dark:text-blue-400'}`}>
+                        <Clock className="w-4 h-4 mr-1" />
+                        {formatCountdown(goal.targetDate)}
                       </span>
                     </div>
                   </div>

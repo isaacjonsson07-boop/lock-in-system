@@ -7,6 +7,7 @@ import { parseAmountByType, amountPlaceholderByType } from '../utils/parsing';
 import { UpgradePrompt } from './UpgradePrompt';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateItemModal } from './CreateItemModal';
+import { formatCountdown, isOverdue } from '../utils/goalUtils';
 
 interface StatsViewProps {
   entries: Entry[];
@@ -50,10 +51,6 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
     }
   }, [newGoal.description, showAddGoalForm]);
-
-  const isOverdue = (targetDate: string): boolean => {
-    return new Date(targetDate) < new Date();
-  };
 
   const sanitizeWholeNumber = (raw: string): string => {
     return raw.replace(/[^0-9]/g, '');
@@ -1213,9 +1210,9 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap">{goal.description}</p>
                     )}
                     <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                      <span className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        {new Date(goal.targetDate).toLocaleDateString()}
+                      <span className={`flex items-center font-medium ${isOverdue(goal.targetDate) ? 'text-red-500' : 'text-blue-600 dark:text-blue-400'}`}>
+                        <Clock className="w-4 h-4 mr-1" />
+                        {formatCountdown(goal.targetDate)}
                       </span>
                     </div>
                   </div>
@@ -1525,8 +1522,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                         )}
                         <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
                           <span className="flex items-center text-red-600 dark:text-red-400 font-medium">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            Overdue: {new Date(goal.targetDate).toLocaleDateString()}
+                            <Clock className="w-4 h-4 mr-1" />
+                            {formatCountdown(goal.targetDate)}
                           </span>
                         </div>
                       </div>
