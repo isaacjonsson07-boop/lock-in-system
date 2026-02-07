@@ -6,7 +6,7 @@ import { uid, fmtDateISO } from '../utils/dateUtils';
 import { parseAmountByType, amountPlaceholderByType } from '../utils/parsing';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { formatCountdown, calculateTargetDateFromDuration, formatTargetDatePreview, isOverdue } from '../utils/goalUtils';
+import { formatCountdown, calculateTargetDateFromDuration, formatTargetDatePreview, isOverdue, calculateDurationFromTargetDate } from '../utils/goalUtils';
 
 interface GoalTrackerProps {
   goals: Goal[];
@@ -177,6 +177,8 @@ export function GoalTracker({
       ? String(Math.trunc(goal.targetAmount))
       : goal.targetAmount.toString();
 
+    const duration = calculateDurationFromTargetDate(goal.targetDate);
+
     setNewGoal({
       title: goal.title,
       description: goal.description || '',
@@ -186,9 +188,9 @@ export function GoalTracker({
     });
     setTargetAmountError('');
     setDeadlineMode('exact');
-    setDurDays(0);
-    setDurWeeks(0);
-    setDurMonths(0);
+    setDurDays(duration.days);
+    setDurWeeks(duration.weeks);
+    setDurMonths(duration.months);
     setShowAddForm(true);
   };
 

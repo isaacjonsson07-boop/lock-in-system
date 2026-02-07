@@ -7,7 +7,7 @@ import { parseAmountByType, amountPlaceholderByType } from '../utils/parsing';
 import { UpgradePrompt } from './UpgradePrompt';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateItemModal } from './CreateItemModal';
-import { formatCountdown, isOverdue, calculateTargetDateFromDuration, formatTargetDatePreview } from '../utils/goalUtils';
+import { formatCountdown, isOverdue, calculateTargetDateFromDuration, formatTargetDatePreview, calculateDurationFromTargetDate } from '../utils/goalUtils';
 
 interface StatsViewProps {
   entries: Entry[];
@@ -367,6 +367,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       ? String(Math.trunc(goal.targetAmount))
       : goal.targetAmount.toString();
 
+    const duration = calculateDurationFromTargetDate(goal.targetDate);
+
     setNewGoal({
       title: goal.title,
       description: goal.description || '',
@@ -378,9 +380,9 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
     });
     setTargetAmountError('');
     setDeadlineMode('exact');
-    setDurDays(0);
-    setDurWeeks(0);
-    setDurMonths(0);
+    setDurDays(duration.days);
+    setDurWeeks(duration.weeks);
+    setDurMonths(duration.months);
     setShowAddGoalForm(true);
   };
 

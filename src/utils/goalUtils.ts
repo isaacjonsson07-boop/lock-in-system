@@ -61,3 +61,23 @@ export const formatTargetDatePreview = (
 export const isOverdue = (targetDate: string): boolean => {
   return new Date(targetDate) < new Date();
 };
+
+export const calculateDurationFromTargetDate = (targetDate: string): { days: number; weeks: number; months: number } => {
+  const now = new Date();
+  const target = new Date(targetDate + 'T00:00:00');
+  const diffMs = target.getTime() - now.getTime();
+
+  if (diffMs < 0) {
+    return { days: 0, weeks: 0, months: 0 };
+  }
+
+  let totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  const months = Math.floor(totalDays / 30);
+  totalDays -= months * 30;
+
+  const weeks = Math.floor(totalDays / 7);
+  const days = totalDays - weeks * 7;
+
+  return { days, weeks, months };
+};
