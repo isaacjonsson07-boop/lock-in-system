@@ -7,7 +7,7 @@ import { parseAmountByType, amountPlaceholderByType } from '../utils/parsing';
 import { UpgradePrompt } from './UpgradePrompt';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateItemModal } from './CreateItemModal';
-import { formatCountdown, isOverdue, calculateTargetDateFromDuration, formatTargetDatePreview, calculateDurationFromTargetDate } from '../utils/goalUtils';
+import { formatCountdown, isOverdue, calculateTargetDateFromDuration, formatTargetDatePreview, calculateDurationFromTargetDate, calculateScheduleAwareStreak, calculateAttendanceProgress, getScheduledDatesBetween } from '../utils/goalUtils';
 
 interface StatsViewProps {
   entries: Entry[];
@@ -37,9 +37,10 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
     description: '',
     targetAmount: '',
     targetDate: '',
-    goalType: 'task' as 'task' | 'time' | 'distance',
+    goalType: 'task' as 'task' | 'time' | 'distance' | 'attendance',
     duration: '',
-    distance: ''
+    distance: '',
+    linkedHabitId: ''
   });
   const [targetAmountError, setTargetAmountError] = React.useState<string>('');
   const [deadlineMode, setDeadlineMode] = React.useState<'exact' | 'duration'>('duration');
@@ -202,17 +203,53 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
     }
   }, [entries, categories, onUpdateCategories]);
 
-  // Calculate current progress for each goal based on entries
   const goalsWithProgress = useMemo(() => {
     return goals.map(goal => {
-      // Check if this goal is linked to any tasks or habits
+      if (goal.goalType === 'attendance' && goal.linkedHabitId) {
+        const linkedHabit = habits.find(h => h.id === goal.linkedHabitId);
+        if (linkedHabit) {
+          const startDate = goal.createdAt.split('T')[0];
+          const completionDates = habitCompletions
+            .filter(c => c.habit_id === linkedHabit.id)
+            .map(c => c.completion_date);
+
+          const attendance = calculateAttendanceProgress(
+            startDate, goal.targetDate, linkedHabit.days_of_week, completionDates
+          );
+
+          const target = attendance.expected;
+          const currentAmount = attendance.completed;
+          const progress = target > 0 ? Math.min((currentAmount / target) * 100, 100) : 0;
+          const isGoalCompleted = attendance.perfect && new Date(goal.targetDate) <= new Date();
+
+          if (isGoalCompleted && !goal.completed) {
+            const updatedGoal = {
+              ...goal,
+              completed: true,
+              completedAt: new Date().toISOString(),
+              currentAmount: target,
+              targetAmount: target
+            };
+            onUpdateGoal(updatedGoal);
+            return { ...updatedGoal, progress: 100, isCompleted: true, attendanceData: attendance };
+          }
+
+          return {
+            ...goal,
+            currentAmount,
+            targetAmount: target,
+            progress,
+            isCompleted: isGoalCompleted,
+            attendanceData: attendance
+          };
+        }
+      }
+
       const hasLinkedTasks = scheduleItems.some(item => item.linkedGoalId === goal.id);
       const hasLinkedHabits = habits.some(habit => habit.linked_goal_id === goal.id);
 
       let currentAmount = Number(goal.currentAmount) || 0;
 
-      // Only calculate from entries if the goal is NOT linked to tasks or habits
-      // Task/habit-linked goals use currentAmount as source of truth (updated in TodayTasksView)
       if (!hasLinkedTasks && !hasLinkedHabits) {
         const categoryEntries = entries.filter(entry =>
           entry.category === goal.category &&
@@ -225,28 +262,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       const progress = target > 0 ? Math.min((currentAmount / target) * 100, 100) : 0;
       const isGoalCompleted = currentAmount >= target && target > 0;
 
-      console.log('[GOAL PROGRESS - StatsView]', {
-        goalId: goal.id,
-        goalTitle: goal.title,
-        hasLinkedTasks,
-        hasLinkedHabits,
-        currentAmount,
-        targetAmount: target,
-        usedStoredAmount: hasLinkedTasks || hasLinkedHabits,
-        isCompleted: goal.completed,
-        wouldComplete: isGoalCompleted
-      });
-
-      // Auto-complete goal if target is reached
       if (isGoalCompleted && !goal.completed) {
-        console.log('[GOAL AUTO-COMPLETE - StatsView]', {
-          goalId: goal.id,
-          goalTitle: goal.title,
-          currentAmount,
-          targetAmount: target,
-          ratio: target ? currentAmount / target : null
-        });
-
         const updatedGoal = {
           ...goal,
           completed: true,
@@ -254,10 +270,9 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
           currentAmount: Math.min(currentAmount, target)
         };
         onUpdateGoal(updatedGoal);
-        return updatedGoal;
+        return { ...updatedGoal, progress: 100, isCompleted: true };
       }
 
-      // For completed goals, don't let current amount exceed target
       const displayAmount = goal.completed ? target : Math.min(currentAmount, target);
       return { ...goal, currentAmount: displayAmount, progress, isCompleted: isGoalCompleted };
     });
@@ -278,6 +293,46 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       targetDate = calculateTargetDateFromDuration(durDays, durWeeks, durMonths);
     }
     if (!targetDate) return;
+
+    if (newGoal.goalType === 'attendance') {
+      if (!newGoal.linkedHabitId) {
+        alert('Please select a habit for attendance tracking');
+        return;
+      }
+      const linkedHabit = habits.find(h => h.id === newGoal.linkedHabitId);
+      if (!linkedHabit) return;
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      const totalSessions = getScheduledDatesBetween(todayStr, targetDate, linkedHabit.days_of_week).length;
+
+      const goal: Goal = {
+        id: uid(),
+        title: newGoal.title.trim(),
+        description: newGoal.description.trim() || undefined,
+        category: 'General',
+        targetAmount: totalSessions,
+        currentAmount: 0,
+        unit: 'Times',
+        targetDate,
+        createdAt: new Date().toISOString(),
+        completed: false,
+        goalType: 'attendance',
+        linkedHabitId: newGoal.linkedHabitId,
+        durDays: deadlineMode === 'duration' ? durDays : undefined,
+        durWeeks: deadlineMode === 'duration' ? durWeeks : undefined,
+        durMonths: deadlineMode === 'duration' ? durMonths : undefined
+      };
+
+      onAddGoal(goal);
+      setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '', linkedHabitId: '' });
+      setTargetAmountError('');
+      setDeadlineMode('duration');
+      setDurDays(0);
+      setDurWeeks(0);
+      setDurMonths(0);
+      setShowAddGoalForm(false);
+      return;
+    }
 
     if (newGoal.goalType === 'time' && !newGoal.duration.trim()) {
       alert('Please enter a duration for time-based goals');
@@ -347,15 +402,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
     };
 
     onAddGoal(goal);
-    setNewGoal({
-      title: '',
-      description: '',
-      targetAmount: '',
-      targetDate: '',
-      goalType: 'task',
-      duration: '',
-      distance: ''
-    });
+    setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '', linkedHabitId: '' });
     setTargetAmountError('');
     setDeadlineMode('duration');
     setDurDays(0);
@@ -380,7 +427,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       targetDate: goal.targetDate,
       goalType: goal.goalType || 'task',
       duration: goal.duration || '',
-      distance: goal.distance || ''
+      distance: goal.distance || '',
+      linkedHabitId: goal.linkedHabitId || ''
     });
     setTargetAmountError('');
     setDeadlineMode(hasSavedDuration ? 'duration' : 'exact');
@@ -400,6 +448,49 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       targetDate = calculateTargetDateFromDuration(durDays, durWeeks, durMonths);
     }
     if (!targetDate) return;
+
+    const resetForm = () => {
+      setEditingGoal(null);
+      setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '', linkedHabitId: '' });
+      setTargetAmountError('');
+      setDeadlineMode('duration');
+      setDurDays(0);
+      setDurWeeks(0);
+      setDurMonths(0);
+      setShowAddGoalForm(false);
+    };
+
+    if (newGoal.goalType === 'attendance') {
+      if (!newGoal.linkedHabitId) {
+        alert('Please select a habit for attendance tracking');
+        return;
+      }
+      const linkedHabit = habits.find(h => h.id === newGoal.linkedHabitId);
+      if (!linkedHabit) return;
+
+      const startDate = editingGoal.createdAt.split('T')[0];
+      const totalSessions = getScheduledDatesBetween(startDate, targetDate, linkedHabit.days_of_week).length;
+
+      const updatedGoal: Goal = {
+        ...editingGoal,
+        title: newGoal.title.trim(),
+        description: newGoal.description.trim() || undefined,
+        targetAmount: totalSessions,
+        unit: 'Times',
+        targetDate,
+        goalType: 'attendance',
+        linkedHabitId: newGoal.linkedHabitId,
+        duration: undefined,
+        distance: undefined,
+        durDays: deadlineMode === 'duration' ? durDays : undefined,
+        durWeeks: deadlineMode === 'duration' ? durWeeks : undefined,
+        durMonths: deadlineMode === 'duration' ? durMonths : undefined
+      };
+
+      onUpdateGoal(updatedGoal);
+      resetForm();
+      return;
+    }
 
     if (newGoal.goalType === 'time' && !newGoal.duration.trim()) {
       alert('Please enter a duration for time-based goals');
@@ -459,28 +550,14 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       goalType: newGoal.goalType,
       duration: newGoal.goalType === 'time' ? newGoal.duration.trim() : undefined,
       distance: newGoal.goalType === 'distance' ? newGoal.distance.trim() : undefined,
+      linkedHabitId: undefined,
       durDays: deadlineMode === 'duration' ? durDays : undefined,
       durWeeks: deadlineMode === 'duration' ? durWeeks : undefined,
       durMonths: deadlineMode === 'duration' ? durMonths : undefined
     };
 
     onUpdateGoal(updatedGoal);
-    setEditingGoal(null);
-    setNewGoal({
-      title: '',
-      description: '',
-      targetAmount: '',
-      targetDate: '',
-      goalType: 'task',
-      duration: '',
-      distance: ''
-    });
-    setTargetAmountError('');
-    setDeadlineMode('duration');
-    setDurDays(0);
-    setDurWeeks(0);
-    setDurMonths(0);
-    setShowAddGoalForm(false);
+    resetForm();
   };
 
   const handleRetryGoal = (goal: Goal) => {
@@ -628,7 +705,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       });
     });
 
-    // Process completed habits and add them to stats
+    const categoryHabitSchedule = new Map<string, number[]>();
+
     habitCompletions.forEach(completion => {
       const habit = habits.find(h => h.id === completion.habit_id);
       if (!habit) return;
@@ -691,8 +769,12 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       const uniqueActivities = categoryUniqueActivities.get(categoryName) || new Set();
       uniqueActivities.add(`habit-${habit.id}`);
       categoryUniqueActivities.set(categoryName, uniqueActivities);
+
+      if (habit.days_of_week && habit.days_of_week.length > 0) {
+        categoryHabitSchedule.set(categoryName, habit.days_of_week);
+      }
     });
-    
+
     const categoryStats = Array.from(categoryTotals.entries()).map(([name, total]) => {
       const type = categoryTypes.get(name) || 'Time';
       const baseUnit = type === 'Time' ? 'Hours' : type === 'Distance' ? 'Km' : 'Times';
@@ -700,9 +782,19 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       const activeDays = categoryDays.get(name)?.size || 0;
       const avgPerDay = activeDays > 0 ? total / activeDays : 0;
       const datesForCategory = categoryDays.get(name) || new Set();
-      const bestStreak = calculateBestStreakFromDates(datesForCategory);
+      const schedule = categoryHabitSchedule.get(name);
+      let bestStreak: number;
+      let currentStreak = 0;
+      if (schedule && schedule.length > 0 && schedule.length < 7) {
+        const streakResult = calculateScheduleAwareStreak(Array.from(datesForCategory), schedule);
+        bestStreak = streakResult.best;
+        currentStreak = streakResult.current;
+      } else {
+        bestStreak = calculateBestStreakFromDates(datesForCategory);
+      }
       const activityRecord = category?.activityRecord || 0;
       const uniqueActivities = categoryUniqueActivities.get(name) || new Set();
+      const scheduledDays = schedule && schedule.length > 0 && schedule.length < 7;
 
       return {
         name,
@@ -716,6 +808,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         avgPerDay,
         formattedAvgPerDay: formatSingleUnit(type, avgPerDay, baseUnit, converters),
         bestStreak,
+        currentStreak,
+        scheduledDays,
         activityRecord,
         formattedRecord: activityRecord > 0 ? formatSingleUnit(type, activityRecord, baseUnit, converters) : ''
       };
@@ -727,7 +821,13 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         const type = category.type;
         const baseUnit = type === 'Time' ? 'Hours' : type === 'Distance' ? 'Km' : 'Times';
         const datesForCategory = categoryDays.get(category.name) || new Set();
-        const bestStreak = calculateBestStreakFromDates(datesForCategory);
+        const schedule = categoryHabitSchedule.get(category.name);
+        let bestStreak: number;
+        if (schedule && schedule.length > 0 && schedule.length < 7) {
+          bestStreak = calculateScheduleAwareStreak(Array.from(datesForCategory), schedule).best;
+        } else {
+          bestStreak = calculateBestStreakFromDates(datesForCategory);
+        }
         const activityRecord = category.activityRecord || 0;
         categoryStats.push({
           name: category.name,
@@ -741,6 +841,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
           avgPerDay: 0,
           formattedAvgPerDay: formatSingleUnit(type, 0, baseUnit, converters),
           bestStreak,
+          currentStreak: 0,
+          scheduledDays: !!(schedule && schedule.length > 0 && schedule.length < 7),
           activityRecord,
           formattedRecord: ''
         });
@@ -1073,7 +1175,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                 targetDate: '',
                 goalType: 'task',
                 duration: '',
-                distance: ''
+                distance: '',
+                linkedHabitId: ''
               });
               setTargetAmountError('');
               setDeadlineMode('duration');
@@ -1097,7 +1200,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         onClose={() => {
           setShowAddGoalForm(false);
           setEditingGoal(null);
-          setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '' });
+          setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '', linkedHabitId: '' });
           setTargetAmountError('');
           setDeadlineMode('duration');
           setDurDays(0);
@@ -1140,7 +1243,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                 <select
                   value={newGoal.goalType}
                   onChange={(e) => {
-                    setNewGoal({ ...newGoal, goalType: e.target.value as 'task' | 'time' | 'distance' });
+                    const val = e.target.value as 'task' | 'time' | 'distance' | 'attendance';
+                    setNewGoal({ ...newGoal, goalType: val, linkedHabitId: val !== 'attendance' ? '' : newGoal.linkedHabitId });
                     setTargetAmountError('');
                   }}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1148,8 +1252,27 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                   <option value="task">Task</option>
                   <option value="time">Time-based</option>
                   <option value="distance">Distance-based</option>
+                  <option value="attendance">Perfect Attendance</option>
                 </select>
               </div>
+
+              {newGoal.goalType === 'attendance' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Linked Habit</label>
+                  <select
+                    value={newGoal.linkedHabitId}
+                    onChange={(e) => setNewGoal({ ...newGoal, linkedHabitId: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Select a habit...</option>
+                    {habits.filter(h => h.days_of_week && h.days_of_week.length > 0).map(h => (
+                      <option key={h.id} value={h.id}>{h.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Tracks scheduled days only - non-scheduled days are ignored</p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Deadline</label>
@@ -1335,17 +1458,43 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                 </div>
                 
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Progress</span>
-                    <span className="font-medium text-gray-800 dark:text-white">
-                      {formatCurrentAmount(goal)} / {formatGoalAmount(goal)} ({Math.round(goal.progress)}%)
-                    </span>
-                  </div>
+                  {goal.goalType === 'attendance' && goal.attendanceData ? (
+                    <>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
+                          Scheduled days only
+                        </span>
+                        {goal.attendanceData.missed > 0 ? (
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">
+                            {goal.attendanceData.missed} missed
+                          </span>
+                        ) : (
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300">
+                            Perfect so far
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Sessions</span>
+                        <span className="font-medium text-gray-800 dark:text-white">
+                          {goal.attendanceData.completed} / {goal.attendanceData.expected} ({Math.round(goal.attendanceData.rate)}%)
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">Progress</span>
+                      <span className="font-medium text-gray-800 dark:text-white">
+                        {formatCurrentAmount(goal)} / {formatGoalAmount(goal)} ({Math.round(goal.progress)}%)
+                      </span>
+                    </div>
+                  )}
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div 
+                    <div
                       className={`h-2 rounded-full transition-all duration-300 ${
-                        goal.progress >= 100 ? 'bg-green-500' : 
-                        goal.progress >= 75 ? 'bg-blue-500' : 
+                        goal.goalType === 'attendance' && goal.attendanceData?.missed ? 'bg-orange-500' :
+                        goal.progress >= 100 ? 'bg-green-500' :
+                        goal.progress >= 75 ? 'bg-blue-500' :
                         goal.progress >= 50 ? 'bg-yellow-500' : 'bg-gray-400'
                       }`}
                       style={{ width: `${Math.min(goal.progress, 100)}%` }}
@@ -1405,9 +1554,15 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                     <span className="text-gray-600 dark:text-gray-400">Avg/Day:</span>
                     <span className="font-medium text-gray-800 dark:text-white">{stat.formattedAvgPerDay}</span>
                   </div>
+                  {stat.currentStreak > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Current Streak:</span>
+                      <span className="font-medium text-green-600">{stat.currentStreak} {stat.scheduledDays ? 'sessions' : 'days'}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Best Streak:</span>
-                    <span className="font-medium text-blue-600">{stat.bestStreak} days</span>
+                    <span className="font-medium text-blue-600">{stat.bestStreak} {stat.scheduledDays ? 'sessions' : 'days'}</span>
                   </div>
                   {stat.activityRecord > 0 && (
                     <div className="flex justify-between">
@@ -1545,7 +1700,11 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 ml-6 whitespace-pre-wrap">{goal.description}</p>
                     )}
                     <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500 dark:text-gray-400 ml-6">
-                      <span>{formatCurrentAmount(goal)} / {formatGoalAmount(goal)}</span>
+                      {goal.goalType === 'attendance' && goal.attendanceData ? (
+                        <span>{goal.attendanceData.completed} / {goal.attendanceData.expected} sessions</span>
+                      ) : (
+                        <span>{formatCurrentAmount(goal)} / {formatGoalAmount(goal)}</span>
+                      )}
                       {goal.completedAt && (
                         <span className="text-green-600 dark:text-green-400 font-medium">
                           Completed {new Date(goal.completedAt).toLocaleDateString()}
@@ -1649,11 +1808,14 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Progress when failed</span>
                         <span className="font-medium text-gray-800 dark:text-white">
-                          {formatCurrentAmount(goal)} / {formatGoalAmount(goal)} ({Math.round(goal.progress)}%)
+                          {goal.goalType === 'attendance' && goal.attendanceData
+                            ? `${goal.attendanceData.completed} / ${goal.attendanceData.expected} sessions (${Math.round(goal.attendanceData.rate)}%)`
+                            : `${formatCurrentAmount(goal)} / ${formatGoalAmount(goal)} (${Math.round(goal.progress)}%)`
+                          }
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div 
+                        <div
                           className="h-2 rounded-full bg-red-500 transition-all duration-300"
                           style={{ width: `${Math.min(goal.progress, 100)}%` }}
                         ></div>

@@ -67,6 +67,99 @@ export const isOverdue = (targetDate: string): boolean => {
   return new Date(targetDate) < new Date();
 };
 
+export const getScheduledDatesBetween = (
+  startDate: string,
+  endDate: string,
+  daysOfWeek: number[]
+): string[] => {
+  if (!daysOfWeek || daysOfWeek.length === 0) return [];
+  const results: string[] = [];
+  const start = new Date(startDate + 'T00:00:00');
+  const end = new Date(endDate + 'T00:00:00');
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    if (daysOfWeek.includes(cursor.getDay())) {
+      results.push(cursor.toISOString().split('T')[0]);
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return results;
+};
+
+export const calculateScheduleAwareStreak = (
+  completionDates: string[],
+  daysOfWeek: number[]
+): { current: number; best: number } => {
+  if (!daysOfWeek || daysOfWeek.length === 0) {
+    return { current: 0, best: 0 };
+  }
+
+  const completedSet = new Set(completionDates);
+  if (completedSet.size === 0) return { current: 0, best: 0 };
+
+  const allDates = [...completedSet].sort();
+  const earliest = allDates[0];
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const scheduledDates = getScheduledDatesBetween(earliest, todayStr, daysOfWeek);
+  if (scheduledDates.length === 0) return { current: 0, best: 0 };
+
+  let best = 0;
+  let run = 0;
+  for (const d of scheduledDates) {
+    if (completedSet.has(d)) {
+      run++;
+      if (run > best) best = run;
+    } else {
+      run = 0;
+    }
+  }
+
+  let current = 0;
+  for (let i = scheduledDates.length - 1; i >= 0; i--) {
+    if (completedSet.has(scheduledDates[i])) {
+      current++;
+    } else {
+      break;
+    }
+  }
+
+  return { current, best };
+};
+
+export const calculateAttendanceProgress = (
+  startDate: string,
+  targetDate: string,
+  daysOfWeek: number[],
+  completionDates: string[]
+): { expected: number; completed: number; missed: number; perfect: boolean; rate: number } => {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const effectiveEnd = targetDate < todayStr ? targetDate : todayStr;
+  const scheduledDates = getScheduledDatesBetween(startDate, effectiveEnd, daysOfWeek);
+  const completedSet = new Set(completionDates);
+
+  let completed = 0;
+  let missed = 0;
+  for (const d of scheduledDates) {
+    if (completedSet.has(d)) {
+      completed++;
+    } else {
+      missed++;
+    }
+  }
+
+  const totalExpected = getScheduledDatesBetween(startDate, targetDate, daysOfWeek).length;
+  const rate = totalExpected > 0 ? (completed / totalExpected) * 100 : 0;
+
+  return {
+    expected: totalExpected,
+    completed,
+    missed,
+    perfect: missed === 0,
+    rate
+  };
+};
+
 export const calculateDurationFromTargetDate = (targetDate: string): { days: number; weeks: number; months: number } => {
   const zero = { days: 0, weeks: 0, months: 0 };
   if (!targetDate) return zero;

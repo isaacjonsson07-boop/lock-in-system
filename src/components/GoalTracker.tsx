@@ -6,7 +6,7 @@ import { uid, fmtDateISO } from '../utils/dateUtils';
 import { parseAmountByType, amountPlaceholderByType } from '../utils/parsing';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { formatCountdown, calculateTargetDateFromDuration, formatTargetDatePreview, isOverdue, calculateDurationFromTargetDate } from '../utils/goalUtils';
+import { formatCountdown, calculateTargetDateFromDuration, formatTargetDatePreview, isOverdue, calculateDurationFromTargetDate, calculateAttendanceProgress, getScheduledDatesBetween } from '../utils/goalUtils';
 
 interface GoalTrackerProps {
   goals: Goal[];
@@ -52,14 +52,35 @@ export function GoalTracker({
   // Calculate current progress for each goal based on entries or task/habit completions
   const goalsWithProgress = useMemo(() => {
     return goals.map(goal => {
-      // Check if this goal is linked to any tasks or habits
+      if (goal.goalType === 'attendance' && goal.linkedHabitId) {
+        const linkedHabit = habits.find(h => h.id === goal.linkedHabitId);
+        if (linkedHabit) {
+          const startDate = goal.createdAt.split('T')[0];
+          const completionDates = habitCompletions
+            .filter(c => c.habit_id === linkedHabit.id)
+            .map(c => c.completion_date);
+          const attendance = calculateAttendanceProgress(
+            startDate, goal.targetDate, linkedHabit.days_of_week, completionDates
+          );
+          const target = attendance.expected;
+          const currentAmount = attendance.completed;
+          const progress = target > 0 ? Math.min((currentAmount / target) * 100, 100) : 0;
+          const isGoalCompleted = attendance.perfect && new Date(goal.targetDate) <= new Date();
+
+          if (isGoalCompleted && !goal.completed) {
+            const updatedGoal = { ...goal, completed: true, completedAt: new Date().toISOString(), currentAmount: target, targetAmount: target };
+            onUpdateGoal(updatedGoal);
+            return { ...updatedGoal, progress: 100, isCompleted: true, attendanceData: attendance };
+          }
+          return { ...goal, currentAmount, targetAmount: target, progress, isCompleted: isGoalCompleted, attendanceData: attendance };
+        }
+      }
+
       const hasLinkedTasks = scheduleItems.some(item => item.linkedGoalId === goal.id);
       const hasLinkedHabits = habits.some(habit => habit.linked_goal_id === goal.id);
 
       let currentAmount = goal.currentAmount;
 
-      // Only calculate from entries if the goal is NOT linked to tasks or habits
-      // Task/habit-linked goals are updated directly when tasks/habits are completed
       if (!hasLinkedTasks && !hasLinkedHabits) {
         const categoryEntries = entries.filter(entry =>
           entry.category === goal.category &&
@@ -73,33 +94,15 @@ export function GoalTracker({
       const progress = target > 0 ? Math.min((current / target) * 100, 100) : 0;
       const isGoalCompleted = current >= target && target > 0;
 
-      // Auto-complete goal if target is reached
       if (isGoalCompleted && !goal.completed) {
-        console.log('[GOAL AUTO-COMPLETE DEBUG - GoalTracker]', {
-          goalId: goal.id,
-          goalTitle: goal.title,
-          goalUnit: goal.unit,
-          currentAmount: current,
-          targetAmount: target,
-          hasLinkedTasks,
-          hasLinkedHabits,
-          isGoalCompleted,
-          ratio: target ? current / target : null
-        });
-
-        const updatedGoal = {
-          ...goal,
-          completed: true,
-          completedAt: new Date().toISOString(),
-          currentAmount: Math.min(current, target)
-        };
+        const updatedGoal = { ...goal, completed: true, completedAt: new Date().toISOString(), currentAmount: Math.min(current, target) };
         onUpdateGoal(updatedGoal);
-        return updatedGoal;
+        return { ...updatedGoal, progress: 100, isCompleted: true };
       }
 
       return { ...goal, currentAmount: current, progress, isCompleted: isGoalCompleted };
     });
-  }, [goals, entries, scheduleItems, habits, onUpdateGoal]);
+  }, [goals, entries, scheduleItems, habits, habitCompletions, onUpdateGoal]);
 
   const activeGoals = goalsWithProgress.filter(goal => !goal.completed);
   const completedGoals = goalsWithProgress.filter(goal => goal.completed);

@@ -47,12 +47,13 @@ export interface Goal {
   createdAt: string;
   completed: boolean;
   completedAt?: string;
-  goalType?: 'task' | 'time' | 'distance';
+  goalType?: 'task' | 'time' | 'distance' | 'attendance';
   duration?: string;
   distance?: string;
   durDays?: number;
   durWeeks?: number;
   durMonths?: number;
+  linkedHabitId?: string;
 }
 
 export interface JournalEntry {
