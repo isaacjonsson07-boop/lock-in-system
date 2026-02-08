@@ -80,7 +80,8 @@ export interface ScheduleItem {
   linkedGoalId?: string; // Link to a Goal ID to auto-update progress
   completed: boolean; // This will track completion for the current week
   completedDates: string[]; // Track which specific dates this was completed
-  completedCounts?: { [date: string]: number }; // Track how many times completed on each date
+  completedCounts?: { [date: string]: number };
+  starred?: boolean;
   createdAt: string;
 }
 
@@ -89,12 +90,13 @@ export interface Habit {
   user_id: string;
   name: string;
   target_number: number;
-  days_of_week: number[]; // 0=Sunday, 1=Monday, 2=Tuesday, etc.
+  days_of_week: number[];
   time: string;
   description?: string;
   duration?: string;
   distance?: string;
   linked_goal_id?: string;
+  starred?: boolean;
   created_at: string;
   updated_at: string;
 }
