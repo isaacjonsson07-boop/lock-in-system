@@ -55,9 +55,9 @@ export async function loadFromCloud(): Promise<{
       .from('user_data')
       .select('data')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       return { error }
     }
 

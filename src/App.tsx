@@ -37,39 +37,26 @@ function App() {
   } = useAuth();
   const { theme } = useTheme();
   useCapacitor();
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
-  const [converters, setConverters] = useState<Converter[]>(DEFAULT_CONVERTERS);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
-  const [month, setMonth] = useState(fmtDateISO(startOfMonth()));
+
+  const [initialData] = useState(() => loadFromStorage());
+  const [entries, setEntries] = useState<Entry[]>(initialData.entries || []);
+  const [categories, setCategories] = useState<Category[]>(initialData.categories || DEFAULT_CATEGORIES);
+  const [converters, setConverters] = useState<Converter[]>(initialData.converters || DEFAULT_CONVERTERS);
+  const [tasks, setTasks] = useState<Task[]>(initialData.tasks || []);
+  const [goals, setGoals] = useState<Goal[]>(initialData.goals || []);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(initialData.journalEntries || []);
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>(initialData.scheduleItems || []);
+  const [month, setMonth] = useState(initialData.month || fmtDateISO(startOfMonth()));
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("ALL");
   const [currentTab, setCurrentTab] = useState<TabType>("log");
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const [habitCompletions, setHabitCompletions] = useState<HabitCompletion[]>([]);
+  const [habits, setHabits] = useState<Habit[]>(initialData.habits || []);
+  const [habitCompletions, setHabitCompletions] = useState<HabitCompletion[]>(initialData.habitCompletions || []);
 
-  const initialLoadDone = useRef(false);
-
-  useEffect(() => {
-    const data = loadFromStorage();
-    if (data.entries) setEntries(data.entries);
-    if (data.categories) setCategories(data.categories);
-    if (data.converters) setConverters(data.converters);
-    if (data.tasks) setTasks(data.tasks);
-    if (data.goals) setGoals(data.goals);
-    if (data.journalEntries) setJournalEntries(data.journalEntries);
-    if (data.scheduleItems) setScheduleItems(data.scheduleItems);
-    if (data.habits) setHabits(data.habits);
-    if (data.habitCompletions) setHabitCompletions(data.habitCompletions);
-    if (data.month) setMonth(data.month);
-    initialLoadDone.current = true;
-  }, []);
+  const isFirstRender = useRef(true);
 
   const userId = user?.id;
 
@@ -81,7 +68,10 @@ function App() {
   }, [userId, authLoading]);
 
   useEffect(() => {
-    if (!initialLoadDone.current) return;
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     saveToStorage({ entries, categories, converters, tasks, goals, journalEntries, scheduleItems, habits, habitCompletions, month });
     if (userId) {
       saveDataToCloud();
@@ -108,16 +98,25 @@ function App() {
       const cloudUpdatedAt = data.updated_at;
 
       if (localUpdatedAt && cloudUpdatedAt && localUpdatedAt > cloudUpdatedAt) {
-        saveDataToCloud();
+        const freshData = loadFromStorage();
+        await saveToCloud({
+          entries: freshData.entries || [],
+          categories: freshData.categories || DEFAULT_CATEGORIES,
+          converters: freshData.converters || DEFAULT_CONVERTERS,
+          tasks: freshData.tasks || [],
+          goals: freshData.goals || [],
+          journalEntries: freshData.journalEntries || [],
+          scheduleItems: freshData.scheduleItems || []
+        });
         return;
       }
 
-      if (data.entries !== undefined) setEntries(data.entries);
-      if (data.categories !== undefined) setCategories(data.categories);
-      if (data.converters !== undefined) setConverters(data.converters);
-      if (data.tasks !== undefined) setTasks(data.tasks);
-      if (data.goals !== undefined) setGoals(data.goals);
-      if (data.scheduleItems !== undefined) setScheduleItems(data.scheduleItems);
+      if (Array.isArray(data.entries)) setEntries(data.entries);
+      if (Array.isArray(data.categories)) setCategories(data.categories);
+      if (Array.isArray(data.converters)) setConverters(data.converters);
+      if (Array.isArray(data.tasks)) setTasks(data.tasks);
+      if (Array.isArray(data.goals)) setGoals(data.goals);
+      if (Array.isArray(data.scheduleItems)) setScheduleItems(data.scheduleItems);
     } catch (error) {
       console.error('Failed to load from cloud:', error);
     } finally {
@@ -127,7 +126,16 @@ function App() {
 
   const saveDataToCloud = async () => {
     try {
-      await saveToCloud({ entries, categories, converters, tasks, goals, journalEntries, scheduleItems });
+      const freshData = loadFromStorage();
+      await saveToCloud({
+        entries: freshData.entries || entries,
+        categories: freshData.categories || categories,
+        converters: freshData.converters || converters,
+        tasks: freshData.tasks || tasks,
+        goals: freshData.goals || goals,
+        journalEntries: freshData.journalEntries || journalEntries,
+        scheduleItems: freshData.scheduleItems || scheduleItems
+      });
     } catch (error) {
       console.error('Failed to save to cloud:', error);
     }
