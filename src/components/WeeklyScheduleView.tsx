@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, Plus, Trash2, BookOpen as Edit3, Save, X } from 'lucide-react';
 import { ScheduleItem, Goal } from '../types';
-import { fmtDateISO, uid } from '../utils/dateUtils';
+import { fmtDateISO, uid, getWeekDates, getDayKeyFromISO } from '../utils/dateUtils';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { QuickGuide } from './QuickGuide';
 
@@ -45,26 +45,39 @@ export function WeeklyScheduleView({
   });
   
   const today = fmtDateISO(new Date());
+  const weekDates = useMemo(() => getWeekDates(), []);
 
-  // Get current day of week
   function getCurrentDay() {
     const today = new Date();
-    const dayIndex = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const dayIndex = today.getDay();
     const adjustedIndex = dayIndex === 0 ? 6 : dayIndex - 1;
     const dayMap = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     return dayMap[adjustedIndex];
   }
 
-  // Group schedule items by day for weekly view
+  const currentWeekDateSet = useMemo(() => new Set(Object.values(weekDates)), [weekDates]);
+
   const itemsByDay = useMemo(() => {
     const grouped: { [key: string]: ScheduleItem[] } = {};
-    DAYS.forEach(day => {
-      grouped[day.key] = scheduleItems
-        .filter(item => item.day === day.key)
-        .sort((a, b) => a.time.localeCompare(b.time));
+    DAYS.forEach(day => { grouped[day.key] = []; });
+
+    scheduleItems.forEach(item => {
+      if (item.task_date) {
+        if (currentWeekDateSet.has(item.task_date)) {
+          const dayKey = getDayKeyFromISO(item.task_date);
+          grouped[dayKey]?.push(item);
+        }
+      } else {
+        grouped[item.day]?.push(item);
+      }
     });
+
+    DAYS.forEach(day => {
+      grouped[day.key].sort((a, b) => a.time.localeCompare(b.time));
+    });
+
     return grouped;
-  }, [scheduleItems]);
+  }, [scheduleItems, currentWeekDateSet]);
 
   // Calculate weekly schedule stats
   const weeklyStats = useMemo(() => {
@@ -97,6 +110,7 @@ export function WeeklyScheduleView({
     const item: ScheduleItem = {
       id: uid(),
       day: selectedDay,
+      task_date: weekDates[selectedDay],
       time: newScheduleItem.time,
       title: newScheduleItem.title.trim(),
       description: newScheduleItem.description.trim() || undefined,
@@ -152,6 +166,7 @@ export function WeeklyScheduleView({
     const updatedItem: ScheduleItem = {
       ...editingScheduleItem,
       day: selectedDay,
+      task_date: weekDates[selectedDay],
       time: newScheduleItem.time,
       title: newScheduleItem.title.trim(),
       description: newScheduleItem.description.trim() || undefined,
@@ -355,6 +370,9 @@ export function WeeklyScheduleView({
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-semibold text-gray-800 dark:text-white text-sm">
                   {day.label}
+                  <span className="ml-1 text-xs text-gray-400 dark:text-gray-500 font-normal">
+                    {new Date(weekDates[day.key] + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
                   {day.key === currentDay && <span className="ml-1 text-xs text-green-600 dark:text-green-400">(Today)</span>}
                 </h4>
                 <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded-full">

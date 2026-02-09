@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { CheckSquare, Check, ChevronLeft, ChevronRight, Calendar, Plus, Save, X, ChevronDown, ChevronUp, Repeat, Pencil, Trash2 } from 'lucide-react';
+import { CheckSquare, Check, ChevronLeft, ChevronRight, Calendar, Plus, Save, X, ChevronDown, ChevronUp, Repeat, Pencil, Trash2, Copy } from 'lucide-react';
 import { ScheduleItem, Goal, Habit, HabitCompletion, Converter } from '../types';
-import { fmtDateISO, uid } from '../utils/dateUtils';
+import { fmtDateISO, uid, getDayKeyFromISO } from '../utils/dateUtils';
 import { parseAmountByType } from '../utils/parsing';
 import { formatDistanceDisplay, formatDurationDisplay } from '../utils/formatting';
 import { supabase } from '../lib/supabase';
@@ -266,7 +266,10 @@ export function TodayTasksView({
 
   const todaysTasks = useMemo(() => {
     return scheduleItems
-      .filter(item => item.day === currentDay)
+      .filter(item => {
+        if (item.task_date) return item.task_date === selectedDate;
+        return item.day === currentDay;
+      })
       .map(item => {
         const completedCount = item.completedCounts?.[selectedDate] || 0;
         const targetCount = item.targetNumber || 1;
@@ -457,6 +460,7 @@ export function TodayTasksView({
     const item: ScheduleItem = {
       id: uid(),
       day: currentDay,
+      task_date: selectedDate,
       time: newScheduleItem.time,
       title: newScheduleItem.title.trim(),
       description: newScheduleItem.description.trim() || undefined,
@@ -525,6 +529,7 @@ export function TodayTasksView({
     const updatedItem: ScheduleItem = {
       ...editingScheduleItem,
       day: currentDay,
+      task_date: selectedDate,
       time: newScheduleItem.time,
       title: newScheduleItem.title.trim(),
       description: newScheduleItem.description.trim() || undefined,
@@ -538,6 +543,20 @@ export function TodayTasksView({
     setEditingScheduleItem(null);
     setNewScheduleItem({ time: '09:00', title: '', description: '', type: 'task', targetNumber: '', duration: '', distance: '', linkedGoalId: '' });
     setShowAddScheduleForm(false);
+  };
+
+  const handleDuplicateTask = (task: ScheduleItem) => {
+    const duplicate: ScheduleItem = {
+      ...task,
+      id: uid(),
+      task_date: selectedDate,
+      day: currentDay,
+      completed: false,
+      completedDates: [],
+      completedCounts: {},
+      createdAt: new Date().toISOString()
+    };
+    onAddScheduleItem(duplicate);
   };
 
   const handleCancelScheduleEdit = () => {
@@ -952,6 +971,16 @@ export function TodayTasksView({
                 </div>
 
                 <div className="flex items-center space-x-2 ml-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDuplicateTask(task);
+                    }}
+                    className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                    title="Duplicate task"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

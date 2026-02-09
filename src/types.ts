@@ -70,16 +70,17 @@ export type TabType = 'log' | 'stats' | 'tasks' | 'journaling' | 'settings' | 'h
 
 export interface ScheduleItem {
   id: string;
-  day: string; // 'monday', 'tuesday', etc.
+  day: string; // 'monday', 'tuesday', etc. (kept for backward compat / grouping)
+  task_date?: string; // ISO date (YYYY-MM-DD) — the exact date this task is for
   time: string; // '09:00'
   title: string;
   description?: string;
-  targetNumber?: number; // For task-based items, how many times to complete
-  duration?: string; // For time-based tasks like "30min", "1h 30m"
-  distance?: string; // For distance-based tasks like "5km", "3 miles"
-  linkedGoalId?: string; // Link to a Goal ID to auto-update progress
-  completed: boolean; // This will track completion for the current week
-  completedDates: string[]; // Track which specific dates this was completed
+  targetNumber?: number;
+  duration?: string;
+  distance?: string;
+  linkedGoalId?: string;
+  completed: boolean;
+  completedDates: string[];
   completedCounts?: { [date: string]: number };
   createdAt: string;
 }

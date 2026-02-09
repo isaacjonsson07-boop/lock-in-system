@@ -24,3 +24,27 @@ export function formatDisplayDate(dateStr: string) {
   const date = new Date(dateStr + "T00:00:00");
   return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
 }
+
+const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+export function getWeekDates(referenceDate = new Date()): Record<string, string> {
+  const d = new Date(referenceDate);
+  const dayOfWeek = d.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + mondayOffset);
+
+  const result: Record<string, string> = {};
+  const keys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(monday);
+    day.setDate(monday.getDate() + i);
+    result[keys[i]] = fmtDateISO(day);
+  }
+  return result;
+}
+
+export function getDayKeyFromISO(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  return DAY_KEYS[d.getDay()];
+}
