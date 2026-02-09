@@ -672,12 +672,14 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
     const categoryTypes = new Map<string, string>();
     const categoryDays = new Map<string, Set<string>>();
     const categoryUniqueActivities = new Map<string, Set<string>>();
+    const categoryEventCount = new Map<string, number>();
     const categoryIsHabitOnly = new Map<string, boolean>();
 
     categories.forEach(cat => {
       categoryTypes.set(cat.name, cat.type);
       categoryDays.set(cat.name, new Set());
       categoryUniqueActivities.set(cat.name, new Set());
+      categoryEventCount.set(cat.name, 0);
     });
     
     // Process regular entries
@@ -692,8 +694,10 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       const uniqueActivities = categoryUniqueActivities.get(entry.category) || new Set();
       uniqueActivities.add(`entry-${entry.id}`);
       categoryUniqueActivities.set(entry.category, uniqueActivities);
+
+      categoryEventCount.set(entry.category, (categoryEventCount.get(entry.category) || 0) + 1);
     });
-    
+
     // Process completed tasks and add them to stats
     scheduleItems.forEach(task => {
       task.completedDates.forEach(completedDate => {
@@ -730,6 +734,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
           categoryTypes.set(categoryName, categoryType);
           categoryDays.set(categoryName, new Set());
           categoryUniqueActivities.set(categoryName, new Set());
+          categoryEventCount.set(categoryName, 0);
         }
 
         // Get the actual completion count for this date
@@ -737,7 +742,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
 
         // Add task completion to totals
         const current = categoryTotals.get(categoryName) || 0;
-        let amountToAdd = completionCount; // Use actual completion count
+        let amountToAdd = completionCount;
 
         // Parse duration or distance if available and multiply by completion count
         if (task.duration && categoryType === 'Time') {
@@ -758,6 +763,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         const uniqueActivities = categoryUniqueActivities.get(categoryName) || new Set();
         uniqueActivities.add(`task-${task.id}`);
         categoryUniqueActivities.set(categoryName, uniqueActivities);
+
+        categoryEventCount.set(categoryName, (categoryEventCount.get(categoryName) || 0) + completionCount);
 
         categoryIsHabitOnly.set(categoryName, false);
       });
@@ -817,6 +824,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         categoryTypes.set(categoryName, categoryType);
         categoryDays.set(categoryName, new Set());
         categoryUniqueActivities.set(categoryName, new Set());
+        categoryEventCount.set(categoryName, 0);
       }
 
       // Add habit completion to totals
@@ -842,6 +850,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       const uniqueActivities = categoryUniqueActivities.get(categoryName) || new Set();
       uniqueActivities.add(`habit-${habit.id}`);
       categoryUniqueActivities.set(categoryName, uniqueActivities);
+
+      categoryEventCount.set(categoryName, (categoryEventCount.get(categoryName) || 0) + 1);
 
       if (habit.days_of_week && habit.days_of_week.length > 0) {
         categoryHabitSchedule.set(categoryName, habit.days_of_week);
@@ -902,7 +912,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         type,
         total,
         baseUnit,
-        entryCount: uniqueActivities.size,
+        entryCount: categoryEventCount.get(name) || 0,
         formattedTotal: formatSingleUnit(type, total, baseUnit, converters),
         isHabit: category?.isHabit || false,
         hasToday: categoryDays.get(name)?.has(today) || false,
@@ -982,12 +992,12 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
     const categoryTotals = new Map<string, number>();
     const categoryTypes = new Map<string, string>();
     const categoryEntries = new Map<string, any[]>();
-    const categoryUniqueActivities = new Map<string, Set<string>>();
+    const categoryEventCount = new Map<string, number>();
 
     categories.forEach(cat => {
       categoryTypes.set(cat.name, cat.type);
       categoryEntries.set(cat.name, []);
-      categoryUniqueActivities.set(cat.name, new Set());
+      categoryEventCount.set(cat.name, 0);
     });
     
     // Process regular entries
@@ -999,11 +1009,9 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       entryList.push(entry);
       categoryEntries.set(entry.category, entryList);
 
-      const uniqueActivities = categoryUniqueActivities.get(entry.category) || new Set();
-      uniqueActivities.add(`entry-${entry.id}`);
-      categoryUniqueActivities.set(entry.category, uniqueActivities);
+      categoryEventCount.set(entry.category, (categoryEventCount.get(entry.category) || 0) + 1);
     });
-    
+
     // Process completed tasks
     scheduleItems.forEach(task => {
       task.completedDates.forEach(completedDate => {
@@ -1039,7 +1047,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         if (!categoryTypes.has(categoryName)) {
           categoryTypes.set(categoryName, categoryType);
           categoryEntries.set(categoryName, []);
-          categoryUniqueActivities.set(categoryName, new Set());
+          categoryEventCount.set(categoryName, 0);
         }
 
         // Get the actual completion count for this date
@@ -1074,9 +1082,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         entryList.push(taskEntry);
         categoryEntries.set(categoryName, entryList);
 
-        const uniqueActivities = categoryUniqueActivities.get(categoryName) || new Set();
-        uniqueActivities.add(`task-${task.id}`);
-        categoryUniqueActivities.set(categoryName, uniqueActivities);
+        categoryEventCount.set(categoryName, (categoryEventCount.get(categoryName) || 0) + completionCount);
       });
     });
 
@@ -1116,7 +1122,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       if (!categoryTypes.has(categoryName)) {
         categoryTypes.set(categoryName, categoryType);
         categoryEntries.set(categoryName, []);
-        categoryUniqueActivities.set(categoryName, new Set());
+        categoryEventCount.set(categoryName, 0);
       }
 
       // Add habit completion to totals
@@ -1148,22 +1154,19 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       entryList.push(habitEntry);
       categoryEntries.set(categoryName, entryList);
 
-      const uniqueActivities = categoryUniqueActivities.get(categoryName) || new Set();
-      uniqueActivities.add(`habit-${habit.id}`);
-      categoryUniqueActivities.set(categoryName, uniqueActivities);
+      categoryEventCount.set(categoryName, (categoryEventCount.get(categoryName) || 0) + 1);
     });
 
     const categoryStats = Array.from(categoryTotals.entries()).map(([name, total]) => {
       const type = categoryTypes.get(name) || 'Time';
       const baseUnit = type === 'Time' ? 'Hours' : type === 'Distance' ? 'Km' : 'Times';
       const allCategoryEntries = categoryEntries.get(name) || [];
-      const uniqueActivities = categoryUniqueActivities.get(name) || new Set();
       return {
         name,
         type,
         total,
         baseUnit,
-        entryCount: uniqueActivities.size,
+        entryCount: categoryEventCount.get(name) || 0,
         formattedTotal: formatSingleUnit(type, total, baseUnit, converters),
         entries: allCategoryEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       };
