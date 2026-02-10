@@ -495,14 +495,12 @@ function App() {
         onShowAuth={() => setShowAuthModal(true)}
       />
 
-      {showAuthModal && (
-        <AuthModal
+      <AuthModal
         isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          onSignIn={signIn}
-          onSignUp={signUp}
-        />
-      )}
+        onClose={() => setShowAuthModal(false)}
+        onSignIn={signIn}
+        onSignUp={signUp}
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {currentTab === 'log' && (

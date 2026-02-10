@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { X, Mail, Lock, User, AlertCircle } from 'lucide-react'
 
 interface AuthModalProps {
@@ -13,7 +13,19 @@ export function AuthModal({ isOpen, onClose, onSignIn, onSignUp }: AuthModalProp
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [authError, setAuthError] = useState('')
+  const prevOpenRef = useRef(false)
+
+  useEffect(() => {
+    if (isOpen && !prevOpenRef.current) {
+      setEmail('')
+      setPassword('')
+      setAuthError('')
+      setIsSignUp(false)
+      setLoading(false)
+    }
+    prevOpenRef.current = isOpen
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -23,17 +35,19 @@ export function AuthModal({ isOpen, onClose, onSignIn, onSignUp }: AuthModalProp
 
     const trimmedEmail = email.trim()
     if (!trimmedEmail || !password) {
-      setError('Please enter both email and password.')
+      setAuthError('Please enter both email and password.')
       return
     }
     if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
+      setAuthError('Password must be at least 6 characters.')
       return
     }
 
     console.log('SIGNIN_CLICKED')
     setLoading(true)
-    setError('')
+    setAuthError('')
+
+    let errorMsg = ''
 
     try {
       const result = isSignUp
@@ -43,38 +57,39 @@ export function AuthModal({ isOpen, onClose, onSignIn, onSignUp }: AuthModalProp
       if (result.error) {
         console.log('SIGNIN_ERROR', result.error?.message)
         if (result.error.message === 'Invalid login credentials') {
-          setError('Invalid email or password. Please check your credentials or sign up if you don\'t have an account.')
+          errorMsg = 'Invalid email or password. Please check your credentials or sign up if you don\'t have an account.'
         } else if (result.error.message?.includes('Email not confirmed')) {
-          setError('Please check your email and confirm your account before signing in.')
+          errorMsg = 'Please check your email and confirm your account before signing in.'
         } else {
-          setError(result.error.message || 'An error occurred. Please try again.')
+          errorMsg = result.error.message || 'An error occurred. Please try again.'
         }
       } else {
         console.log('SIGNIN_SUCCESS')
         if (isSignUp && result.data?.user && !result.data?.session) {
-          setError('Please check your email to confirm your account before signing in.')
+          errorMsg = 'Please check your email to confirm your account before signing in.'
         } else {
-          resetForm()
           onClose()
+          return
         }
       }
     } catch (err: any) {
       console.log('SIGNIN_ERROR', err?.message)
-      setError(err?.message || 'An unexpected error occurred. Please try again.')
+      errorMsg = err?.message || 'An unexpected error occurred. Please try again.'
     } finally {
       setLoading(false)
     }
-  }
 
-  const resetForm = () => {
-    setEmail('')
-    setPassword('')
-    setError('')
-    setIsSignUp(false)
+    if (errorMsg) {
+      setAuthError(errorMsg)
+    }
   }
 
   const handleClose = () => {
-    resetForm()
+    setEmail('')
+    setPassword('')
+    setAuthError('')
+    setIsSignUp(false)
+    setLoading(false)
     onClose()
   }
 
@@ -113,7 +128,7 @@ export function AuthModal({ isOpen, onClose, onSignIn, onSignUp }: AuthModalProp
               <input
                 type="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setError('') }}
+                onChange={(e) => { setEmail(e.target.value); setAuthError('') }}
                 onKeyDown={handleKeyDown}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                 placeholder="Enter your email"
@@ -131,7 +146,7 @@ export function AuthModal({ isOpen, onClose, onSignIn, onSignUp }: AuthModalProp
               <input
                 type="password"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setError('') }}
+                onChange={(e) => { setPassword(e.target.value); setAuthError('') }}
                 onKeyDown={handleKeyDown}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
                 placeholder="Enter your password"
@@ -140,12 +155,16 @@ export function AuthModal({ isOpen, onClose, onSignIn, onSignUp }: AuthModalProp
             </div>
           </div>
 
-          {error && (
-            <div className="flex items-start space-x-2 text-red-600 bg-red-50 p-3 rounded-md">
+          {authError && (
+            <div className="flex items-start space-x-2 text-red-600 bg-red-50 border border-red-200 p-3 rounded-md">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <span className="text-sm">{error}</span>
+              <span className="text-sm font-medium">{authError}</span>
             </div>
           )}
+
+          <p className="text-xs text-gray-400 font-mono">
+            Auth error state: {authError || 'none'}
+          </p>
 
           <button
             id="auth-submit-btn"
@@ -170,7 +189,7 @@ export function AuthModal({ isOpen, onClose, onSignIn, onSignUp }: AuthModalProp
             type="button"
             onClick={() => {
               setIsSignUp(!isSignUp)
-              setError('')
+              setAuthError('')
             }}
             className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
           >
