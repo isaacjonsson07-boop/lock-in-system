@@ -69,21 +69,23 @@ export function useAuth() {
       setLoading(false)
     })
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        loadUserPlan(session.user.id)
+        (async () => {
+          await loadUserPlan(session.user.id)
+          setLoading(false)
+        })()
       } else {
         setPlan('free')
         setTrialEndsAt(null)
         setPlanSource('profile')
         applyDevOverride()
+        setLoading(false)
       }
-      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
@@ -111,26 +113,23 @@ export function useAuth() {
   }
 
   const signIn = async (email: string, password: string) => {
-  setLoading(true)
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
+    if (error) {
+      console.error('Sign in error:', error)
+    }
 
-  if (error) {
-    console.error('Sign in error:', error)
+    if (!error && data.session) {
+      setSession(data.session)
+      setUser(data.session.user)
+      await loadUserPlan(data.session.user.id)
+    }
+
+    return { data, error }
   }
-
-  if (!error && data.session) {
-    setSession(data.session)
-    setUser(data.session.user)
-    await loadUserPlan(data.session.user.id)
-  }
-
-  setLoading(false)
-  return { data, error }
-}
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()

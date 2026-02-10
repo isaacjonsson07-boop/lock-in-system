@@ -17,10 +17,11 @@ export function AuthModal({ isOpen, onClose, onSignIn, onSignUp }: AuthModalProp
 
   if (!isOpen) return null
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setLoading(true)
-  setError('')
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setLoading(true)
+    setError('')
 
     try {
       const result = isSignUp
@@ -28,6 +29,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         : await onSignIn(email, password)
 
       if (result.error) {
+        console.error('Auth error details:', result.error)
         if (result.error.message === 'Invalid login credentials') {
           setError('Invalid email or password. Please check your credentials or sign up if you don\'t have an account.')
         } else if (result.error.message.includes('Email not confirmed')) {
@@ -43,9 +45,9 @@ const handleSubmit = async (e: React.FormEvent) => {
           resetForm()
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Auth error:', err)
-      setError('An unexpected error occurred. Please try again.')
+      setError(err?.message || 'An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -71,6 +73,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             {isSignUp ? 'Create Account' : 'Sign In'}
           </h2>
           <button
+            type="button"
             onClick={handleClose}
             className="p-2 text-gray-400 hover:text-gray-600 rounded-md transition-colors"
           >
@@ -78,7 +81,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} action="javascript:void(0)" className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email
@@ -141,6 +144,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
         <div className="mt-6 text-center">
           <button
+            type="button"
             onClick={() => {
               setIsSignUp(!isSignUp)
               setError('')
