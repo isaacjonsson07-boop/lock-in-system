@@ -766,45 +766,70 @@ export function TodayTasksView({
               {habits.map(habit => (
                 <div
                   key={habit.id}
-                  onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
-                  className={`flex items-start space-x-3 p-3 rounded-lg border transition-all ${
+                  className={`p-3 rounded-lg border transition-all ${
                     habit.isCompleted
                       ? 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700'
                       : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                   }`}
                 >
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleHabit(habit);
-                    }}
-                    className={`flex-shrink-0 w-6 h-6 rounded border transition-colors flex items-center justify-center ${
-                      habit.isCompleted
-                        ? 'bg-green-500 border-green-500 text-white'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    {habit.isCompleted ? <Check className="w-3 h-3" /> : null}
-                  </button>
+                  <div className="grid grid-cols-[auto_64px_1fr_auto_auto] gap-3 items-start">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleHabit(habit);
+                      }}
+                      className={`flex-shrink-0 w-6 h-6 rounded border transition-colors flex items-center justify-center ${
+                        habit.isCompleted
+                          ? 'bg-green-500 border-green-500 text-white'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      {habit.isCompleted ? <Check className="w-3 h-3" /> : null}
+                    </button>
 
-                  <div
-                    className="flex-1 cursor-pointer"
-                    onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">
-                        {habit.time}
-                      </span>
-                      <Repeat className="w-3 h-3 text-gray-500 dark:text-gray-400" />
-                      <span
-                        className={`font-medium ${
+                    <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded inline-block">
+                      {habit.time}
+                    </span>
+
+                    <div
+                      className="cursor-pointer"
+                      onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <Repeat className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                        <span
+                          className={`font-medium ${
+                            habit.isCompleted
+                              ? 'text-green-700 dark:text-green-300 line-through'
+                              : 'text-gray-800 dark:text-white'
+                          }`}
+                        >
+                          {habit.name}
+                        </span>
+                      </div>
+                      {habit.linked_goal_id && (() => {
+                        const linkedGoal = goals.find(g => g.id === habit.linked_goal_id);
+                        return linkedGoal ? (
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-2 py-0.5 rounded">
+                              🎯 {linkedGoal.title}
+                            </span>
+                          </div>
+                        ) : null;
+                      })()}
+
+                      {expandedHabit === habit.id && habit.description && (
+                        <p className={`text-sm mt-2 whitespace-pre-line ${
                           habit.isCompleted
-                            ? 'text-green-700 dark:text-green-300 line-through'
-                            : 'text-gray-800 dark:text-white'
-                        }`}
-                      >
-                        {habit.name}
-                      </span>
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-gray-600 dark:text-gray-400'
+                        }`}>
+                          {habit.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-end min-w-[100px]">
                       {(habit.duration || habit.distance || habit.target_number > 1) && (
                         <span className={`text-xs px-2 py-1 rounded ${
                           habit.isCompleted
@@ -820,45 +845,24 @@ export function TodayTasksView({
                         </span>
                       )}
                     </div>
-                    {habit.linked_goal_id && (() => {
-                      const linkedGoal = goals.find(g => g.id === habit.linked_goal_id);
-                      return linkedGoal ? (
-                        <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-2 py-0.5 rounded">
-                            🎯 {linkedGoal.title}
-                          </span>
-                        </div>
-                      ) : null;
-                    })()}
 
-                    {expandedHabit === habit.id && habit.description && (
-                      <p className={`text-sm mt-2 whitespace-pre-line ${
-                        habit.isCompleted
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-gray-600 dark:text-gray-400'
-                      }`}>
-                        {habit.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center space-x-2 ml-2">
-                    <div
-                      className="cursor-pointer"
-                      onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
-                    >
-                      {habit.description && (
-                        <>
-                          {expandedHabit === habit.id ? (
-                            <ChevronUp className="w-4 h-4 text-gray-400" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                          )}
-                        </>
-                      )}
+                    <div className="flex items-center">
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
+                      >
+                        {habit.description && (
+                          <>
+                            {expandedHabit === habit.id ? (
+                              <ChevronUp className="w-4 h-4 text-gray-400" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-gray-400" />
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-
                 </div>
               ))}
             </div>
@@ -881,36 +885,36 @@ export function TodayTasksView({
               {todaysTasks.map(task => (
               <div
                 key={task.id}
-                onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
-                className={`flex items-start space-x-3 p-3 rounded-lg border transition-all ${
+                className={`p-3 rounded-lg border transition-all ${
                   task.completed
                     ? 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700'
                     : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                 }`}
               >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleTaskCompletion(task.id);
-                  }}
-                  className={`flex-shrink-0 w-6 h-6 rounded border transition-colors flex items-center justify-center ${
-                    task.completed
-                      ? 'bg-green-500 border-green-500 text-white'
-                      : 'border-gray-300 hover:border-green-400'
-                  }`}
-                >
-                  {task.completed ? <Check className="w-3 h-3" /> : null}
-                </button>
+                <div className="grid grid-cols-[auto_64px_1fr_auto_auto] gap-3 items-start">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleTaskCompletion(task.id);
+                    }}
+                    className={`flex-shrink-0 w-6 h-6 rounded border transition-colors flex items-center justify-center ${
+                      task.completed
+                        ? 'bg-green-500 border-green-500 text-white'
+                        : 'border-gray-300 hover:border-green-400'
+                    }`}
+                  >
+                    {task.completed ? <Check className="w-3 h-3" /> : null}
+                  </button>
 
-                <div 
-                  className="flex-1 cursor-pointer" 
-                  onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
-                >
-                  <div className="flex flex-col space-y-1">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">
-                        {task.time}
-                      </span>
+                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded inline-block">
+                    {task.time}
+                  </span>
+
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
+                  >
+                    <div className="flex flex-col space-y-1">
                       <span
                         className={`${
                           task.completed
@@ -920,88 +924,91 @@ export function TodayTasksView({
                       >
                         {task.title}
                       </span>
-                      {(task.duration || task.distance || (task.targetNumber && task.targetNumber > 1)) && (
-                        <span className={`ml-2 text-xs px-2 py-1 rounded ${
-                          task.completed
-                            ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
-                            : 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300'
-                        }`}>
-                          {task.duration
-                            ? formatDurationDisplay(task.duration)
-                            : task.distance
-                              ? formatDistanceDisplay(task.distance || '')
-                              : `${task.targetNumber} times`
-                          }
-                        </span>
-                      )}
+                      {task.linkedGoalId && (() => {
+                        const linkedGoal = goals.find(g => g.id === task.linkedGoalId);
+                        return linkedGoal ? (
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-2 py-0.5 rounded">
+                              🎯 {linkedGoal.title}
+                            </span>
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
-                    {task.linkedGoalId && (() => {
-                      const linkedGoal = goals.find(g => g.id === task.linkedGoalId);
-                      return linkedGoal ? (
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-2 py-0.5 rounded">
-                            🎯 {linkedGoal.title}
-                          </span>
-                        </div>
-                      ) : null;
-                    })()}
+
+                    {expandedTask === task.id && task.description && (
+                      <p className={`mt-2 text-sm whitespace-pre-line ${
+                        task.completed
+                          ? 'text-green-600 dark:text-green-400'
+                          : 'text-gray-600 dark:text-gray-400'
+                      }`}>
+                        {task.description}
+                      </p>
+                    )}
                   </div>
 
-                  {expandedTask === task.id && task.description && (
-                    <p className={`mt-2 text-sm whitespace-pre-line ${
-                      task.completed
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-gray-600 dark:text-gray-400'
-                    }`}>
-                      {task.description}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex items-center space-x-2 ml-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDuplicateTask(task);
-                    }}
-                    className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-                    title="Duplicate task"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditScheduleItem(task);
-                    }}
-                    className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded transition-colors"
-                    title="Edit task"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeletingItemId(task.id);
-                    }}
-                    className="p-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded transition-colors"
-                    title="Delete task"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <div
-                    className="cursor-pointer"
-                    onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
-                  >
-                    {task.description && (
-                      <>
-                        {expandedTask === task.id ? (
-                          <ChevronUp className="w-4 h-4 text-gray-400" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-gray-400" />
-                        )}
-                      </>
+                  <div className="flex items-center justify-end min-w-[100px]">
+                    {(task.duration || task.distance || (task.targetNumber && task.targetNumber > 1)) && (
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        task.completed
+                          ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
+                          : 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300'
+                      }`}>
+                        {task.duration
+                          ? formatDurationDisplay(task.duration)
+                          : task.distance
+                            ? formatDistanceDisplay(task.distance || '')
+                            : `${task.targetNumber} times`
+                        }
+                      </span>
                     )}
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDuplicateTask(task);
+                      }}
+                      className="p-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                      title="Duplicate task"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditScheduleItem(task);
+                      }}
+                      className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded transition-colors"
+                      title="Edit task"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletingItemId(task.id);
+                      }}
+                      className="p-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded transition-colors"
+                      title="Delete task"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <div
+                      className="cursor-pointer"
+                      onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
+                    >
+                      {task.description && (
+                        <>
+                          {expandedTask === task.id ? (
+                            <ChevronUp className="w-4 h-4 text-gray-400" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
