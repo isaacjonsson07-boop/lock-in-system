@@ -770,7 +770,7 @@ export function TodayTasksView({
                   className={`flex items-start space-x-3 p-3 rounded-lg border transition-all ${
                     habit.isCompleted
                       ? 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700'
-                      : 'bg-purple-50 dark:bg-purple-900 border-purple-200 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-800'
+                      : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                   }`}
                 >
                   <button
@@ -781,7 +781,7 @@ export function TodayTasksView({
                     className={`flex-shrink-0 w-6 h-6 rounded border transition-colors flex items-center justify-center ${
                       habit.isCompleted
                         ? 'bg-green-500 border-green-500 text-white'
-                        : 'border-purple-300 hover:border-purple-400'
+                        : 'border-gray-300 hover:border-gray-400'
                     }`}
                   >
                     {habit.isCompleted ? <Check className="w-3 h-3" /> : null}
@@ -795,7 +795,7 @@ export function TodayTasksView({
                       <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">
                         {habit.time}
                       </span>
-                      <Repeat className="w-3 h-3 text-purple-500" />
+                      <Repeat className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                       <span
                         className={`font-medium ${
                           habit.isCompleted
@@ -809,7 +809,7 @@ export function TodayTasksView({
                         <span className={`text-xs px-2 py-1 rounded ${
                           habit.isCompleted
                             ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
-                            : 'bg-purple-100 dark:bg-purple-800 text-purple-600 dark:text-purple-300'
+                            : 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300'
                         }`}>
                           {habit.duration
                             ? formatDurationDisplay(habit.duration)
@@ -824,7 +824,7 @@ export function TodayTasksView({
                       const linkedGoal = goals.find(g => g.id === habit.linked_goal_id);
                       return linkedGoal ? (
                         <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900 px-2 py-0.5 rounded">
+                          <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-2 py-0.5 rounded">
                             🎯 {linkedGoal.title}
                           </span>
                         </div>
@@ -939,7 +939,7 @@ export function TodayTasksView({
                       const linkedGoal = goals.find(g => g.id === task.linkedGoalId);
                       return linkedGoal ? (
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900 px-2 py-0.5 rounded">
+                          <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-2 py-0.5 rounded">
                             🎯 {linkedGoal.title}
                           </span>
                         </div>
