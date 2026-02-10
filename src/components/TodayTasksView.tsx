@@ -772,7 +772,7 @@ export function TodayTasksView({
                       : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                   }`}
                 >
-                  <div className="grid grid-cols-[auto_64px_1fr_auto_auto] gap-3 items-start">
+                  <div className="grid grid-cols-[auto_64px_auto_1fr_auto] gap-3 items-start">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -790,6 +790,23 @@ export function TodayTasksView({
                     <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded inline-block">
                       {habit.time}
                     </span>
+
+                    <div className="flex items-center min-w-[100px]">
+                      {(habit.duration || habit.distance || habit.target_number > 1) && (
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          habit.isCompleted
+                            ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
+                            : 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300'
+                        }`}>
+                          {habit.duration
+                            ? formatDurationDisplay(habit.duration)
+                            : habit.distance
+                              ? formatDistanceDisplay(habit.distance || '')
+                              : `${habit.target_number} times`
+                          }
+                        </span>
+                      )}
+                    </div>
 
                     <div
                       className="cursor-pointer"
@@ -826,23 +843,6 @@ export function TodayTasksView({
                         }`}>
                           {habit.description}
                         </p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-end min-w-[100px]">
-                      {(habit.duration || habit.distance || habit.target_number > 1) && (
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          habit.isCompleted
-                            ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
-                            : 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300'
-                        }`}>
-                          {habit.duration
-                            ? formatDurationDisplay(habit.duration)
-                            : habit.distance
-                              ? formatDistanceDisplay(habit.distance || '')
-                              : `${habit.target_number} times`
-                          }
-                        </span>
                       )}
                     </div>
 
@@ -891,7 +891,7 @@ export function TodayTasksView({
                     : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
                 }`}
               >
-                <div className="grid grid-cols-[auto_64px_1fr_auto_auto] gap-3 items-start">
+                <div className="grid grid-cols-[auto_64px_auto_1fr_auto] gap-3 items-start">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -909,6 +909,23 @@ export function TodayTasksView({
                   <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded inline-block">
                     {task.time}
                   </span>
+
+                  <div className="flex items-center min-w-[100px]">
+                    {(task.duration || task.distance || (task.targetNumber && task.targetNumber > 1)) && (
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        task.completed
+                          ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
+                          : 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300'
+                      }`}>
+                        {task.duration
+                          ? formatDurationDisplay(task.duration)
+                          : task.distance
+                            ? formatDistanceDisplay(task.distance || '')
+                            : `${task.targetNumber} times`
+                        }
+                      </span>
+                    )}
+                  </div>
 
                   <div
                     className="cursor-pointer"
@@ -944,23 +961,6 @@ export function TodayTasksView({
                       }`}>
                         {task.description}
                       </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-end min-w-[100px]">
-                    {(task.duration || task.distance || (task.targetNumber && task.targetNumber > 1)) && (
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        task.completed
-                          ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
-                          : 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300'
-                      }`}>
-                        {task.duration
-                          ? formatDurationDisplay(task.duration)
-                          : task.distance
-                            ? formatDistanceDisplay(task.distance || '')
-                            : `${task.targetNumber} times`
-                        }
-                      </span>
                     )}
                   </div>
 
