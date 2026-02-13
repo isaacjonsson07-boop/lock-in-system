@@ -826,7 +826,7 @@ export function TodayTasksView({
                       </span>
 
                       <div
-                        className="flex items-center space-x-2 cursor-pointer min-w-0 w-24 flex-shrink-0"
+                        className="flex items-center space-x-2 cursor-pointer min-w-0 w-36 flex-shrink-0"
                         onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
                       >
                         <Repeat className="w-3 h-3 flex-shrink-0 text-gray-500 dark:text-gray-400" />
@@ -934,7 +934,7 @@ export function TodayTasksView({
                     </span>
 
                     <div
-                      className="cursor-pointer min-w-0 w-24 flex-shrink-0 truncate"
+                      className="cursor-pointer min-w-0 w-36 flex-shrink-0 truncate"
                       onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
                     >
                       <span className="text-gray-800 dark:text-white">
