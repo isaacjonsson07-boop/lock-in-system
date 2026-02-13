@@ -41,7 +41,8 @@ export function WeeklyScheduleView({
     linkedGoalId: '',
     targetNumber: '',
     duration: '',
-    distance: ''
+    distance: '',
+    weight: ''
   });
   
   const today = fmtDateISO(new Date());
@@ -100,7 +101,7 @@ export function WeeklyScheduleView({
         return;
       }
 
-      const taskType = newScheduleItem.duration ? 'time' : newScheduleItem.distance ? 'distance' : 'task';
+      const taskType = newScheduleItem.duration ? 'time' : newScheduleItem.distance ? 'distance' : newScheduleItem.weight ? 'weight' : 'task';
       if (linkedGoal.goalType !== taskType) {
         alert('The selected goal type does not match this task type. Please select a matching goal or leave it unlinked.');
         return;
@@ -118,6 +119,7 @@ export function WeeklyScheduleView({
       targetNumber: newScheduleItem.targetNumber ? parseInt(newScheduleItem.targetNumber) : undefined,
       duration: newScheduleItem.duration.trim() || undefined,
       distance: newScheduleItem.distance.trim() || undefined,
+      weight: newScheduleItem.weight?.trim() || undefined,
       completed: false,
       completedDates: [],
       completedCounts: {},
@@ -125,7 +127,7 @@ export function WeeklyScheduleView({
     };
 
     onAddScheduleItem(item);
-    setNewScheduleItem({ time: '09:00', title: '', description: '', linkedGoalId: '', targetNumber: '', duration: '', distance: '' });
+    setNewScheduleItem({ time: '09:00', title: '', description: '', linkedGoalId: '', targetNumber: '', duration: '', distance: '', weight: '' });
     setShowAddScheduleForm(false);
   };
 
@@ -138,7 +140,8 @@ export function WeeklyScheduleView({
       linkedGoalId: item.linkedGoalId || '',
       targetNumber: item.targetNumber?.toString() || '',
       duration: item.duration || '',
-      distance: item.distance || ''
+      distance: item.distance || '',
+      weight: item.weight || ''
     });
     setSelectedDay(item.day);
     setShowAddScheduleForm(true);
@@ -156,7 +159,7 @@ export function WeeklyScheduleView({
         return;
       }
 
-      const taskType = newScheduleItem.duration ? 'time' : newScheduleItem.distance ? 'distance' : 'task';
+      const taskType = newScheduleItem.duration ? 'time' : newScheduleItem.distance ? 'distance' : newScheduleItem.weight ? 'weight' : 'task';
       if (linkedGoal.goalType !== taskType) {
         alert('The selected goal type does not match this task type. Please select a matching goal or leave it unlinked.');
         return;
@@ -173,12 +176,13 @@ export function WeeklyScheduleView({
       linkedGoalId: validatedLinkedGoalId || undefined,
       targetNumber: newScheduleItem.targetNumber ? parseInt(newScheduleItem.targetNumber) : undefined,
       duration: newScheduleItem.duration.trim() || undefined,
-      distance: newScheduleItem.distance.trim() || undefined
+      distance: newScheduleItem.distance.trim() || undefined,
+      weight: newScheduleItem.weight?.trim() || undefined
     };
 
     onUpdateScheduleItem(updatedItem);
     setEditingScheduleItem(null);
-    setNewScheduleItem({ time: '09:00', title: '', description: '', linkedGoalId: '', targetNumber: '', duration: '', distance: '' });
+    setNewScheduleItem({ time: '09:00', title: '', description: '', linkedGoalId: '', targetNumber: '', duration: '', distance: '', weight: '' });
     setShowAddScheduleForm(false);
   };
 
@@ -188,7 +192,7 @@ export function WeeklyScheduleView({
 
   const handleCancelScheduleEdit = () => {
     setEditingScheduleItem(null);
-    setNewScheduleItem({ time: '09:00', title: '', description: '', linkedGoalId: '', targetNumber: '', duration: '', distance: '' });
+    setNewScheduleItem({ time: '09:00', title: '', description: '', linkedGoalId: '', targetNumber: '', duration: '', distance: '', weight: '' });
     setShowAddScheduleForm(false);
   };
 
@@ -295,6 +299,7 @@ export function WeeklyScheduleView({
                     {goals.filter(goal => {
                       if (newScheduleItem.duration) return goal.goalType === 'time';
                       if (newScheduleItem.distance) return goal.goalType === 'distance';
+                      if (newScheduleItem.weight) return goal.goalType === 'weight';
                       if (newScheduleItem.targetNumber) return goal.goalType === 'task';
                       return true;
                     }).map(goal => (
@@ -336,6 +341,21 @@ export function WeeklyScheduleView({
                     value={newScheduleItem.distance}
                     onChange={(e) => setNewScheduleItem({ ...newScheduleItem, distance: e.target.value })}
                     placeholder="e.g., 5km, 3 miles"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Weight in kg (optional)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={newScheduleItem.weight}
+                    onChange={(e) => setNewScheduleItem({ ...newScheduleItem, weight: e.target.value })}
+                    placeholder="e.g., 72.5, 100"
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>

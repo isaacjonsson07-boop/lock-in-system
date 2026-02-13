@@ -32,16 +32,17 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
   const [newRetryDate, setNewRetryDate] = React.useState('');
   const [allTimeFilter, setAllTimeFilter] = React.useState<'latest' | 'highest-total' | 'best-streak'>('latest');
   const [allTimeSearch, setAllTimeSearch] = React.useState('');
-  const [allTimeTypeFilter, setAllTimeTypeFilter] = React.useState<'all' | 'Distance' | 'Time' | 'Count'>('all');
+  const [allTimeTypeFilter, setAllTimeTypeFilter] = React.useState<'all' | 'Distance' | 'Time' | 'Count' | 'Weight'>('all');
   const [deletingGoalId, setDeletingGoalId] = React.useState<string | null>(null);
   const [newGoal, setNewGoal] = React.useState({
     title: '',
     description: '',
     targetAmount: '',
     targetDate: '',
-    goalType: 'task' as 'task' | 'time' | 'distance' | 'attendance',
+    goalType: 'task' as 'task' | 'time' | 'distance' | 'weight' | 'attendance',
     duration: '',
     distance: '',
+    weight: '',
     linkedHabitId: ''
   });
   const [targetAmountError, setTargetAmountError] = React.useState<string>('');
@@ -380,7 +381,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       };
 
       onAddGoal(goal);
-      setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '', linkedHabitId: '' });
+      setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '', weight: '', linkedHabitId: '' });
       setTargetAmountError('');
       setDeadlineMode('duration');
       setDurDays(0);
@@ -397,6 +398,11 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
 
     if (newGoal.goalType === 'distance' && !newGoal.distance.trim()) {
       alert('Please enter a distance for distance-based goals');
+      return;
+    }
+
+    if (newGoal.goalType === 'weight' && !newGoal.weight.trim()) {
+      alert('Please enter a weight for weight-based goals');
       return;
     }
 
@@ -418,6 +424,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       parsed = parseAmountByType(newGoal.duration, 'Time', converters);
     } else if (newGoal.goalType === 'distance') {
       parsed = parseAmountByType(newGoal.distance, 'Distance', converters);
+    } else if (newGoal.goalType === 'weight') {
+      parsed = parseAmountByType(newGoal.weight, 'Weight', converters);
     } else {
       parsed = parseAmountByType(newGoal.targetAmount, 'Count', converters) ||
                parseAmountByType(newGoal.targetAmount, 'Distance', converters) ||
@@ -452,13 +460,14 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       goalType: newGoal.goalType,
       duration: newGoal.goalType === 'time' ? newGoal.duration.trim() : undefined,
       distance: newGoal.goalType === 'distance' ? newGoal.distance.trim() : undefined,
+      weight: newGoal.goalType === 'weight' ? newGoal.weight.trim() : undefined,
       durDays: deadlineMode === 'duration' ? durDays : undefined,
       durWeeks: deadlineMode === 'duration' ? durWeeks : undefined,
       durMonths: deadlineMode === 'duration' ? durMonths : undefined
     };
 
     onAddGoal(goal);
-    setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '', linkedHabitId: '' });
+    setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '', weight: '', linkedHabitId: '' });
     setTargetAmountError('');
     setDeadlineMode('duration');
     setDurDays(0);
@@ -484,6 +493,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       goalType: goal.goalType || 'task',
       duration: goal.duration || '',
       distance: goal.distance || '',
+      weight: goal.weight || '',
       linkedHabitId: goal.linkedHabitId || ''
     });
     setTargetAmountError('');
@@ -507,7 +517,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
 
     const resetForm = () => {
       setEditingGoal(null);
-      setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '', linkedHabitId: '' });
+      setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '', weight: '', linkedHabitId: '' });
       setTargetAmountError('');
       setDeadlineMode('duration');
       setDurDays(0);
@@ -538,6 +548,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         linkedHabitId: newGoal.linkedHabitId,
         duration: undefined,
         distance: undefined,
+        weight: undefined,
         durDays: deadlineMode === 'duration' ? durDays : undefined,
         durWeeks: deadlineMode === 'duration' ? durWeeks : undefined,
         durMonths: deadlineMode === 'duration' ? durMonths : undefined
@@ -555,6 +566,11 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
 
     if (newGoal.goalType === 'distance' && !newGoal.distance.trim()) {
       alert('Please enter a distance for distance-based goals');
+      return;
+    }
+
+    if (newGoal.goalType === 'weight' && !newGoal.weight.trim()) {
+      alert('Please enter a weight for weight-based goals');
       return;
     }
 
@@ -576,6 +592,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       parsed = parseAmountByType(newGoal.duration, 'Time', converters);
     } else if (newGoal.goalType === 'distance') {
       parsed = parseAmountByType(newGoal.distance, 'Distance', converters);
+    } else if (newGoal.goalType === 'weight') {
+      parsed = parseAmountByType(newGoal.weight, 'Weight', converters);
     } else {
       parsed = parseAmountByType(newGoal.targetAmount, 'Count', converters) ||
                parseAmountByType(newGoal.targetAmount, 'Distance', converters) ||
@@ -606,6 +624,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       goalType: newGoal.goalType,
       duration: newGoal.goalType === 'time' ? newGoal.duration.trim() : undefined,
       distance: newGoal.goalType === 'distance' ? newGoal.distance.trim() : undefined,
+      weight: newGoal.goalType === 'weight' ? newGoal.weight.trim() : undefined,
       linkedHabitId: undefined,
       durDays: deadlineMode === 'duration' ? durDays : undefined,
       durWeeks: deadlineMode === 'duration' ? durWeeks : undefined,
@@ -645,26 +664,28 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
   };
 
   const formatGoalAmount = (goal: Goal): string => {
-    // For goals with duration/distance, display the original input
     if (goal.goalType === 'time' && goal.duration) {
       return goal.duration;
     }
     if (goal.goalType === 'distance' && goal.distance) {
       return goal.distance;
     }
-    // For task-based goals, use the parsed unit
+    if (goal.goalType === 'weight' && goal.weight) {
+      return goal.weight + ' kg';
+    }
     return formatSingleUnit('Count', goal.targetAmount, goal.unit, converters);
   };
 
   const formatCurrentAmount = (goal: Goal): string => {
-    // For goals with duration/distance, format based on goal type
     if (goal.goalType === 'time') {
       return formatSingleUnit('Time', goal.currentAmount, goal.unit, converters);
     }
     if (goal.goalType === 'distance') {
       return formatSingleUnit('Distance', goal.currentAmount, goal.unit, converters);
     }
-    // For task-based goals, use the parsed unit
+    if (goal.goalType === 'weight') {
+      return formatSingleUnit('Weight', goal.currentAmount, goal.unit, converters);
+    }
     return formatSingleUnit('Count', goal.currentAmount, goal.unit, converters);
   };
 
@@ -1379,7 +1400,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         onClose={() => {
           setShowAddGoalForm(false);
           setEditingGoal(null);
-          setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '', linkedHabitId: '' });
+          setNewGoal({ title: '', description: '', targetAmount: '', targetDate: '', goalType: 'task', duration: '', distance: '', weight: '', linkedHabitId: '' });
           setTargetAmountError('');
           setDeadlineMode('duration');
           setDurDays(0);
@@ -1422,7 +1443,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                 <select
                   value={newGoal.goalType}
                   onChange={(e) => {
-                    const val = e.target.value as 'task' | 'time' | 'distance' | 'attendance';
+                    const val = e.target.value as 'task' | 'time' | 'distance' | 'weight' | 'attendance';
                     setNewGoal({ ...newGoal, goalType: val, linkedHabitId: val !== 'attendance' ? '' : newGoal.linkedHabitId });
                     setTargetAmountError('');
                   }}
@@ -1431,6 +1452,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                   <option value="task">Task</option>
                   <option value="time">Time-based</option>
                   <option value="distance">Distance-based</option>
+                  <option value="weight">Weight-based</option>
                   <option value="attendance">Perfect Attendance</option>
                 </select>
               </div>
@@ -1576,6 +1598,23 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                     required
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Examples: 5km, 3 miles, 2000m</p>
+                </div>
+              )}
+
+              {newGoal.goalType === 'weight' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Weight (kg)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={newGoal.weight}
+                    onChange={(e) => setNewGoal({ ...newGoal, weight: e.target.value })}
+                    placeholder="e.g., 72.5, 100"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter weight in kilograms</p>
                 </div>
               )}
 
@@ -1764,13 +1803,14 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
           </div>
           <select
             value={allTimeTypeFilter}
-            onChange={(e) => setAllTimeTypeFilter(e.target.value as 'all' | 'Distance' | 'Time' | 'Count')}
+            onChange={(e) => setAllTimeTypeFilter(e.target.value as 'all' | 'Distance' | 'Time' | 'Count' | 'Weight')}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Types</option>
             <option value="Distance">Distance</option>
             <option value="Time">Time</option>
             <option value="Count">Count</option>
+            <option value="Weight">Weight</option>
           </select>
           <select
             value={allTimeFilter}
