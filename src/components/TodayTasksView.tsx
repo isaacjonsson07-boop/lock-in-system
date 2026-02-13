@@ -835,9 +835,9 @@ export function TodayTasksView({
                         </span>
                       </div>
 
-                      <div className="flex-shrink-0 w-24 flex justify-end">
+                      <div className="flex-shrink-0 w-16 flex justify-end">
                         {(habit.duration || habit.distance || habit.weight || habit.target_number > 1) && (
-                          <span className="text-xs px-2 py-1 rounded whitespace-nowrap bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300">
+                          <span className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300">
                             {habit.duration
                               ? formatDurationDisplay(habit.duration)
                               : habit.distance
@@ -850,12 +850,12 @@ export function TodayTasksView({
                         )}
                       </div>
 
-                      <div className="flex-shrink-0 w-[180px] truncate">
+                      <div className="flex-shrink-0 w-[120px] truncate">
                         {habit.linked_goal_id && (() => {
                           const linkedGoal = goals.find(g => g.id === habit.linked_goal_id);
                           return linkedGoal ? (
-                            <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-2 py-0.5 rounded whitespace-nowrap">
-                              🎯 {linkedGoal.title}
+                            <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-1.5 py-0.5 rounded truncate block">
+                              {linkedGoal.title}
                             </span>
                           ) : null;
                         })()}
@@ -942,9 +942,9 @@ export function TodayTasksView({
                       </span>
                     </div>
 
-                    <div className="flex-shrink-0 w-24 flex justify-end">
+                    <div className="flex-shrink-0 w-16 flex justify-end">
                       {(task.duration || task.distance || task.weight || (task.targetNumber && task.targetNumber > 1)) && (
-                        <span className="text-xs px-2 py-1 rounded whitespace-nowrap bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300">
+                        <span className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300">
                           {task.duration
                             ? formatDurationDisplay(task.duration)
                             : task.distance
@@ -957,12 +957,12 @@ export function TodayTasksView({
                       )}
                     </div>
 
-                    <div className="flex-shrink-0 w-[180px] truncate">
+                    <div className="flex-shrink-0 w-[120px] truncate">
                       {task.linkedGoalId && (() => {
                         const linkedGoal = goals.find(g => g.id === task.linkedGoalId);
                         return linkedGoal ? (
-                          <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-2 py-0.5 rounded whitespace-nowrap">
-                            🎯 {linkedGoal.title}
+                          <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-1.5 py-0.5 rounded truncate block">
+                            {linkedGoal.title}
                           </span>
                         ) : null;
                       })()}
