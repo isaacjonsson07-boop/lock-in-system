@@ -31,11 +31,10 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { name: "Exercise", type: "Count", displayUnit: "Auto" },
 ];
 
-export const TYPE_BASE = {
-  Time: "Hours",
-  Distance: "Km",
-  Count: "Times",
-  Weight: "Kg"
+export const TYPE_BASE = { 
+  Time: "Hours", 
+  Distance: "Km", 
+  Count: "Times"
 };
 
 export const TYPES = Object.keys(TYPE_BASE);
