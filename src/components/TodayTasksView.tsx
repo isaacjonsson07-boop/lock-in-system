@@ -803,11 +803,7 @@ export function TodayTasksView({
               {habits.map(habit => (
                 <div
                   key={habit.id}
-                  className={`p-3 rounded-lg border transition-all ${
-                    habit.isCompleted
-                      ? 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700'
-                      : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
-                  }`}
+                  className="p-3 rounded-lg border transition-all bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
                 >
                   <div>
                     <div className="flex items-center gap-3">
@@ -834,24 +830,14 @@ export function TodayTasksView({
                         onClick={() => setExpandedHabit(expandedHabit === habit.id ? null : habit.id)}
                       >
                         <Repeat className="w-3 h-3 flex-shrink-0 text-gray-500 dark:text-gray-400" />
-                        <span
-                          className={`font-medium truncate ${
-                            habit.isCompleted
-                              ? 'text-green-700 dark:text-green-300 line-through'
-                              : 'text-gray-800 dark:text-white'
-                          }`}
-                        >
+                        <span className="font-medium truncate text-gray-800 dark:text-white">
                           {habit.name}
                         </span>
                       </div>
 
                       <div className="flex-shrink-0 w-24 flex justify-end">
                         {(habit.duration || habit.distance || habit.weight || habit.target_number > 1) && (
-                          <span className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
-                            habit.isCompleted
-                              ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
-                              : 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300'
-                          }`}>
+                          <span className="text-xs px-2 py-1 rounded whitespace-nowrap bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300">
                             {habit.duration
                               ? formatDurationDisplay(habit.duration)
                               : habit.distance
@@ -925,11 +911,7 @@ export function TodayTasksView({
               {todaysTasks.map(task => (
               <div
                 key={task.id}
-                className={`p-3 rounded-lg border transition-all ${
-                  task.completed
-                    ? 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-700'
-                    : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
-                }`}
+                className="p-3 rounded-lg border transition-all bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               >
                 <div>
                   <div className="flex items-center gap-3">
@@ -955,24 +937,14 @@ export function TodayTasksView({
                       className="cursor-pointer min-w-0 flex-1 truncate"
                       onClick={() => setExpandedTask(expandedTask === task.id ? null : task.id)}
                     >
-                      <span
-                        className={`${
-                          task.completed
-                            ? 'text-green-700 dark:text-green-300 line-through'
-                            : 'text-gray-800 dark:text-white'
-                        }`}
-                      >
+                      <span className="text-gray-800 dark:text-white">
                         {task.title}
                       </span>
                     </div>
 
                     <div className="flex-shrink-0 w-24 flex justify-end">
                       {(task.duration || task.distance || task.weight || (task.targetNumber && task.targetNumber > 1)) && (
-                        <span className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
-                          task.completed
-                            ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
-                            : 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300'
-                        }`}>
+                        <span className="text-xs px-2 py-1 rounded whitespace-nowrap bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300">
                           {task.duration
                             ? formatDurationDisplay(task.duration)
                             : task.distance
