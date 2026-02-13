@@ -101,10 +101,12 @@ export function TodayTasksView({
     return selectedDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }, [selectedDate]);
 
-  const selectedDateShort = useMemo(() => {
-    const weekday = selectedDateObj.toLocaleDateString('en-US', { weekday: 'short' });
-    const monthDay = selectedDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return `${weekday}, ${monthDay}`;
+  const selectedWeekday = useMemo(() => {
+    return selectedDateObj.toLocaleDateString('en-US', { weekday: 'long' });
+  }, [selectedDate]);
+
+  const selectedMonthDay = useMemo(() => {
+    return selectedDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }, [selectedDate]);
 
   const goToPreviousDay = () => {
@@ -739,33 +741,39 @@ export function TodayTasksView({
       {/* Today's Tasks Section */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center">
             <button
               onClick={goToPreviousDay}
-              className="flex-shrink-0 p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
+              className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            <h2 className="text-lg font-medium text-gray-700 dark:text-gray-200">
-              {selectedDayLabel} <span className="text-gray-400 dark:text-gray-500 font-normal">·</span> {selectedDateShort}
-            </h2>
+            <div className="flex items-baseline gap-2 min-w-[180px]">
+              <div>
+                <h2 className="text-lg font-medium text-gray-700 dark:text-gray-200 leading-tight">
+                  {selectedDayLabel}
+                </h2>
+                <p className="text-sm text-gray-400 dark:text-gray-500">
+                  {selectedWeekday} · {selectedMonthDay}
+                </p>
+              </div>
+              {!isToday && (
+                <button
+                  onClick={goToToday}
+                  className="flex-shrink-0 px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Today
+                </button>
+              )}
+            </div>
 
             <button
               onClick={goToNextDay}
-              className="flex-shrink-0 p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
+              className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
-
-            {!isToday && (
-              <button
-                onClick={goToToday}
-                className="flex-shrink-0 px-2.5 py-1 text-xs text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                Today
-              </button>
-            )}
           </div>
 
           <div className="flex items-center space-x-4">
