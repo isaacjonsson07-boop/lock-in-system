@@ -115,13 +115,26 @@ function parseCountAmount(str: string): ParsedAmount | null {
   return null;
 }
 
+function parseWeightAmount(str: string): ParsedAmount | null {
+  const tokens = tokenizeAmount(str);
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (t.type === 'num') {
+      const n = toNumber(t.val);
+      if (Number.isFinite(n) && n >= 0) return { value: Math.round(n * 100) / 100, unit: 'Kg' };
+    }
+  }
+  return null;
+}
+
 export function parseAmountByType(input: string, type: string, converters: Converter[]): ParsedAmount | null {
   if (!input || !String(input).trim()) return null;
   const str = String(input).trim().toLowerCase();
-  
+
   if (type === 'Time') return parseTimeAmount(str);
   if (type === 'Distance') return parseDistanceAmount(str, converters);
   if (type === 'Count') return parseCountAmount(str);
+  if (type === 'Weight') return parseWeightAmount(str);
   return null;
 }
 
@@ -129,5 +142,6 @@ export function amountPlaceholderByType(type: string): string {
   if (type === 'Time') return "e.g., 1h 30m, 90min, 1:30";
   if (type === 'Distance') return "e.g., 5km, 3.2mi, 1500m";
   if (type === 'Count') return "e.g., 5, 12x, 3 times";
+  if (type === 'Weight') return "e.g., 72.5, 100";
   return "e.g., 1h 30m";
 }

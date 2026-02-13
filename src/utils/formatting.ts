@@ -34,6 +34,7 @@ export function formatSingleUnit(type: string, valueInBase: number, unit: string
   const label = UNIT_SHORT[unit as keyof typeof UNIT_SHORT] || unit;
 
   if (type === 'Distance') return `${Math.round(amount * 100) / 100} ${label}`;
+  if (type === 'Weight') return `${Math.round(amount * 100) / 100} kg`;
   if (type === 'Count') {
     const n = Math.round(amount);
     return `${n} ${n === 1 ? 'time' : 'times'}`;
@@ -60,6 +61,14 @@ export function formatDistanceDisplay(value: string): string {
   }
 
   return value;
+}
+
+export function formatWeightDisplay(value: string): string {
+  if (!value) return value;
+  const trimmed = value.trim();
+  const numericValue = parseFloat(trimmed);
+  if (isNaN(numericValue)) return value;
+  return `${Math.round(numericValue * 100) / 100}kg`;
 }
 
 export function formatDurationDisplay(value: string): string {

@@ -205,7 +205,7 @@ export function EntryForm({
         
         {/* Examples hint */}
         <div className="text-xs text-gray-500 pt-1 border-t">
-          <span className="font-medium">Examples:</span> Time: "1h 30m" or "90min" or "1:30" • Distance: "5km" or "3.2mi" or "1500m"
+          <span className="font-medium">Examples:</span> Time: "1h 30m" or "90min" or "1:30" • Distance: "5km" or "3.2mi" • Weight: "72.5" kg
         </div>
       </form>
     </div>

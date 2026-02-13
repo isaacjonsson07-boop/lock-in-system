@@ -3,7 +3,7 @@ import { Calendar, Plus, Trash2, Save, X, Pencil } from 'lucide-react';
 import { Habit, Goal } from '../types';
 import { supabase } from '../lib/supabase';
 import { uid } from '../utils/dateUtils';
-import { formatDistanceDisplay, formatDurationDisplay } from '../utils/formatting';
+import { formatDistanceDisplay, formatDurationDisplay, formatWeightDisplay } from '../utils/formatting';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateItemModal } from './CreateItemModal';
 import { QuickGuide } from './QuickGuide';
@@ -40,9 +40,10 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
     target_number: '',
     days_of_week: [] as number[],
     time: '09:00',
-    type: 'task' as 'task' | 'time' | 'distance',
+    type: 'task' as 'task' | 'time' | 'distance' | 'weight',
     duration: '',
     distance: '',
+    weight: '',
     description: '',
     linkedGoalId: ''
   });
@@ -85,15 +86,20 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
       return;
     }
 
+    if (formData.type === 'weight' && !formData.weight.trim()) {
+      alert('Please enter a weight for weight-based habits');
+      return;
+    }
+
     let validatedLinkedGoalId = formData.linkedGoalId;
     if (formData.linkedGoalId) {
       const linkedGoal = goals.find(g => g.id === formData.linkedGoalId);
       if (!linkedGoal) {
-        console.warn('⚠️ Selected goal not found. Clearing linked goal.');
+        console.warn('Selected goal not found. Clearing linked goal.');
         alert('The selected goal no longer exists. Please select a different goal or leave it unlinked.');
         validatedLinkedGoalId = '';
       } else if (linkedGoal.goalType !== formData.type) {
-        console.warn('⚠️ Goal type mismatch. Clearing linked goal.');
+        console.warn('Goal type mismatch. Clearing linked goal.');
         alert('The selected goal type does not match this habit type. Please select a matching goal or leave it unlinked.');
         validatedLinkedGoalId = '';
       }
@@ -114,12 +120,12 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
             description: formData.description.trim() || undefined,
             duration: formData.type === 'time' ? formData.duration.trim() : undefined,
             distance: formData.type === 'distance' ? formData.distance.trim() : undefined,
+            weight: formData.type === 'weight' ? formData.weight.trim() : undefined,
             linked_goal_id: validatedLinkedGoalId || undefined,
             user_id: user.id
           });
 
         if (error) throw error;
-        console.log('✅ Habit saved with linked_goal_id:', validatedLinkedGoalId);
         onHabitsChange();
       } else {
         const newHabit: Habit = {
@@ -132,6 +138,7 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
           description: formData.description.trim() || undefined,
           duration: formData.type === 'time' ? formData.duration.trim() : undefined,
           distance: formData.type === 'distance' ? formData.distance.trim() : undefined,
+          weight: formData.type === 'weight' ? formData.weight.trim() : undefined,
           linked_goal_id: validatedLinkedGoalId || undefined,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -147,6 +154,7 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
         type: 'task',
         duration: '',
         distance: '',
+        weight: '',
         description: '',
         linkedGoalId: ''
       });
@@ -179,15 +187,20 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
       return;
     }
 
+    if (formData.type === 'weight' && !formData.weight.trim()) {
+      alert('Please enter a weight for weight-based habits');
+      return;
+    }
+
     let validatedLinkedGoalId = formData.linkedGoalId;
     if (formData.linkedGoalId) {
       const linkedGoal = goals.find(g => g.id === formData.linkedGoalId);
       if (!linkedGoal) {
-        console.warn('⚠️ Selected goal not found. Clearing linked goal.');
+        console.warn('Selected goal not found. Clearing linked goal.');
         alert('The selected goal no longer exists. Please select a different goal or leave it unlinked.');
         validatedLinkedGoalId = '';
       } else if (linkedGoal.goalType !== formData.type) {
-        console.warn('⚠️ Goal type mismatch. Clearing linked goal.');
+        console.warn('Goal type mismatch. Clearing linked goal.');
         alert('The selected goal type does not match this habit type. Please select a matching goal or leave it unlinked.');
         validatedLinkedGoalId = '';
       }
@@ -208,6 +221,7 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
             description: formData.description.trim() || undefined,
             duration: formData.type === 'time' ? formData.duration.trim() : undefined,
             distance: formData.type === 'distance' ? formData.distance.trim() : undefined,
+            weight: formData.type === 'weight' ? formData.weight.trim() : undefined,
             linked_goal_id: validatedLinkedGoalId || undefined,
             updated_at: new Date().toISOString()
           })
@@ -227,6 +241,7 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
                 description: formData.description.trim() || undefined,
                 duration: formData.type === 'time' ? formData.duration.trim() : undefined,
                 distance: formData.type === 'distance' ? formData.distance.trim() : undefined,
+                weight: formData.type === 'weight' ? formData.weight.trim() : undefined,
                 linked_goal_id: validatedLinkedGoalId || undefined,
                 updated_at: new Date().toISOString()
               }
@@ -243,6 +258,7 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
         type: 'task',
         duration: '',
         distance: '',
+        weight: '',
         description: '',
         linkedGoalId: ''
       });
@@ -262,9 +278,10 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
       target_number: habit.target_number.toString(),
       days_of_week: habit.days_of_week,
       time: habit.time,
-      type: habit.duration ? 'time' : habit.distance ? 'distance' : 'task',
+      type: habit.duration ? 'time' : habit.distance ? 'distance' : habit.weight ? 'weight' : 'task',
       duration: habit.duration || '',
       distance: habit.distance || '',
+      weight: habit.weight || '',
       description: habit.description || '',
       linkedGoalId: habit.linked_goal_id || ''
     });
@@ -301,6 +318,7 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
       type: 'task',
       duration: '',
       distance: '',
+      weight: '',
       description: '',
       linkedGoalId: ''
     });
@@ -405,7 +423,7 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
               <select
                 value={formData.type}
                 onChange={(e) => {
-                  const newType = e.target.value as 'task' | 'time' | 'distance';
+                  const newType = e.target.value as 'task' | 'time' | 'distance' | 'weight';
                   const linkedGoal = goals.find(g => g.id === formData.linkedGoalId);
                   const newLinkedGoalId = linkedGoal && linkedGoal.goalType === newType ? formData.linkedGoalId : '';
                   setFormData({ ...formData, type: newType, linkedGoalId: newLinkedGoalId });
@@ -415,6 +433,7 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
                 <option value="task">Task</option>
                 <option value="time">Time-based</option>
                 <option value="distance">Distance-based</option>
+                <option value="weight">Weight-based</option>
               </select>
             </div>
           </div>
@@ -462,6 +481,23 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
                 required
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Examples: 5km, 3 miles, 2000m</p>
+            </div>
+          )}
+
+          {formData.type === 'weight' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Weight (kg)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.weight}
+                onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                placeholder="e.g., 72.5, 100"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter weight in kilograms</p>
             </div>
           )}
 
@@ -597,9 +633,11 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
                           ? formatDurationDisplay(habit.duration)
                           : habit.distance
                             ? formatDistanceDisplay(habit.distance)
-                            : habit.target_number > 1
-                              ? `${habit.target_number}x`
-                              : 'Task'
+                            : habit.weight
+                              ? formatWeightDisplay(habit.weight)
+                              : habit.target_number > 1
+                                ? `${habit.target_number}x`
+                                : 'Task'
                         }
                       </td>
 

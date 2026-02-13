@@ -152,9 +152,10 @@ export function GoalTracker({
       targetDate: targetDate,
       createdAt: new Date().toISOString(),
       completed: false,
-      goalType: categoryType === 'Distance' ? 'distance' : categoryType === 'Time' ? 'time' : 'task',
+      goalType: categoryType === 'Distance' ? 'distance' : categoryType === 'Time' ? 'time' : categoryType === 'Weight' ? 'weight' : 'task',
       distance: categoryType === 'Distance' ? newGoal.targetAmount : undefined,
       duration: categoryType === 'Time' ? newGoal.targetAmount : undefined,
+      weight: categoryType === 'Weight' ? newGoal.targetAmount : undefined,
       durDays: deadlineMode === 'duration' ? durDays : undefined,
       durWeeks: deadlineMode === 'duration' ? durWeeks : undefined,
       durMonths: deadlineMode === 'duration' ? durMonths : undefined
@@ -242,9 +243,10 @@ export function GoalTracker({
       targetAmount: parsed.value,
       unit: parsed.unit,
       targetDate,
-      goalType: categoryType === 'Distance' ? 'distance' : categoryType === 'Time' ? 'time' : 'task',
+      goalType: categoryType === 'Distance' ? 'distance' : categoryType === 'Time' ? 'time' : categoryType === 'Weight' ? 'weight' : 'task',
       distance: categoryType === 'Distance' ? newGoal.targetAmount : undefined,
       duration: categoryType === 'Time' ? newGoal.targetAmount : undefined,
+      weight: categoryType === 'Weight' ? newGoal.targetAmount : undefined,
       durDays: deadlineMode === 'duration' ? durDays : undefined,
       durWeeks: deadlineMode === 'duration' ? durWeeks : undefined,
       durMonths: deadlineMode === 'duration' ? durMonths : undefined
@@ -274,8 +276,10 @@ export function GoalTracker({
     if (goal) {
       if (goal.distance) return 'Distance';
       if (goal.duration) return 'Time';
+      if (goal.weight) return 'Weight';
       if (goal.goalType === 'distance') return 'Distance';
       if (goal.goalType === 'time') return 'Time';
+      if (goal.goalType === 'weight') return 'Weight';
       if (goal.goalType === 'task') return 'Count';
     }
 

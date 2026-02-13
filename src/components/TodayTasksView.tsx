@@ -3,7 +3,7 @@ import { CheckSquare, Check, ChevronLeft, ChevronRight, Calendar, Plus, Save, X,
 import { ScheduleItem, Goal, Habit, HabitCompletion, Converter } from '../types';
 import { fmtDateISO, uid, getDayKeyFromISO } from '../utils/dateUtils';
 import { parseAmountByType } from '../utils/parsing';
-import { formatDistanceDisplay, formatDurationDisplay } from '../utils/formatting';
+import { formatDistanceDisplay, formatDurationDisplay, formatWeightDisplay } from '../utils/formatting';
 import { supabase } from '../lib/supabase';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateItemModal } from './CreateItemModal';
@@ -63,10 +63,11 @@ export function TodayTasksView({
     time: '09:00',
     title: '',
     description: '',
-    type: 'task' as 'task' | 'time' | 'distance',
+    type: 'task' as 'task' | 'time' | 'distance' | 'weight',
     targetNumber: '',
     duration: '',
     distance: '',
+    weight: '',
     linkedGoalId: ''
   });
   const [habits, setHabits] = useState<HabitWithCompletion[]>([]);
@@ -411,19 +412,24 @@ export function TodayTasksView({
     } else if (task.duration) {
       const parsed = parseAmountByType(task.duration, 'Time', converters);
       return parsed?.value || 0;
+    } else if (task.weight) {
+      const parsed = parseAmountByType(task.weight, 'Weight', converters);
+      return parsed?.value || 0;
     } else if (task.targetNumber) {
       return task.targetNumber;
     }
     return 1;
   };
 
-  // Calculate the amount to add to the goal based on habit type
   const calculateHabitAmount = (habit: Habit): number => {
     if (habit.distance) {
       const parsed = parseAmountByType(habit.distance, 'Distance', converters);
       return parsed?.value || 0;
     } else if (habit.duration) {
       const parsed = parseAmountByType(habit.duration, 'Time', converters);
+      return parsed?.value || 0;
+    } else if (habit.weight) {
+      const parsed = parseAmountByType(habit.weight, 'Weight', converters);
       return parsed?.value || 0;
     } else if (habit.target_number) {
       return habit.target_number;
@@ -451,6 +457,11 @@ export function TodayTasksView({
       return;
     }
 
+    if (newScheduleItem.type === 'weight' && !newScheduleItem.weight.trim()) {
+      alert('Please enter a weight for weight-based tasks');
+      return;
+    }
+
     let validatedLinkedGoalId = newScheduleItem.linkedGoalId;
     if (newScheduleItem.linkedGoalId) {
       const linkedGoal = goals.find(g => g.id === newScheduleItem.linkedGoalId);
@@ -473,6 +484,7 @@ export function TodayTasksView({
       targetNumber: newScheduleItem.type === 'task' ? parseInt(newScheduleItem.targetNumber) : undefined,
       duration: newScheduleItem.type === 'time' ? newScheduleItem.duration.trim() : undefined,
       distance: newScheduleItem.type === 'distance' ? newScheduleItem.distance.trim() : undefined,
+      weight: newScheduleItem.type === 'weight' ? newScheduleItem.weight.trim() : undefined,
       linkedGoalId: validatedLinkedGoalId || undefined,
       completed: false,
       completedDates: [],
@@ -481,7 +493,7 @@ export function TodayTasksView({
     };
 
     onAddScheduleItem(item);
-    setNewScheduleItem({ time: '09:00', title: '', description: '', type: 'task', targetNumber: '', duration: '', distance: '', linkedGoalId: '' });
+    setNewScheduleItem({ time: '09:00', title: '', description: '', type: 'task', targetNumber: '', duration: '', distance: '', weight: '', linkedGoalId: '' });
     setShowAddScheduleForm(false);
   };
 
@@ -491,10 +503,11 @@ export function TodayTasksView({
       time: item.time,
       title: item.title,
       description: item.description || '',
-      type: item.duration ? 'time' : item.distance ? 'distance' : 'task',
+      type: item.duration ? 'time' : item.distance ? 'distance' : item.weight ? 'weight' : 'task',
       targetNumber: item.targetNumber?.toString() || '',
       duration: item.duration || '',
       distance: item.distance || '',
+      weight: item.weight || '',
       linkedGoalId: item.linkedGoalId || ''
     });
     setShowAddScheduleForm(true);
@@ -520,6 +533,11 @@ export function TodayTasksView({
       return;
     }
 
+    if (newScheduleItem.type === 'weight' && !newScheduleItem.weight.trim()) {
+      alert('Please enter a weight for weight-based tasks');
+      return;
+    }
+
     let validatedLinkedGoalId = newScheduleItem.linkedGoalId;
     if (newScheduleItem.linkedGoalId) {
       const linkedGoal = goals.find(g => g.id === newScheduleItem.linkedGoalId);
@@ -542,12 +560,13 @@ export function TodayTasksView({
       targetNumber: newScheduleItem.type === 'task' ? parseInt(newScheduleItem.targetNumber) : undefined,
       duration: newScheduleItem.type === 'time' ? newScheduleItem.duration.trim() : undefined,
       distance: newScheduleItem.type === 'distance' ? newScheduleItem.distance.trim() : undefined,
+      weight: newScheduleItem.type === 'weight' ? newScheduleItem.weight.trim() : undefined,
       linkedGoalId: validatedLinkedGoalId || undefined
     };
 
     onUpdateScheduleItem(updatedItem);
     setEditingScheduleItem(null);
-    setNewScheduleItem({ time: '09:00', title: '', description: '', type: 'task', targetNumber: '', duration: '', distance: '', linkedGoalId: '' });
+    setNewScheduleItem({ time: '09:00', title: '', description: '', type: 'task', targetNumber: '', duration: '', distance: '', weight: '', linkedGoalId: '' });
     setShowAddScheduleForm(false);
   };
 
@@ -567,7 +586,7 @@ export function TodayTasksView({
 
   const handleCancelScheduleEdit = () => {
     setEditingScheduleItem(null);
-    setNewScheduleItem({ time: '09:00', title: '', description: '', type: 'task', targetNumber: '', duration: '', distance: '', linkedGoalId: '' });
+    setNewScheduleItem({ time: '09:00', title: '', description: '', type: 'task', targetNumber: '', duration: '', distance: '', weight: '', linkedGoalId: '' });
     setShowAddScheduleForm(false);
   };
 
@@ -609,7 +628,7 @@ export function TodayTasksView({
             <select
               value={newScheduleItem.type}
               onChange={(e) => {
-                const newType = e.target.value as 'task' | 'time' | 'distance';
+                const newType = e.target.value as 'task' | 'time' | 'distance' | 'weight';
                 const linkedGoal = goals.find(g => g.id === newScheduleItem.linkedGoalId);
                 const newLinkedGoalId = linkedGoal && linkedGoal.goalType === newType ? newScheduleItem.linkedGoalId : '';
                 setNewScheduleItem({ ...newScheduleItem, type: newType, linkedGoalId: newLinkedGoalId });
@@ -619,6 +638,7 @@ export function TodayTasksView({
               <option value="task">Task</option>
               <option value="time">Time-based</option>
               <option value="distance">Distance-based</option>
+              <option value="weight">Weight-based</option>
             </select>
           </div>
         </div>
@@ -666,6 +686,23 @@ export function TodayTasksView({
               required
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Examples: 5km, 3 miles, 2000m</p>
+          </div>
+        )}
+
+        {newScheduleItem.type === 'weight' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Weight (kg)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={newScheduleItem.weight}
+              onChange={(e) => setNewScheduleItem({ ...newScheduleItem, weight: e.target.value })}
+              placeholder="e.g., 72.5, 100"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter weight in kilograms</p>
           </div>
         )}
 
@@ -809,7 +846,7 @@ export function TodayTasksView({
                       </div>
 
                       <div className="flex-shrink-0 w-24 flex justify-end">
-                        {(habit.duration || habit.distance || habit.target_number > 1) && (
+                        {(habit.duration || habit.distance || habit.weight || habit.target_number > 1) && (
                           <span className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
                             habit.isCompleted
                               ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
@@ -819,7 +856,9 @@ export function TodayTasksView({
                               ? formatDurationDisplay(habit.duration)
                               : habit.distance
                                 ? formatDistanceDisplay(habit.distance || '')
-                                : `${habit.target_number} times`
+                                : habit.weight
+                                  ? formatWeightDisplay(habit.weight)
+                                  : `${habit.target_number} times`
                             }
                           </span>
                         )}
@@ -928,7 +967,7 @@ export function TodayTasksView({
                     </div>
 
                     <div className="flex-shrink-0 w-24 flex justify-end">
-                      {(task.duration || task.distance || (task.targetNumber && task.targetNumber > 1)) && (
+                      {(task.duration || task.distance || task.weight || (task.targetNumber && task.targetNumber > 1)) && (
                         <span className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
                           task.completed
                             ? 'bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300'
@@ -938,7 +977,9 @@ export function TodayTasksView({
                             ? formatDurationDisplay(task.duration)
                             : task.distance
                               ? formatDistanceDisplay(task.distance || '')
-                              : `${task.targetNumber} times`
+                              : task.weight
+                                ? formatWeightDisplay(task.weight)
+                                : `${task.targetNumber} times`
                           }
                         </span>
                       )}

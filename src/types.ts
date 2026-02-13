@@ -47,9 +47,10 @@ export interface Goal {
   createdAt: string;
   completed: boolean;
   completedAt?: string;
-  goalType?: 'task' | 'time' | 'distance' | 'attendance';
+  goalType?: 'task' | 'time' | 'distance' | 'weight' | 'attendance';
   duration?: string;
   distance?: string;
+  weight?: string;
   durDays?: number;
   durWeeks?: number;
   durMonths?: number;
@@ -78,6 +79,7 @@ export interface ScheduleItem {
   targetNumber?: number;
   duration?: string;
   distance?: string;
+  weight?: string;
   linkedGoalId?: string;
   completed: boolean;
   completedDates: string[];
@@ -95,6 +97,7 @@ export interface Habit {
   description?: string;
   duration?: string;
   distance?: string;
+  weight?: string;
   linked_goal_id?: string;
   starred?: boolean;
   created_at: string;

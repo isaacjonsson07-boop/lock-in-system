@@ -20,6 +20,7 @@ export const DEFAULT_CONVERTERS: Converter[] = [
   { unit: "Meters", type: "Distance", baseUnit: "Km", factorToBase: 0.001 },
   { unit: "Miles", type: "Distance", baseUnit: "Km", factorToBase: 1.60934 },
   { unit: "Times", type: "Count", baseUnit: "Times", factorToBase: 1 },
+  { unit: "Kg", type: "Weight", baseUnit: "Kg", factorToBase: 1 },
 ];
 
 export const DEFAULT_CATEGORIES: Category[] = [
@@ -31,21 +32,23 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { name: "Exercise", type: "Count", displayUnit: "Auto" },
 ];
 
-export const TYPE_BASE = { 
-  Time: "Hours", 
-  Distance: "Km", 
-  Count: "Times"
+export const TYPE_BASE = {
+  Time: "Hours",
+  Distance: "Km",
+  Count: "Times",
+  Weight: "Kg"
 };
 
 export const TYPES = Object.keys(TYPE_BASE);
 
-export const UNIT_SHORT = { 
-  Hours: 'h', 
-  Minutes: 'min', 
-  Km: 'km', 
-  Meters: 'm', 
-  Miles: 'mi', 
-  Times: '×'
+export const UNIT_SHORT = {
+  Hours: 'h',
+  Minutes: 'min',
+  Km: 'km',
+  Meters: 'm',
+  Miles: 'mi',
+  Times: '\u00d7',
+  Kg: 'kg'
 };
 
 export const UNIT_SYNONYMS = {
@@ -58,7 +61,10 @@ export const UNIT_SYNONYMS = {
     m: "Meters", meter: "Meters", meters: "Meters", metre: "Meters", metres: "Meters", 
     mi: "Miles", mile: "Miles", miles: "Miles" 
   },
-  Count: { 
-    x: "Times", time: "Times", times: "Times" 
+  Count: {
+    x: "Times", time: "Times", times: "Times"
+  },
+  Weight: {
+    kg: "Kg", kilogram: "Kg", kilograms: "Kg", kilo: "Kg", kilos: "Kg"
   },
 };
