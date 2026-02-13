@@ -855,7 +855,7 @@ export function TodayTasksView({
                           const linkedGoal = goals.find(g => g.id === habit.linked_goal_id);
                           return linkedGoal ? (
                             <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-2 py-0.5 rounded whitespace-nowrap">
-                              {linkedGoal.title}
+                              🎯 {linkedGoal.title}
                             </span>
                           ) : null;
                         })()}
@@ -962,7 +962,7 @@ export function TodayTasksView({
                         const linkedGoal = goals.find(g => g.id === task.linkedGoalId);
                         return linkedGoal ? (
                           <span className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900 px-2 py-0.5 rounded whitespace-nowrap">
-                            {linkedGoal.title}
+                            🎯 {linkedGoal.title}
                           </span>
                         ) : null;
                       })()}
