@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { BarChart3, TrendingUp, Clock, Target, Star, StarOff, ChevronDown, ChevronRight, ChevronUp, Plus, Edit3, Trash2, CheckCircle, Calendar, Search } from 'lucide-react';
 import { Entry, Category, Converter, Goal, ScheduleItem, Habit, HabitCompletion } from '../types';
-import { formatSingleUnit, humanizeTime, humanizeDistance } from '../utils/formatting';
+import { formatSingleUnit, humanizeTime, humanizeDistance, convertDistanceToMetric, convertDistanceToImperial, convertWeightToMetric, convertWeightToImperial, convertNumericToImperial } from '../utils/formatting';
 import { useUnitSystem } from '../hooks/useUnitSystem';
 import { formatDisplayDate, uid, fmtDateISO } from '../utils/dateUtils';
 import { parseAmountByType, amountPlaceholderByType } from '../utils/parsing';
@@ -421,13 +421,16 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       }
     }
 
+    const distanceInput = unitSystem === 'imperial' ? convertDistanceToMetric(newGoal.distance) : newGoal.distance;
+    const weightInput = unitSystem === 'imperial' ? convertWeightToMetric(newGoal.weight) : newGoal.weight;
+
     let parsed;
     if (newGoal.goalType === 'time') {
       parsed = parseAmountByType(newGoal.duration, 'Time', converters);
     } else if (newGoal.goalType === 'distance') {
-      parsed = parseAmountByType(newGoal.distance, 'Distance', converters);
+      parsed = parseAmountByType(distanceInput, 'Distance', converters);
     } else if (newGoal.goalType === 'weight') {
-      parsed = parseAmountByType(newGoal.weight, 'Weight', converters);
+      parsed = parseAmountByType(weightInput, 'Weight', converters);
     } else {
       parsed = parseAmountByType(newGoal.targetAmount, 'Count', converters) ||
                parseAmountByType(newGoal.targetAmount, 'Distance', converters) ||
@@ -461,8 +464,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       completed: false,
       goalType: newGoal.goalType,
       duration: newGoal.goalType === 'time' ? newGoal.duration.trim() : undefined,
-      distance: newGoal.goalType === 'distance' ? newGoal.distance.trim() : undefined,
-      weight: newGoal.goalType === 'weight' ? newGoal.weight.trim() : undefined,
+      distance: newGoal.goalType === 'distance' ? distanceInput.trim() : undefined,
+      weight: newGoal.goalType === 'weight' ? weightInput.trim() : undefined,
       durDays: deadlineMode === 'duration' ? durDays : undefined,
       durWeeks: deadlineMode === 'duration' ? durWeeks : undefined,
       durMonths: deadlineMode === 'duration' ? durMonths : undefined
@@ -494,8 +497,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       targetDate: goal.targetDate,
       goalType: goal.goalType || 'task',
       duration: goal.duration || '',
-      distance: goal.distance || '',
-      weight: goal.weight || '',
+      distance: unitSystem === 'imperial' ? convertDistanceToImperial(goal.distance || '') : (goal.distance || ''),
+      weight: unitSystem === 'imperial' ? convertWeightToImperial(goal.weight || '') : (goal.weight || ''),
       linkedHabitId: goal.linkedHabitId || ''
     });
     setTargetAmountError('');
@@ -589,13 +592,16 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       }
     }
 
+    const updateDistanceInput = unitSystem === 'imperial' ? convertDistanceToMetric(newGoal.distance) : newGoal.distance;
+    const updateWeightInput = unitSystem === 'imperial' ? convertWeightToMetric(newGoal.weight) : newGoal.weight;
+
     let parsed;
     if (newGoal.goalType === 'time') {
       parsed = parseAmountByType(newGoal.duration, 'Time', converters);
     } else if (newGoal.goalType === 'distance') {
-      parsed = parseAmountByType(newGoal.distance, 'Distance', converters);
+      parsed = parseAmountByType(updateDistanceInput, 'Distance', converters);
     } else if (newGoal.goalType === 'weight') {
-      parsed = parseAmountByType(newGoal.weight, 'Weight', converters);
+      parsed = parseAmountByType(updateWeightInput, 'Weight', converters);
     } else {
       parsed = parseAmountByType(newGoal.targetAmount, 'Count', converters) ||
                parseAmountByType(newGoal.targetAmount, 'Distance', converters) ||
@@ -625,8 +631,8 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       targetDate,
       goalType: newGoal.goalType,
       duration: newGoal.goalType === 'time' ? newGoal.duration.trim() : undefined,
-      distance: newGoal.goalType === 'distance' ? newGoal.distance.trim() : undefined,
-      weight: newGoal.goalType === 'weight' ? newGoal.weight.trim() : undefined,
+      distance: newGoal.goalType === 'distance' ? updateDistanceInput.trim() : undefined,
+      weight: newGoal.goalType === 'weight' ? updateWeightInput.trim() : undefined,
       linkedHabitId: undefined,
       durDays: deadlineMode === 'duration' ? durDays : undefined,
       durWeeks: deadlineMode === 'duration' ? durWeeks : undefined,
@@ -1616,33 +1622,41 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
 
               {newGoal.goalType === 'distance' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Distance</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {unitSystem === 'imperial' ? 'Distance (mi)' : 'Distance'}
+                  </label>
                   <input
                     type="text"
                     value={newGoal.distance}
                     onChange={(e) => setNewGoal({ ...newGoal, distance: e.target.value })}
-                    placeholder="e.g., 5km, 3 miles, 2000m"
+                    placeholder={unitSystem === 'imperial' ? 'e.g., 3, 5.5' : 'e.g., 5km, 3 miles, 2000m'}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Examples: 5km, 3 miles, 2000m</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {unitSystem === 'imperial' ? 'Enter distance in miles' : 'Examples: 5km, 3 miles, 2000m'}
+                  </p>
                 </div>
               )}
 
               {newGoal.goalType === 'weight' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Weight (kg)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {unitSystem === 'imperial' ? 'Weight (lb)' : 'Weight (kg)'}
+                  </label>
                   <input
                     type="number"
                     step="0.01"
                     min="0"
                     value={newGoal.weight}
                     onChange={(e) => setNewGoal({ ...newGoal, weight: e.target.value })}
-                    placeholder="e.g., 72.5, 100"
+                    placeholder={unitSystem === 'imperial' ? 'e.g., 160, 220' : 'e.g., 72.5, 100'}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter weight in kilograms</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {unitSystem === 'imperial' ? 'Enter weight in pounds' : 'Enter weight in kilograms'}
+                  </p>
                 </div>
               )}
 

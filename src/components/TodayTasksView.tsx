@@ -3,7 +3,7 @@ import { CheckSquare, Check, ChevronLeft, ChevronRight, Calendar, Plus, Save, X,
 import { ScheduleItem, Goal, Habit, HabitCompletion, Converter } from '../types';
 import { fmtDateISO, uid, getDayKeyFromISO } from '../utils/dateUtils';
 import { parseAmountByType } from '../utils/parsing';
-import { formatDistanceDisplay, formatDurationDisplay, formatWeightDisplay } from '../utils/formatting';
+import { formatDistanceDisplay, formatDurationDisplay, formatWeightDisplay, convertDistanceToMetric, convertDistanceToImperial, convertWeightToMetric, convertWeightToImperial } from '../utils/formatting';
 import { useUnitSystem } from '../hooks/useUnitSystem';
 import { supabase } from '../lib/supabase';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
@@ -487,8 +487,8 @@ export function TodayTasksView({
       description: newScheduleItem.description.trim() || undefined,
       targetNumber: newScheduleItem.type === 'task' ? parseInt(newScheduleItem.targetNumber) : undefined,
       duration: newScheduleItem.type === 'time' ? newScheduleItem.duration.trim() : undefined,
-      distance: newScheduleItem.type === 'distance' ? newScheduleItem.distance.trim() : undefined,
-      weight: newScheduleItem.type === 'weight' ? newScheduleItem.weight.trim() : undefined,
+      distance: newScheduleItem.type === 'distance' ? (unitSystem === 'imperial' ? convertDistanceToMetric(newScheduleItem.distance.trim()) : newScheduleItem.distance.trim()) : undefined,
+      weight: newScheduleItem.type === 'weight' ? (unitSystem === 'imperial' ? convertWeightToMetric(newScheduleItem.weight.trim()) : newScheduleItem.weight.trim()) : undefined,
       linkedGoalId: validatedLinkedGoalId || undefined,
       completed: false,
       completedDates: [],
@@ -510,8 +510,8 @@ export function TodayTasksView({
       type: item.duration ? 'time' : item.distance ? 'distance' : item.weight ? 'weight' : 'task',
       targetNumber: item.targetNumber?.toString() || '',
       duration: item.duration || '',
-      distance: item.distance || '',
-      weight: item.weight || '',
+      distance: unitSystem === 'imperial' ? convertDistanceToImperial(item.distance || '') : (item.distance || ''),
+      weight: unitSystem === 'imperial' ? convertWeightToImperial(item.weight || '') : (item.weight || ''),
       linkedGoalId: item.linkedGoalId || ''
     });
     setShowAddScheduleForm(true);
@@ -563,8 +563,8 @@ export function TodayTasksView({
       description: newScheduleItem.description.trim() || undefined,
       targetNumber: newScheduleItem.type === 'task' ? parseInt(newScheduleItem.targetNumber) : undefined,
       duration: newScheduleItem.type === 'time' ? newScheduleItem.duration.trim() : undefined,
-      distance: newScheduleItem.type === 'distance' ? newScheduleItem.distance.trim() : undefined,
-      weight: newScheduleItem.type === 'weight' ? newScheduleItem.weight.trim() : undefined,
+      distance: newScheduleItem.type === 'distance' ? (unitSystem === 'imperial' ? convertDistanceToMetric(newScheduleItem.distance.trim()) : newScheduleItem.distance.trim()) : undefined,
+      weight: newScheduleItem.type === 'weight' ? (unitSystem === 'imperial' ? convertWeightToMetric(newScheduleItem.weight.trim()) : newScheduleItem.weight.trim()) : undefined,
       linkedGoalId: validatedLinkedGoalId || undefined
     };
 
@@ -680,22 +680,28 @@ export function TodayTasksView({
 
         {newScheduleItem.type === 'distance' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Distance</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              {unitSystem === 'imperial' ? 'Distance (mi)' : 'Distance'}
+            </label>
             <input
               type="text"
               value={newScheduleItem.distance}
               onChange={(e) => setNewScheduleItem({ ...newScheduleItem, distance: e.target.value })}
-              placeholder="e.g., 5km, 3 miles, 2000m"
+              placeholder={unitSystem === 'imperial' ? 'e.g., 1, 3.5, 0.5' : 'e.g., 5km, 3 miles, 2000m'}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Examples: 5km, 3 miles, 2000m</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {unitSystem === 'imperial' ? 'Enter distance in miles' : 'Examples: 5km, 3 miles, 2000m'}
+            </p>
           </div>
         )}
 
         {newScheduleItem.type === 'weight' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Weight (kg)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              {unitSystem === 'imperial' ? 'Weight (lb)' : 'Weight (kg)'}
+            </label>
             <input
               type="number"
               step="0.01"
@@ -706,7 +712,9 @@ export function TodayTasksView({
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter weight in kilograms</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {unitSystem === 'imperial' ? 'Enter weight in pounds' : 'Enter weight in kilograms'}
+            </p>
           </div>
         )}
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Target, Plus, Edit3, Trash2, CheckCircle, Clock, TrendingUp, Calendar } from 'lucide-react';
 import { Goal, Entry, Category, Converter, ScheduleItem, Habit, HabitCompletion } from '../types';
-import { formatSingleUnit } from '../utils/formatting';
+import { formatSingleUnit, convertDistanceToMetric, convertWeightToMetric, convertNumericToImperial } from '../utils/formatting';
 import { useUnitSystem } from '../hooks/useUnitSystem';
 import { uid, fmtDateISO } from '../utils/dateUtils';
 import { parseAmountByType, amountPlaceholderByType } from '../utils/parsing';
@@ -131,7 +131,16 @@ export function GoalTracker({
       }
     }
 
-    const parsed = parseAmountByType(newGoal.targetAmount, categoryType, converters);
+    let inputForParsing = newGoal.targetAmount;
+    if (unitSystem === 'imperial') {
+      if (categoryType === 'Distance') {
+        inputForParsing = convertDistanceToMetric(newGoal.targetAmount);
+      } else if (categoryType === 'Weight') {
+        inputForParsing = convertWeightToMetric(newGoal.targetAmount);
+      }
+    }
+
+    const parsed = parseAmountByType(inputForParsing, categoryType, converters);
 
     if (!parsed) {
       alert('Could not parse target amount. Please check the format.');
@@ -155,9 +164,9 @@ export function GoalTracker({
       createdAt: new Date().toISOString(),
       completed: false,
       goalType: categoryType === 'Distance' ? 'distance' : categoryType === 'Time' ? 'time' : categoryType === 'Weight' ? 'weight' : 'task',
-      distance: categoryType === 'Distance' ? newGoal.targetAmount : undefined,
+      distance: categoryType === 'Distance' ? inputForParsing : undefined,
       duration: categoryType === 'Time' ? newGoal.targetAmount : undefined,
-      weight: categoryType === 'Weight' ? newGoal.targetAmount : undefined,
+      weight: categoryType === 'Weight' ? inputForParsing : undefined,
       durDays: deadlineMode === 'duration' ? durDays : undefined,
       durWeeks: deadlineMode === 'duration' ? durWeeks : undefined,
       durMonths: deadlineMode === 'duration' ? durMonths : undefined
@@ -182,9 +191,14 @@ export function GoalTracker({
   const handleEditGoal = (goal: Goal) => {
     setEditingGoal(goal);
     const categoryType = getCategoryType(goal.category, goal);
-    const targetAmountStr = categoryType === 'Count'
-      ? String(Math.trunc(goal.targetAmount))
-      : goal.targetAmount.toString();
+    let targetAmountStr: string;
+    if (categoryType === 'Count') {
+      targetAmountStr = String(Math.trunc(goal.targetAmount));
+    } else if (unitSystem === 'imperial' && (categoryType === 'Distance' || categoryType === 'Weight')) {
+      targetAmountStr = convertNumericToImperial(goal.targetAmount, categoryType);
+    } else {
+      targetAmountStr = goal.targetAmount.toString();
+    }
 
     const hasSavedDuration = goal.durDays != null || goal.durWeeks != null || goal.durMonths != null;
     const fallback = calculateDurationFromTargetDate(goal.targetDate);
@@ -225,7 +239,16 @@ export function GoalTracker({
       }
     }
 
-    const parsed = parseAmountByType(newGoal.targetAmount, categoryType, converters);
+    let updateInputForParsing = newGoal.targetAmount;
+    if (unitSystem === 'imperial') {
+      if (categoryType === 'Distance') {
+        updateInputForParsing = convertDistanceToMetric(newGoal.targetAmount);
+      } else if (categoryType === 'Weight') {
+        updateInputForParsing = convertWeightToMetric(newGoal.targetAmount);
+      }
+    }
+
+    const parsed = parseAmountByType(updateInputForParsing, categoryType, converters);
 
     if (!parsed) {
       alert('Could not parse target amount. Please check the format.');
@@ -246,9 +269,9 @@ export function GoalTracker({
       unit: parsed.unit,
       targetDate,
       goalType: categoryType === 'Distance' ? 'distance' : categoryType === 'Time' ? 'time' : categoryType === 'Weight' ? 'weight' : 'task',
-      distance: categoryType === 'Distance' ? newGoal.targetAmount : undefined,
+      distance: categoryType === 'Distance' ? updateInputForParsing : undefined,
       duration: categoryType === 'Time' ? newGoal.targetAmount : undefined,
-      weight: categoryType === 'Weight' ? newGoal.targetAmount : undefined,
+      weight: categoryType === 'Weight' ? updateInputForParsing : undefined,
       durDays: deadlineMode === 'duration' ? durDays : undefined,
       durWeeks: deadlineMode === 'duration' ? durWeeks : undefined,
       durMonths: deadlineMode === 'duration' ? durMonths : undefined
@@ -467,7 +490,7 @@ export function GoalTracker({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Target Amount ({getCategoryType(newGoal.category)})
+                Target Amount ({getCategoryType(newGoal.category)}{unitSystem === 'imperial' && getCategoryType(newGoal.category) === 'Distance' ? ' - mi' : unitSystem === 'imperial' && getCategoryType(newGoal.category) === 'Weight' ? ' - lb' : ''})
               </label>
               <input
                 type="text"
@@ -476,7 +499,7 @@ export function GoalTracker({
                 value={newGoal.targetAmount}
                 onChange={(e) => handleTargetAmountChange(e.target.value)}
                 onBlur={handleTargetAmountBlur}
-                placeholder={amountPlaceholderByType(getCategoryType(newGoal.category))}
+                placeholder={unitSystem === 'imperial' && getCategoryType(newGoal.category) === 'Distance' ? 'e.g., 5, 10, 26.2' : unitSystem === 'imperial' && getCategoryType(newGoal.category) === 'Weight' ? 'e.g., 150, 200' : amountPlaceholderByType(getCategoryType(newGoal.category))}
                 className={`w-full px-3 py-2 border ${targetAmountError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 ${targetAmountError ? 'focus:ring-red-500' : 'focus:ring-blue-500'}`}
                 required
               />

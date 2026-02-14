@@ -6,6 +6,8 @@ import type { UnitSystem } from '../hooks/useUnitSystem';
 const KM_TO_MI = 0.621371;
 const M_TO_MI = 0.000621371;
 const KG_TO_LB = 2.20462;
+const MI_TO_KM = 1.60934;
+const LB_TO_KG = 1 / KG_TO_LB;
 
 function fmtNum(val: number): string {
   return parseFloat(val.toFixed(2)).toString();
@@ -111,6 +113,64 @@ export function formatWeightDisplay(value: string, unitSystem: UnitSystem = 'met
     return `${fmtNum(numericValue * KG_TO_LB)} lb`;
   }
   return `${Math.round(numericValue * 100) / 100}kg`;
+}
+
+export function convertDistanceToMetric(input: string): string {
+  if (!input) return input;
+  const trimmed = input.trim();
+  const num = parseFloat(trimmed);
+  if (isNaN(num)) return input;
+  if (trimmed === num.toString()) {
+    return `${parseFloat((num * MI_TO_KM).toFixed(6))}km`;
+  }
+  const miMatch = /^([\d.]+)\s*(mi|miles?)$/i.exec(trimmed);
+  if (miMatch) {
+    return `${parseFloat((parseFloat(miMatch[1]) * MI_TO_KM).toFixed(6))}km`;
+  }
+  return input;
+}
+
+export function convertDistanceToImperial(stored: string): string {
+  if (!stored) return '';
+  const trimmed = stored.trim();
+  const num = parseFloat(trimmed);
+  if (isNaN(num)) return stored;
+  if (trimmed === num.toString()) {
+    return fmtNum(num * M_TO_MI);
+  }
+  const kmMatch = /^([\d.]+)\s*km$/i.exec(trimmed);
+  if (kmMatch) {
+    return fmtNum(parseFloat(kmMatch[1]) * KM_TO_MI);
+  }
+  const mMatch = /^([\d.]+)\s*m$/i.exec(trimmed);
+  if (mMatch) {
+    return fmtNum(parseFloat(mMatch[1]) * M_TO_MI);
+  }
+  const miMatch = /^([\d.]+)\s*(mi|miles?)$/i.exec(trimmed);
+  if (miMatch) {
+    return fmtNum(parseFloat(miMatch[1]));
+  }
+  return stored;
+}
+
+export function convertWeightToMetric(lbStr: string): string {
+  if (!lbStr) return lbStr;
+  const lb = parseFloat(lbStr);
+  if (isNaN(lb)) return lbStr;
+  return parseFloat((lb * LB_TO_KG).toFixed(6)).toString();
+}
+
+export function convertWeightToImperial(kgStr: string): string {
+  if (!kgStr) return '';
+  const kg = parseFloat(kgStr);
+  if (isNaN(kg)) return kgStr;
+  return fmtNum(kg * KG_TO_LB);
+}
+
+export function convertNumericToImperial(value: number, type: string): string {
+  if (type === 'Distance') return fmtNum(value * KM_TO_MI);
+  if (type === 'Weight') return fmtNum(value * KG_TO_LB);
+  return value.toString();
 }
 
 export function formatDurationDisplay(value: string): string {

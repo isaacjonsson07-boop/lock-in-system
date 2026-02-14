@@ -3,7 +3,7 @@ import { Calendar, Plus, Trash2, Save, X, Pencil } from 'lucide-react';
 import { Habit, Goal } from '../types';
 import { supabase } from '../lib/supabase';
 import { uid } from '../utils/dateUtils';
-import { formatDistanceDisplay, formatDurationDisplay, formatWeightDisplay } from '../utils/formatting';
+import { formatDistanceDisplay, formatDurationDisplay, formatWeightDisplay, convertDistanceToMetric, convertDistanceToImperial, convertWeightToMetric, convertWeightToImperial } from '../utils/formatting';
 import { useUnitSystem } from '../hooks/useUnitSystem';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateItemModal } from './CreateItemModal';
@@ -121,8 +121,8 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
             time: formData.time,
             description: formData.description.trim() || undefined,
             duration: formData.type === 'time' ? formData.duration.trim() : undefined,
-            distance: formData.type === 'distance' ? formData.distance.trim() : undefined,
-            weight: formData.type === 'weight' ? formData.weight.trim() : undefined,
+            distance: formData.type === 'distance' ? (unitSystem === 'imperial' ? convertDistanceToMetric(formData.distance.trim()) : formData.distance.trim()) : undefined,
+            weight: formData.type === 'weight' ? (unitSystem === 'imperial' ? convertWeightToMetric(formData.weight.trim()) : formData.weight.trim()) : undefined,
             linked_goal_id: validatedLinkedGoalId || undefined,
             user_id: user.id
           });
@@ -139,8 +139,8 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
           time: formData.time,
           description: formData.description.trim() || undefined,
           duration: formData.type === 'time' ? formData.duration.trim() : undefined,
-          distance: formData.type === 'distance' ? formData.distance.trim() : undefined,
-          weight: formData.type === 'weight' ? formData.weight.trim() : undefined,
+          distance: formData.type === 'distance' ? (unitSystem === 'imperial' ? convertDistanceToMetric(formData.distance.trim()) : formData.distance.trim()) : undefined,
+          weight: formData.type === 'weight' ? (unitSystem === 'imperial' ? convertWeightToMetric(formData.weight.trim()) : formData.weight.trim()) : undefined,
           linked_goal_id: validatedLinkedGoalId || undefined,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -222,8 +222,8 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
             time: formData.time,
             description: formData.description.trim() || undefined,
             duration: formData.type === 'time' ? formData.duration.trim() : undefined,
-            distance: formData.type === 'distance' ? formData.distance.trim() : undefined,
-            weight: formData.type === 'weight' ? formData.weight.trim() : undefined,
+            distance: formData.type === 'distance' ? (unitSystem === 'imperial' ? convertDistanceToMetric(formData.distance.trim()) : formData.distance.trim()) : undefined,
+            weight: formData.type === 'weight' ? (unitSystem === 'imperial' ? convertWeightToMetric(formData.weight.trim()) : formData.weight.trim()) : undefined,
             linked_goal_id: validatedLinkedGoalId || undefined,
             updated_at: new Date().toISOString()
           })
@@ -242,8 +242,8 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
                 time: formData.time,
                 description: formData.description.trim() || undefined,
                 duration: formData.type === 'time' ? formData.duration.trim() : undefined,
-                distance: formData.type === 'distance' ? formData.distance.trim() : undefined,
-                weight: formData.type === 'weight' ? formData.weight.trim() : undefined,
+                distance: formData.type === 'distance' ? (unitSystem === 'imperial' ? convertDistanceToMetric(formData.distance.trim()) : formData.distance.trim()) : undefined,
+                weight: formData.type === 'weight' ? (unitSystem === 'imperial' ? convertWeightToMetric(formData.weight.trim()) : formData.weight.trim()) : undefined,
                 linked_goal_id: validatedLinkedGoalId || undefined,
                 updated_at: new Date().toISOString()
               }
@@ -282,8 +282,8 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
       time: habit.time,
       type: habit.duration ? 'time' : habit.distance ? 'distance' : habit.weight ? 'weight' : 'task',
       duration: habit.duration || '',
-      distance: habit.distance || '',
-      weight: habit.weight || '',
+      distance: unitSystem === 'imperial' ? convertDistanceToImperial(habit.distance || '') : (habit.distance || ''),
+      weight: unitSystem === 'imperial' ? convertWeightToImperial(habit.weight || '') : (habit.weight || ''),
       description: habit.description || '',
       linkedGoalId: habit.linked_goal_id || ''
     });
@@ -473,22 +473,28 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
 
           {formData.type === 'distance' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Distance</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {unitSystem === 'imperial' ? 'Distance (mi)' : 'Distance'}
+              </label>
               <input
                 type="text"
                 value={formData.distance}
                 onChange={(e) => setFormData({ ...formData, distance: e.target.value })}
-                placeholder="e.g., 5km, 3 miles, 2000m"
+                placeholder={unitSystem === 'imperial' ? 'e.g., 1, 3.5, 0.5' : 'e.g., 5km, 3 miles, 2000m'}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Examples: 5km, 3 miles, 2000m</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {unitSystem === 'imperial' ? 'Enter distance in miles' : 'Examples: 5km, 3 miles, 2000m'}
+              </p>
             </div>
           )}
 
           {formData.type === 'weight' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Weight (kg)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {unitSystem === 'imperial' ? 'Weight (lb)' : 'Weight (kg)'}
+              </label>
               <input
                 type="number"
                 step="0.01"
@@ -499,7 +505,9 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter weight in kilograms</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {unitSystem === 'imperial' ? 'Enter weight in pounds' : 'Enter weight in kilograms'}
+              </p>
             </div>
           )}
 

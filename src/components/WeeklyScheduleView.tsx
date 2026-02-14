@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Calendar, Plus, Trash2, BookOpen as Edit3, Save, X } from 'lucide-react';
 import { ScheduleItem, Goal } from '../types';
 import { fmtDateISO, uid, getWeekDates, getDayKeyFromISO } from '../utils/dateUtils';
+import { convertDistanceToMetric, convertDistanceToImperial, convertWeightToMetric, convertWeightToImperial } from '../utils/formatting';
+import { useUnitSystem } from '../hooks/useUnitSystem';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { QuickGuide } from './QuickGuide';
 
@@ -30,6 +32,7 @@ export function WeeklyScheduleView({
   onUpdateScheduleItem,
   onDeleteScheduleItem
 }: WeeklyScheduleViewProps) {
+  const { unitSystem } = useUnitSystem();
   const [selectedDay, setSelectedDay] = useState('monday');
   const [showAddScheduleForm, setShowAddScheduleForm] = useState(false);
   const [editingScheduleItem, setEditingScheduleItem] = useState<ScheduleItem | null>(null);
@@ -118,8 +121,8 @@ export function WeeklyScheduleView({
       linkedGoalId: validatedLinkedGoalId || undefined,
       targetNumber: newScheduleItem.targetNumber ? parseInt(newScheduleItem.targetNumber) : undefined,
       duration: newScheduleItem.duration.trim() || undefined,
-      distance: newScheduleItem.distance.trim() || undefined,
-      weight: newScheduleItem.weight?.trim() || undefined,
+      distance: newScheduleItem.distance.trim() ? (unitSystem === 'imperial' ? convertDistanceToMetric(newScheduleItem.distance.trim()) : newScheduleItem.distance.trim()) : undefined,
+      weight: newScheduleItem.weight?.trim() ? (unitSystem === 'imperial' ? convertWeightToMetric(newScheduleItem.weight.trim()) : newScheduleItem.weight.trim()) : undefined,
       completed: false,
       completedDates: [],
       completedCounts: {},
@@ -140,8 +143,8 @@ export function WeeklyScheduleView({
       linkedGoalId: item.linkedGoalId || '',
       targetNumber: item.targetNumber?.toString() || '',
       duration: item.duration || '',
-      distance: item.distance || '',
-      weight: item.weight || ''
+      distance: unitSystem === 'imperial' ? convertDistanceToImperial(item.distance || '') : (item.distance || ''),
+      weight: unitSystem === 'imperial' ? convertWeightToImperial(item.weight || '') : (item.weight || '')
     });
     setSelectedDay(item.day);
     setShowAddScheduleForm(true);
@@ -176,8 +179,8 @@ export function WeeklyScheduleView({
       linkedGoalId: validatedLinkedGoalId || undefined,
       targetNumber: newScheduleItem.targetNumber ? parseInt(newScheduleItem.targetNumber) : undefined,
       duration: newScheduleItem.duration.trim() || undefined,
-      distance: newScheduleItem.distance.trim() || undefined,
-      weight: newScheduleItem.weight?.trim() || undefined
+      distance: newScheduleItem.distance.trim() ? (unitSystem === 'imperial' ? convertDistanceToMetric(newScheduleItem.distance.trim()) : newScheduleItem.distance.trim()) : undefined,
+      weight: newScheduleItem.weight?.trim() ? (unitSystem === 'imperial' ? convertWeightToMetric(newScheduleItem.weight.trim()) : newScheduleItem.weight.trim()) : undefined
     };
 
     onUpdateScheduleItem(updatedItem);
@@ -335,12 +338,14 @@ export function WeeklyScheduleView({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Distance (optional)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {unitSystem === 'imperial' ? 'Distance in mi (optional)' : 'Distance (optional)'}
+                  </label>
                   <input
                     type="text"
                     value={newScheduleItem.distance}
                     onChange={(e) => setNewScheduleItem({ ...newScheduleItem, distance: e.target.value })}
-                    placeholder="e.g., 5km, 3 miles"
+                    placeholder={unitSystem === 'imperial' ? 'e.g., 1, 3.5' : 'e.g., 5km, 3 miles'}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -348,7 +353,9 @@ export function WeeklyScheduleView({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Weight in kg (optional)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {unitSystem === 'imperial' ? 'Weight in lb (optional)' : 'Weight in kg (optional)'}
+                  </label>
                   <input
                     type="number"
                     step="0.01"
