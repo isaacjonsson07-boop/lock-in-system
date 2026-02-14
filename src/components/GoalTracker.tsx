@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Target, Plus, Edit3, Trash2, CheckCircle, Clock, TrendingUp, Calendar } from 'lucide-react';
 import { Goal, Entry, Category, Converter, ScheduleItem, Habit, HabitCompletion } from '../types';
 import { formatSingleUnit } from '../utils/formatting';
+import { useUnitSystem } from '../hooks/useUnitSystem';
 import { uid, fmtDateISO } from '../utils/dateUtils';
 import { parseAmountByType, amountPlaceholderByType } from '../utils/parsing';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
@@ -33,6 +34,7 @@ export function GoalTracker({
   onUpdateGoal,
   onDeleteGoal
 }: GoalTrackerProps) {
+  const { unitSystem } = useUnitSystem();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
@@ -337,12 +339,12 @@ export function GoalTracker({
 
   const formatGoalAmount = (goal: Goal): string => {
     const categoryType = getCategoryType(goal.category, goal);
-    return formatSingleUnit(categoryType, goal.targetAmount, goal.unit, converters);
+    return formatSingleUnit(categoryType, goal.targetAmount, goal.unit, converters, unitSystem);
   };
 
   const formatCurrentAmount = (goal: Goal): string => {
     const categoryType = getCategoryType(goal.category, goal);
-    return formatSingleUnit(categoryType, goal.currentAmount, goal.unit, converters);
+    return formatSingleUnit(categoryType, goal.currentAmount, goal.unit, converters, unitSystem);
   };
 
   const stats = {

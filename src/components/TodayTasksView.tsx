@@ -4,6 +4,7 @@ import { ScheduleItem, Goal, Habit, HabitCompletion, Converter } from '../types'
 import { fmtDateISO, uid, getDayKeyFromISO } from '../utils/dateUtils';
 import { parseAmountByType } from '../utils/parsing';
 import { formatDistanceDisplay, formatDurationDisplay, formatWeightDisplay } from '../utils/formatting';
+import { useUnitSystem } from '../hooks/useUnitSystem';
 import { supabase } from '../lib/supabase';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateItemModal } from './CreateItemModal';
@@ -72,6 +73,7 @@ export function TodayTasksView({
   });
   const [habits, setHabits] = useState<HabitWithCompletion[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { unitSystem } = useUnitSystem();
 
   function getDateFromOffset(offset: number): Date {
     const d = new Date();
@@ -849,9 +851,9 @@ export function TodayTasksView({
                             {habit.duration
                               ? formatDurationDisplay(habit.duration)
                               : habit.distance
-                                ? formatDistanceDisplay(habit.distance || '')
+                                ? formatDistanceDisplay(habit.distance || '', unitSystem)
                                 : habit.weight
-                                  ? formatWeightDisplay(habit.weight)
+                                  ? formatWeightDisplay(habit.weight, unitSystem)
                                   : habit.target_number === 1
                                     ? '1 time'
                                     : `${habit.target_number} times`
@@ -956,9 +958,9 @@ export function TodayTasksView({
                           {task.duration
                             ? formatDurationDisplay(task.duration)
                             : task.distance
-                              ? formatDistanceDisplay(task.distance || '')
+                              ? formatDistanceDisplay(task.distance || '', unitSystem)
                               : task.weight
-                                ? formatWeightDisplay(task.weight)
+                                ? formatWeightDisplay(task.weight, unitSystem)
                                 : task.targetNumber === 1
                                   ? '1 time'
                                   : `${task.targetNumber} times`

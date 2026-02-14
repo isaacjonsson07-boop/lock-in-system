@@ -4,6 +4,7 @@ import { Habit, Goal } from '../types';
 import { supabase } from '../lib/supabase';
 import { uid } from '../utils/dateUtils';
 import { formatDistanceDisplay, formatDurationDisplay, formatWeightDisplay } from '../utils/formatting';
+import { useUnitSystem } from '../hooks/useUnitSystem';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { CreateItemModal } from './CreateItemModal';
 import { QuickGuide } from './QuickGuide';
@@ -30,6 +31,7 @@ const DAYS = [
 ];
 
 export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsViewProps) {
+  const { unitSystem } = useUnitSystem();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editContext, setEditContext] = useState<EditContext | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -632,9 +634,9 @@ export function HabitsView({ habits, goals, onHabitsChange, setHabits }: HabitsV
                         {habit.duration
                           ? formatDurationDisplay(habit.duration)
                           : habit.distance
-                            ? formatDistanceDisplay(habit.distance)
+                            ? formatDistanceDisplay(habit.distance, unitSystem)
                             : habit.weight
-                              ? formatWeightDisplay(habit.weight)
+                              ? formatWeightDisplay(habit.weight, unitSystem)
                               : habit.target_number === 1
                                 ? '1 time'
                                 : `${habit.target_number} times`

@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import { BarChart3, TrendingUp, Clock, Target, Star, StarOff, ChevronDown, ChevronRight, ChevronUp, Plus, Edit3, Trash2, CheckCircle, Calendar, Search } from 'lucide-react';
 import { Entry, Category, Converter, Goal, ScheduleItem, Habit, HabitCompletion } from '../types';
 import { formatSingleUnit, humanizeTime, humanizeDistance } from '../utils/formatting';
+import { useUnitSystem } from '../hooks/useUnitSystem';
 import { formatDisplayDate, uid, fmtDateISO } from '../utils/dateUtils';
 import { parseAmountByType, amountPlaceholderByType } from '../utils/parsing';
 import { UpgradePrompt } from './UpgradePrompt';
@@ -25,6 +26,7 @@ interface StatsViewProps {
 }
 
 export function StatsView({ entries, categories, converters, goals, scheduleItems, habits, habitCompletions, plan = 'free', onUpdateCategories, onAddGoal, onUpdateGoal, onDeleteGoal }: StatsViewProps) {
+  const { unitSystem } = useUnitSystem();
   const [expandedCategory, setExpandedCategory] = React.useState<string | null>(null);
   const [showAddGoalForm, setShowAddGoalForm] = React.useState(false);
   const [editingGoal, setEditingGoal] = React.useState<Goal | null>(null);
@@ -668,25 +670,28 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       return goal.duration;
     }
     if (goal.goalType === 'distance' && goal.distance) {
+      if (unitSystem === 'imperial') {
+        return formatSingleUnit('Distance', goal.targetAmount, goal.unit, converters, unitSystem);
+      }
       return goal.distance;
     }
     if (goal.goalType === 'weight') {
-      return formatSingleUnit('Weight', goal.targetAmount, goal.unit || 'Kg', converters);
+      return formatSingleUnit('Weight', goal.targetAmount, goal.unit || 'Kg', converters, unitSystem);
     }
-    return formatSingleUnit('Count', goal.targetAmount, goal.unit, converters);
+    return formatSingleUnit('Count', goal.targetAmount, goal.unit, converters, unitSystem);
   };
 
   const formatCurrentAmount = (goal: Goal): string => {
     if (goal.goalType === 'time') {
-      return formatSingleUnit('Time', goal.currentAmount, goal.unit, converters);
+      return formatSingleUnit('Time', goal.currentAmount, goal.unit, converters, unitSystem);
     }
     if (goal.goalType === 'distance') {
-      return formatSingleUnit('Distance', goal.currentAmount, goal.unit, converters);
+      return formatSingleUnit('Distance', goal.currentAmount, goal.unit, converters, unitSystem);
     }
     if (goal.goalType === 'weight') {
-      return formatSingleUnit('Weight', goal.currentAmount, goal.unit, converters);
+      return formatSingleUnit('Weight', goal.currentAmount, goal.unit, converters, unitSystem);
     }
-    return formatSingleUnit('Count', goal.currentAmount, goal.unit, converters);
+    return formatSingleUnit('Count', goal.currentAmount, goal.unit, converters, unitSystem);
   };
 
   const stats = useMemo(() => {
@@ -964,19 +969,19 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         total,
         baseUnit,
         entryCount: categoryEventCount.get(name) || 0,
-        formattedTotal: formatSingleUnit(type, total, baseUnit, converters),
+        formattedTotal: formatSingleUnit(type, total, baseUnit, converters, unitSystem),
         isHabit: category?.isHabit || false,
         hasToday: categoryDays.get(name)?.has(today) || false,
         activeDays,
         avgPerDay,
-        formattedAvgPerDay: formatSingleUnit(type, avgPerDay, baseUnit, converters),
+        formattedAvgPerDay: formatSingleUnit(type, avgPerDay, baseUnit, converters, unitSystem),
         bestStreak,
         currentStreak,
         scheduledDays,
         activityRecord,
-        formattedRecord: activityRecord > 0 ? formatSingleUnit(type, activityRecord, baseUnit, converters) : '',
+        formattedRecord: activityRecord > 0 ? formatSingleUnit(type, activityRecord, baseUnit, converters, unitSystem) : '',
         todayTotal,
-        formattedTodayTotal: formatSingleUnit(type, todayTotal, baseUnit, converters),
+        formattedTodayTotal: formatSingleUnit(type, todayTotal, baseUnit, converters, unitSystem),
         todayEntryCount
       };
     });
@@ -1006,19 +1011,19 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
           total: 0,
           baseUnit,
           entryCount: 0,
-          formattedTotal: formatSingleUnit(type, 0, baseUnit, converters),
+          formattedTotal: formatSingleUnit(type, 0, baseUnit, converters, unitSystem),
           isHabit: true,
           hasToday: categoryDays.get(category.name)?.has(today) || false,
           activeDays: 0,
           avgPerDay: 0,
-          formattedAvgPerDay: formatSingleUnit(type, 0, baseUnit, converters),
+          formattedAvgPerDay: formatSingleUnit(type, 0, baseUnit, converters, unitSystem),
           bestStreak,
           currentStreak,
           scheduledDays: !!(categoryIsHabitOnly.get(category.name) === true && schedule && schedule.length > 0 && schedule.length < 7),
           activityRecord,
           formattedRecord: '',
           todayTotal: 0,
-          formattedTodayTotal: formatSingleUnit(type, 0, baseUnit, converters),
+          formattedTodayTotal: formatSingleUnit(type, 0, baseUnit, converters, unitSystem),
           todayEntryCount: 0
         });
       }
@@ -1031,7 +1036,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
       return b.total - a.total;
     });
 
-  }, [entries, categories, converters, scheduleItems, habits, habitCompletions]);
+  }, [entries, categories, converters, scheduleItems, habits, habitCompletions, unitSystem]);
 
   const goalStats = {
     total: goals.length,
@@ -1271,10 +1276,10 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
         total,
         baseUnit,
         entryCount: categoryEventCount.get(name) || 0,
-        formattedTotal: formatSingleUnit(type, total, baseUnit, converters),
+        formattedTotal: formatSingleUnit(type, total, baseUnit, converters, unitSystem),
         activeDays,
         avgPerDay,
-        formattedAvgPerDay: formatSingleUnit(type, avgPerDay, baseUnit, converters),
+        formattedAvgPerDay: formatSingleUnit(type, avgPerDay, baseUnit, converters, unitSystem),
         currentStreak,
         bestStreak,
         entries: allCategoryEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -1282,7 +1287,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
     });
 
     return categoryStats.sort((a, b) => b.total - a.total);
-  }, [entries, categories, converters, scheduleItems, habits, habitCompletions]);
+  }, [entries, categories, converters, scheduleItems, habits, habitCompletions, unitSystem]);
 
   const filteredAllTimeStats = useMemo(() => {
     let filtered = [...allTimeStats];
@@ -1900,7 +1905,7 @@ export function StatsView({ entries, categories, converters, goals, scheduleItem
                         <div key={entry.id} className="flex items-baseline gap-3 text-sm py-1 border-b border-gray-100 dark:border-gray-600 last:border-b-0">
                           <span className="text-gray-500 dark:text-gray-400 shrink-0 w-28">{formatDisplayDate(entry.date)}</span>
                           <span className="font-medium text-gray-800 dark:text-white shrink-0">
-                            {formatSingleUnit(stat.type, entry.amount, entry.unit, converters)}
+                            {formatSingleUnit(stat.type, entry.amount, entry.unit, converters, unitSystem)}
                           </span>
                           {entry.note && (
                             <span className="text-gray-400 dark:text-gray-500 truncate">{entry.note}</span>

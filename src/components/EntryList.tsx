@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Edit3, Trash2 } from 'lucide-react';
 import { Entry, Category, Converter } from '../types';
 import { formatSingleUnit } from '../utils/formatting';
+import { useUnitSystem } from '../hooks/useUnitSystem';
 import { formatDisplayDate } from '../utils/dateUtils';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
@@ -14,6 +15,7 @@ interface EntryListProps {
 }
 
 export function EntryList({ entries, categories, converters, onEditEntry, onDeleteEntry }: EntryListProps) {
+  const { unitSystem } = useUnitSystem();
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
 
   const getCategoryType = (categoryName: string): string => {
@@ -35,7 +37,7 @@ export function EntryList({ entries, categories, converters, onEditEntry, onDele
       <div className="space-y-3">
         {entries.map(entry => {
           const categoryType = getCategoryType(entry.category);
-          const formattedAmount = formatSingleUnit(categoryType, entry.amount, entry.unit, converters);
+          const formattedAmount = formatSingleUnit(categoryType, entry.amount, entry.unit, converters, unitSystem);
 
           return (
             <div key={entry.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
