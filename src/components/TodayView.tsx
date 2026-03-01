@@ -48,14 +48,21 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
       {dims.w > 0 && (
         <svg className="absolute inset-0 pointer-events-none z-[5]" 
           width={dims.w} height={dims.h}
-          viewBox={`0 0 ${dims.w} ${dims.h}`}>
+          viewBox={`0 0 ${dims.w} ${dims.h}`}
+          style={{ overflow: 'visible' }}>
+          <defs>
+            <filter id="shimmer-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" />
+            </filter>
+          </defs>
           <rect
             ref={rectRef}
             x="0.5" y="0.5"
             width={dims.w - 1} height={dims.h - 1}
             fill="none"
-            stroke="rgba(197,165,90,0.5)"
-            strokeWidth="1"
+            stroke="rgba(197,165,90,0.6)"
+            strokeWidth="4"
+            filter="url(#shimmer-glow)"
             strokeDasharray={`${glowLen} ${gapLen}`}
           />
         </svg>
