@@ -1,3 +1,167 @@
+// ============================================
+// STRUCTURED ACHIEVEMENT — Type Definitions
+// ============================================
+
+// === NAVIGATION ===
+
+export type TabType = 'today' | 'installation' | 'reviews' | 'system' | 'settings';
+
+export type InstallationPhase = 'stabilize' | 'reconstruct' | 'install';
+
+// === NON-NEGOTIABLES (Day 4) ===
+// Core daily behaviors. Show up every day. The foundation of execution.
+
+export interface NonNegotiable {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  order: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NonNegotiableCompletion {
+  id: string;
+  non_negotiable_id: string;
+  user_id: string;
+  completion_date: string; // YYYY-MM-DD
+  created_at: string;
+}
+
+// === HABITS (Day 10 — Keystone Habits) ===
+// Recurring behaviors tied to specific days. Installed during Phase II.
+
+export interface Habit {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string;
+  target_number: number;
+  days_of_week: number[]; // 0=Sun, 1=Mon, ... 6=Sat
+  time: string;
+  starred?: boolean;
+  linked_goal_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HabitCompletion {
+  id: string;
+  habit_id: string;
+  user_id: string;
+  completion_date: string; // YYYY-MM-DD
+  completed_number: number;
+  created_at: string;
+}
+
+// === DAILY TASKS ===
+// One-off tasks for a specific date. Plan tomorrow tonight, execute today.
+
+export interface DailyTask {
+  id: string;
+  user_id?: string;
+  title: string;
+  description?: string;
+  task_date: string; // YYYY-MM-DD
+  time?: string;
+  completed: boolean;
+  created_at: string;
+}
+
+// === GOALS ===
+// Longer-term targets. Habits and tasks feed into these.
+
+export interface Goal {
+  id: string;
+  user_id?: string;
+  title: string;
+  description?: string;
+  target_amount: number;
+  current_amount: number;
+  unit: string; // 'tasks', 'days', 'times', or custom
+  target_date?: string;
+  created_at: string;
+  completed: boolean;
+  completed_at?: string;
+}
+
+// === JOURNAL ===
+// Installation journal (21 days) + ongoing operational notes.
+
+export interface JournalEntry {
+  id: string;
+  dayNumber?: number; // 1-21 for installation, undefined for operational
+  title: string;
+  content: string;
+  entry_date: string; // YYYY-MM-DD
+  entry_type: 'installation' | 'daily' | 'weekly_review' | 'monthly_review';
+  answers?: { [key: string]: string };
+  lastModified: string;
+  userId?: string;
+}
+
+// === SYSTEM DOCUMENTS (Day 20 — Operating Manual) ===
+// Living documents built during installation, updated during recalibrations.
+
+export interface SystemDocument {
+  id: string;
+  user_id: string;
+  doc_type: 'direction' | 'identity' | 'priorities' | 'decision_rules' | 'failure_protocol' | 'operating_manual';
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// === REVIEWS ===
+
+// Day 18 — Weekly Review (10 minutes, every week)
+export interface WeeklyReview {
+  id: string;
+  user_id: string;
+  week_start: string; // YYYY-MM-DD (Monday)
+  nn_completion_rate: number; // 0-100
+  habit_completion_rate: number; // 0-100
+  task_completion_rate: number; // 0-100
+  wins: string;
+  adjustments: string;
+  next_week_focus: string;
+  created_at: string;
+}
+
+// Day 19 — Monthly Recalibration (30 minutes, every month)
+export interface MonthlyReview {
+  id: string;
+  user_id: string;
+  month: string; // YYYY-MM
+  direction_still_valid: boolean;
+  direction_update?: string;
+  identity_alignment: number; // 1-10
+  priorities_changed: boolean;
+  priorities_update?: string;
+  system_health: number; // 1-10
+  biggest_win: string;
+  biggest_challenge: string;
+  next_month_focus: string;
+  created_at: string;
+}
+
+// === INSTALLATION PROGRESS ===
+
+export interface InstallationProgress {
+  current_day: number; // 1-21
+  start_date: string;
+  completed_days: number[];
+  phase: InstallationPhase;
+  activated: boolean; // true after Day 21 completion
+}
+
+// === LEGACY TYPES ===
+// Kept for backward compatibility with existing localStorage data.
+// Will be removed once migration to SA data model is complete.
+
 export interface Entry {
   id: string;
   date: string;
@@ -22,58 +186,19 @@ export interface Converter {
   factorToBase: number;
 }
 
-export interface ParsedAmount {
-  value: number;
-  unit: string;
-}
-
 export interface Task {
   id: string;
   text: string;
   completed: boolean;
-  completedDates: string[]; // Array of dates when this task was completed
+  completedDates: string[];
   createdAt: string;
 }
-
-export interface Goal {
-  id: string;
-  title: string;
-  description?: string;
-  category: string;
-  targetAmount: number;
-  currentAmount: number;
-  unit: string;
-  targetDate: string;
-  createdAt: string;
-  completed: boolean;
-  completedAt?: string;
-  goalType?: 'task' | 'time' | 'distance' | 'weight' | 'attendance';
-  duration?: string;
-  distance?: string;
-  weight?: string;
-  durDays?: number;
-  durWeeks?: number;
-  durMonths?: number;
-  linkedHabitId?: string;
-}
-
-export interface JournalEntry {
-  id: string;
-  dayNumber: number;
-  title: string;
-  content: string;
-  answers?: { [key: string]: string }; // For structured journal entries with multiple questions
-  lastModified: string;
-  userId?: string;
-}
-
-export type TabType = 'log' | 'stats' | 'tasks' | 'journaling' | 'settings' | 'help';
 
 export interface ScheduleItem {
   id: string;
-  day: string; // 'monday', 'tuesday', etc. (kept for backward compat / grouping)
-  task_date?: string; // ISO date (YYYY-MM-DD) — the exact date this task is for
-  time: string; // '09:00'
+  day: string;
+  task_date?: string;
+  time: string;
   title: string;
   description?: string;
   targetNumber?: number;
@@ -87,28 +212,7 @@ export interface ScheduleItem {
   createdAt: string;
 }
 
-export interface Habit {
-  id: string;
-  user_id: string;
-  name: string;
-  target_number: number;
-  days_of_week: number[];
-  time: string;
-  description?: string;
-  duration?: string;
-  distance?: string;
-  weight?: string;
-  linked_goal_id?: string;
-  starred?: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface HabitCompletion {
-  id: string;
-  habit_id: string;
-  user_id: string;
-  completion_date: string;
-  completed_number: number;
-  created_at: string;
+export interface ParsedAmount {
+  value: number;
+  unit: string;
 }

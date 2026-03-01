@@ -1,135 +1,177 @@
 import React from 'react';
-import { BookOpenCheck, BarChart3, CheckSquare, BookOpen, Calendar, Settings, Info, User, Crown } from 'lucide-react';
+import { CheckCircle, BookOpen, BarChart3, Layers, Settings, User } from 'lucide-react';
 import { TabType } from '../types';
-import { getTrialDaysRemaining } from '../utils/trialUtils';
 
 interface NavigationProps {
   currentTab: TabType;
   onTabChange: (tab: TabType) => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  filterCategory: string;
-  onFilterChange: (category: string) => void;
-  categories: Array<{ name: string }>;
   user?: { email?: string } | null;
   plan?: 'free' | 'paid';
   trialEndsAt?: string | null;
   onSignOut: () => void;
   onShowAuth?: () => void;
+  installationDay?: number;
 }
+
+const tabs: { id: TabType; label: string; mobileLabel: string; icon: React.ElementType }[] = [
+  { id: 'today', label: 'Today', mobileLabel: 'Today', icon: CheckCircle },
+  { id: 'installation', label: 'Installation', mobileLabel: 'Install', icon: BookOpen },
+  { id: 'reviews', label: 'Reviews', mobileLabel: 'Reviews', icon: BarChart3 },
+  { id: 'system', label: 'System', mobileLabel: 'System', icon: Layers },
+  { id: 'settings', label: 'Settings', mobileLabel: 'Settings', icon: Settings },
+];
 
 export function Navigation({
   currentTab,
   onTabChange,
-  searchQuery,
-  onSearchChange,
-  filterCategory,
-  onFilterChange,
-  categories,
   user,
   plan = 'free',
-  trialEndsAt = null,
+  trialEndsAt,
   onSignOut,
-  onShowAuth
+  onShowAuth,
+  installationDay,
 }: NavigationProps) {
-  const trialDaysRemaining = getTrialDaysRemaining(trialEndsAt);
-  const isTrialActive = trialDaysRemaining > 0;
-  const tabs = [
-    { id: 'log' as TabType, label: "Today's Tasks", icon: CheckSquare },
-    { id: 'stats' as TabType, label: 'Dashboard', icon: BarChart3 },
-    { id: 'tasks' as TabType, label: 'Daily Habits', icon: Calendar },
-    { id: 'journaling' as TabType, label: 'Journaling', icon: BookOpen },
-    { id: 'settings' as TabType, label: 'Settings', icon: Settings },
-    { id: 'help' as TabType, label: 'Info', icon: Info },
-  ];
+  const isTrialActive = trialEndsAt ? new Date(trialEndsAt) > new Date() : false;
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-md border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Main Navigation */}
-        <div className="flex items-center h-16 justify-between gap-4">
-          <div className="flex items-center gap-2 lg:gap-10 min-w-0 overflow-hidden">
+    <>
+      {/* ===== DESKTOP HEADER ===== */}
+      <header className="hidden md:block border-b border-sa-border">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+          <div className="flex items-center justify-between h-14">
 
-            <h1 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white whitespace-nowrap">Daily Achievement Tracker</h1>
+            {/* Brand */}
+            <button
+              onClick={() => onTabChange('today')}
+              className="text-[0.65rem] font-medium tracking-[0.14em] uppercase text-sa-cream-muted hover:text-sa-cream transition-colors"
+            >
+              Structured Achievement
+            </button>
 
-            <nav className="hidden md:flex space-x-0.5 lg:space-x-2 overflow-hidden">
-              {tabs.map(tab => {
+            {/* Desktop tabs */}
+            <nav className="flex items-center gap-1">
+              {tabs.map((tab) => {
                 const Icon = tab.icon;
+                const isActive = currentTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => onTabChange(tab.id)}
-                    className={`px-1.5 lg:px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-1.5 whitespace-nowrap ${
-                      currentTab === tab.id
-                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sa-sm text-[0.78rem] font-normal transition-all duration-150 ${
+                      isActive
+                        ? 'text-sa-gold bg-sa-gold-soft'
+                        : 'text-sa-cream-muted hover:text-sa-cream-soft hover:bg-sa-bg-lift'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
-                    {tab.id !== 'settings' && tab.id !== 'help' && <span>{tab.label}</span>}
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                    {tab.id === 'installation' && installationDay != null && installationDay <= 21 && (
+                      <span className="ml-0.5 text-[0.6rem] text-sa-gold/60 font-medium">
+                        {installationDay}/21
+                      </span>
+                    )}
                   </button>
                 );
               })}
             </nav>
-          </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {user ? (
-              <div className="hidden sm:flex items-center gap-3">
-                {/* Plan Badge */}
-                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  plan === 'paid' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' :
-                  isTrialActive ? 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300' :
-                  'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+            {/* Right side — user info */}
+            <div className="flex items-center gap-3">
+              {/* Plan badge */}
+              {user && (
+                <span className={`text-[0.6rem] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                  plan === 'paid'
+                    ? 'bg-sa-green-soft text-sa-green border border-sa-green-border'
+                    : isTrialActive
+                      ? 'bg-sa-gold-soft text-sa-gold border border-sa-gold-border'
+                      : 'bg-sa-bg-lift text-sa-cream-faint border border-sa-border-light'
                 }`}>
-                  {plan === 'paid' && <span className="flex items-center"><Crown className="w-3 h-3 mr-1" />Paid</span>}
-                  {plan === 'free' && isTrialActive && <span className="flex items-center"><Crown className="w-3 h-3 mr-1" />Trial ({trialDaysRemaining}d)</span>}
-                  {plan === 'free' && !isTrialActive && 'Free'}
-                </div>
+                  {plan === 'paid' ? 'Active' : isTrialActive ? 'Trial' : 'Free'}
+                </span>
+              )}
 
-                {/* User Email */}
-                <span className="text-sm text-gray-600 dark:text-gray-400 max-w-[150px] truncate">
+              {user ? (
+                <span className="text-[0.72rem] text-sa-cream-faint truncate max-w-[120px]">
                   {user.email}
                 </span>
-              </div>
+              ) : (
+                <button
+                  onClick={onShowAuth}
+                  className="flex items-center gap-1.5 text-[0.72rem] text-sa-cream-muted hover:text-sa-gold transition-colors"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>Sign In</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* ===== MOBILE TOP BAR ===== */}
+      <header className="md:hidden border-b border-sa-border">
+        <div className="flex items-center justify-between h-12 px-4">
+          <button
+            onClick={() => onTabChange('today')}
+            className="text-[0.6rem] font-medium tracking-[0.14em] uppercase text-sa-cream-muted"
+          >
+            Structured Achievement
+          </button>
+
+          <div className="flex items-center gap-2">
+            {user && plan === 'paid' && (
+              <span className="text-[0.55rem] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-sa-green-soft text-sa-green border border-sa-green-border">
+                Active
+              </span>
+            )}
+
+            {user ? (
+              <span className="text-[0.65rem] text-sa-cream-faint truncate max-w-[100px]">
+                {user.email}
+              </span>
             ) : (
               <button
                 onClick={onShowAuth}
-                className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium flex items-center"
+                className="flex items-center gap-1 text-[0.65rem] text-sa-cream-muted hover:text-sa-gold transition-colors"
               >
-                <User className="w-4 h-4 mr-2" />
-                Sign In
+                <User className="w-3 h-3" />
+                <span>Sign In</span>
               </button>
             )}
           </div>
-          </div>
-        
-        {/* Mobile Navigation */}
-        <div className="md:hidden border-t border-gray-200 dark:border-gray-700 py-3">
-          <div className="flex space-x-1 overflow-x-auto">
-            {tabs.map(tab => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => onTabChange(tab.id)}
-                  className={`px-3 py-2 rounded-md text-xs font-medium transition-colors flex items-center space-x-2 whitespace-nowrap ${
-                    currentTab === tab.id
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
         </div>
-        
-        {/* Search and Filter */}
-      </div>
-    </div>
+      </header>
+
+      {/* ===== MOBILE BOTTOM TAB BAR ===== */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-sa-bg-warm border-t border-sa-border">
+        <div className="flex items-center justify-around px-2 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = currentTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={`relative flex flex-col items-center justify-center gap-0.5 py-1 px-2 min-w-[3.5rem] rounded-sa-sm transition-colors duration-150 ${
+                  isActive
+                    ? 'text-sa-gold'
+                    : 'text-sa-cream-faint active:text-sa-cream-muted'
+                }`}
+              >
+                <Icon className={`w-[1.15rem] h-[1.15rem] ${isActive ? 'stroke-[2.2]' : 'stroke-[1.6]'}`} />
+                <span className={`text-[0.55rem] leading-none ${
+                  isActive ? 'font-medium' : 'font-normal'
+                }`}>
+                  {tab.mobileLabel}
+                </span>
+                {tab.id === 'installation' && installationDay != null && installationDay <= 21 && (
+                  <span className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-sa-gold" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </>
   );
 }

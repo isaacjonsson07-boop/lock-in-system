@@ -1,87 +1,230 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  * {
-    box-sizing: border-box;
-  }
-  
-  html {
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  }
-  
-  body {
-    margin: 0;
-    padding: 0;
-    background-color: #f9fafb;
-    color: #111827;
-    line-height: 1.6;
-  }
-  
-  .dark body {
-    background-color: #111827;
-    color: #f9fafb;
-  }
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ========================================
+   STRUCTURED ACHIEVEMENT — DESIGN SYSTEM
+   ======================================== */
+
+:root {
+  /* Backgrounds */
+  --bg: #1E1F23;
+  --bg-warm: #24252A;
+  --bg-lift: #2A2B31;
+  --bg-hover: #313238;
+
+  /* Text */
+  --cream: #FAF8F3;
+  --cream-soft: #E0DDD6;
+  --cream-muted: #B0ADA5;
+  --cream-faint: #787570;
+
+  /* Gold — primary accent */
+  --gold: #C9A96E;
+  --gold-light: #D4BA88;
+  --gold-soft: rgba(201, 169, 110, 0.12);
+  --gold-border: rgba(201, 169, 110, 0.25);
+
+  /* Semantic */
+  --green: #5ADB7E;
+  --green-soft: rgba(90, 219, 126, 0.14);
+  --green-border: rgba(90, 219, 126, 0.30);
+  --rose: #E07070;
+  --rose-soft: rgba(230, 100, 100, 0.12);
+  --rose-border: rgba(230, 100, 100, 0.25);
+  --blue: #6DB5F5;
+  --blue-soft: rgba(109, 181, 245, 0.14);
+  --blue-border: rgba(109, 181, 245, 0.30);
+
+  /* Borders */
+  --border: rgba(240, 237, 230, 0.07);
+  --border-light: rgba(240, 237, 230, 0.12);
+  --border-active: rgba(201, 169, 110, 0.40);
+
+  /* Typography */
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Inter', -apple-system, sans-serif;
 }
 
-@layer components {
-  .prose code {
-    @apply bg-gray-100 text-gray-800 px-1 py-0.5 rounded text-sm font-mono;
-  }
-  
-  .prose p {
-    @apply mb-3;
-  }
-  
-  .prose h4 {
-    @apply font-semibold text-gray-800 mb-2;
-  }
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
+body {
+  background: var(--bg);
+  color: var(--cream);
+  font-family: var(--sans);
+  line-height: 1.6;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
+/* ========================================
+   SCROLLBAR
+   ======================================== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(240,237,230,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(240,237,230,0.18); }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Smooth transitions for all interactive elements */
-button, input, select, textarea {
-  transition: all 0.2s ease-in-out;
-}
-
-/* Focus styles */
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid #3b82f6;
+/* ========================================
+   FOCUS
+   ======================================== */
+*:focus-visible {
+  outline: 1.5px solid var(--gold);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
-/* Mobile app specific styles */
-.keyboard-open {
-  padding-bottom: 0;
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Safe area handling for mobile */
-@supports (padding: max(0px)) {
-  body {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-rise {
+  animation: rise 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.delay-1 { animation-delay: 0.05s; opacity: 0; }
+.delay-2 { animation-delay: 0.1s; opacity: 0; }
+.delay-3 { animation-delay: 0.15s; opacity: 0; }
+.delay-4 { animation-delay: 0.2s; opacity: 0; }
+.delay-5 { animation-delay: 0.25s; opacity: 0; }
+.delay-6 { animation-delay: 0.3s; opacity: 0; }
+
+/* ========================================
+   FORM ELEMENTS
+   ======================================== */
+input, textarea, select {
+  font-family: var(--sans);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--cream-faint);
+}
+
+/* ========================================
+   COMPONENT LAYER — reusable SA classes
+   ======================================== */
+@layer components {
+
+  /* Cards */
+  .sa-card {
+    @apply bg-sa-bg-warm border border-sa-border rounded-sa p-5;
+  }
+
+  .sa-card-elevated {
+    @apply bg-sa-bg-lift border border-sa-border-light rounded-sa-lg p-6 shadow-sa;
+  }
+
+  /* Buttons */
+  .sa-btn-primary {
+    @apply px-4 py-2.5 bg-sa-gold text-sa-bg font-medium text-sm rounded-sa
+           hover:bg-sa-gold-light transition-colors duration-150;
+  }
+
+  .sa-btn-secondary {
+    @apply px-4 py-2.5 bg-sa-bg-lift text-sa-cream-soft border border-sa-border-light
+           font-medium text-sm rounded-sa hover:bg-sa-bg-hover hover:border-sa-border-active
+           transition-colors duration-150;
+  }
+
+  .sa-btn-ghost {
+    @apply px-3 py-2 text-sa-cream-muted text-sm rounded-sa
+           hover:text-sa-cream-soft hover:bg-sa-bg-lift transition-colors duration-150;
+  }
+
+  .sa-btn-danger {
+    @apply px-4 py-2.5 bg-sa-rose-soft text-sa-rose border border-sa-rose-border
+           font-medium text-sm rounded-sa hover:bg-sa-rose/20 transition-colors duration-150;
+  }
+
+  /* Inputs */
+  .sa-input {
+    @apply w-full px-3.5 py-2.5 bg-sa-bg-lift border border-sa-border-light rounded-sa
+           text-sa-cream text-sm placeholder:text-sa-cream-faint
+           focus:border-sa-border-active focus:outline-none transition-colors duration-150;
+  }
+
+  .sa-textarea {
+    @apply w-full px-3.5 py-2.5 bg-sa-bg-lift border border-sa-border-light rounded-sa
+           text-sa-cream text-sm placeholder:text-sa-cream-faint resize-none
+           focus:border-sa-border-active focus:outline-none transition-colors duration-150;
+  }
+
+  /* Checkbox — the non-negotiable check */
+  .sa-check {
+    @apply flex-shrink-0 w-5 h-5 rounded-sa-sm border border-sa-border-light
+           flex items-center justify-center cursor-pointer transition-all duration-150;
+  }
+
+  .sa-check-done {
+    @apply bg-sa-green border-sa-green text-sa-bg;
+  }
+
+  .sa-check-undone {
+    @apply hover:border-sa-green-border;
+  }
+
+  /* Section headers */
+  .sa-section-title {
+    @apply font-serif text-xl text-sa-cream tracking-tight;
+  }
+
+  .sa-section-subtitle {
+    @apply text-xs font-medium uppercase tracking-widest text-sa-cream-faint;
+  }
+
+  /* Labels */
+  .sa-label {
+    @apply text-xs font-medium uppercase tracking-wider text-sa-cream-faint mb-1.5 block;
+  }
+
+  /* Badge / tag */
+  .sa-badge {
+    @apply inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full;
+  }
+
+  .sa-badge-gold {
+    @apply sa-badge bg-sa-gold-soft text-sa-gold border border-sa-gold-border;
+  }
+
+  .sa-badge-green {
+    @apply sa-badge bg-sa-green-soft text-sa-green border border-sa-green-border;
+  }
+
+  .sa-badge-muted {
+    @apply sa-badge bg-sa-bg-lift text-sa-cream-muted border border-sa-border-light;
+  }
+
+  /* Divider */
+  .sa-divider {
+    @apply border-t border-sa-border my-4;
+  }
+
+  /* Progress bar */
+  .sa-progress-track {
+    @apply w-full h-1.5 bg-sa-bg-lift rounded-full overflow-hidden;
+  }
+
+  .sa-progress-fill {
+    @apply h-full bg-sa-gold rounded-full transition-all duration-500 ease-out;
+  }
+
+  .sa-progress-fill-green {
+    @apply h-full bg-sa-green rounded-full transition-all duration-500 ease-out;
   }
 }

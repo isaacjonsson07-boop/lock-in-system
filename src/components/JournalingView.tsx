@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, BookOpen as Edit, Check, X, ArrowLeft, Lock, Crown } from 'lucide-react';
+import { Check, X, ArrowLeft, Lock } from 'lucide-react';
 import { JournalEntry } from '../types';
 import { uid } from '../utils/dateUtils';
-import { getJournalAccessDays, getTrialDaysRemaining } from '../utils/trialUtils';
-import { UpgradePrompt } from './UpgradePrompt';
+import { getJournalAccessDays } from '../utils/trialUtils';
 import { openWhopPaid, openWhopTrial } from '../constants';
 
 // Journal templates with specific content for each day
@@ -272,6 +271,12 @@ interface JournalingViewProps {
   onStartTrial?: () => Promise<void>;
 }
 
+const PHASES = [
+  { label: 'Phase I — Stabilize', days: [1, 2, 3, 4, 5, 6, 7] },
+  { label: 'Phase II — Reconstruct', days: [8, 9, 10, 11, 12, 13, 14] },
+  { label: 'Phase III — Install', days: [15, 16, 17, 18, 19, 20, 21] },
+];
+
 export function JournalingView({
   journalEntries,
   onUpdateJournalEntry,
@@ -282,17 +287,15 @@ export function JournalingView({
 }: JournalingViewProps) {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
-  const [isFullScreen, setIsFullScreen] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
 
   const journalAccessDays = getJournalAccessDays(plan, trialEndsAt);
-  const trialDaysRemaining = getTrialDaysRemaining(trialEndsAt);
 
-  // Initialize journal entries for days 1-21 if they don't exist
+  // Initialize journal entries for days 1-21
   const initializeJournalEntries = () => {
     const existingDays = new Set(journalEntries.map(entry => entry.dayNumber));
     const newEntries: JournalEntry[] = [];
-    
+
     for (let day = 1; day <= 21; day++) {
       if (!existingDays.has(day)) {
         const template = JOURNAL_TEMPLATES[day as keyof typeof JOURNAL_TEMPLATES];
@@ -301,13 +304,15 @@ export function JournalingView({
           dayNumber: day,
           title: template ? template.title : `Day ${day} Journal`,
           content: '',
+          entry_date: new Date().toISOString().split('T')[0],
+          entry_type: 'installation',
           answers: {},
           lastModified: new Date().toISOString(),
           userId: user?.id
         });
       }
     }
-    
+
     newEntries.forEach(entry => onUpdateJournalEntry(entry));
   };
 
@@ -315,15 +320,15 @@ export function JournalingView({
     initializeJournalEntries();
   }, [user]);
 
-  // Auto-save functionality
+  // Auto-save
   useEffect(() => {
     if (selectedDay && Object.keys(answers).length > 0) {
       const existingEntry = journalEntries.find(entry => entry.dayNumber === selectedDay);
       if (existingEntry) {
-        const hasChanges = Object.keys(answers).some(key => 
+        const hasChanges = Object.keys(answers).some(key =>
           (existingEntry.answers?.[key] || '') !== answers[key]
         );
-        
+
         if (hasChanges) {
           const updatedEntry: JournalEntry = {
             ...existingEntry,
@@ -334,7 +339,7 @@ export function JournalingView({
         }
       }
     }
-  }, [answers, selectedDay, journalEntries, onUpdateJournalEntry]);
+  }, [answers, selectedDay]);
 
   const handleAnswerChange = (questionIndex: number, value: string) => {
     setAnswers(prev => ({
@@ -354,17 +359,10 @@ export function JournalingView({
       setShowUpgradePrompt(true);
       return;
     }
-
     const entry = journalEntries.find(e => e.dayNumber === dayNumber);
     if (entry) {
       setSelectedDay(dayNumber);
       setAnswers(entry.answers || {});
-    }
-  };
-
-  const handleStartTrial = async () => {
-    if (onStartTrial) {
-      await onStartTrial();
     }
   };
 
@@ -374,339 +372,275 @@ export function JournalingView({
   };
 
   const hasContent = (entry: JournalEntry) => {
-    return entry.content.trim() !== '' || 
-           (entry.answers && Object.values(entry.answers).some(answer => answer.trim() !== ''));
+    return (entry.content && entry.content.trim() !== '') ||
+      (entry.answers && Object.values(entry.answers).some(a => a && a.trim() !== ''));
   };
 
-  // If a day is selected, show the journal entry view
+  // Installation progress
+  const completedDays = journalEntries.filter(e => e.dayNumber && hasContent(e)).length;
+  const progressPercent = Math.round((completedDays / 21) * 100);
+
+  // ── DAY DETAIL VIEW ──
   if (selectedDay) {
     const selectedEntry = journalEntries.find(e => e.dayNumber === selectedDay);
     const template = JOURNAL_TEMPLATES[selectedDay as keyof typeof JOURNAL_TEMPLATES];
-    
+
     if (!selectedEntry) return null;
 
     return (
-      <div className="space-y-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-            <button
-              onClick={handleClose}
-              className="text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 p-2 rounded-md transition-colors flex items-center"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </button>
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-              {selectedEntry.title}
-            </h3>
-            <button
-              onClick={handleClose}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center"
-            >
-              <Check className="w-4 h-4 mr-2" />
-              Done
-            </button>
-          </div>
+      <div className="max-w-2xl mx-auto animate-rise">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={handleClose}
+            className="sa-btn-ghost flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </button>
+          <span className="sa-badge-gold">Day {selectedDay} of 21</span>
+          <button
+            onClick={handleClose}
+            className="sa-btn-primary flex items-center gap-2"
+          >
+            <Check className="w-4 h-4" />
+            <span>Done</span>
+          </button>
+        </div>
 
-          {/* Content */}
-          <div className="p-6">
-            {template && template.questions ? (
-              // Structured questions for Day 1 (and future days)
-              <div className="space-y-6">
-                {template.questions.map((question, index) => (
-                  <div
-                    key={index}
-                    className={`space-y-3 ${
-                      index === template.questions.length - 1 && template.separateLastQuestion
-                        ? 'pt-8 mt-8 border-t-2 border-blue-200 dark:border-blue-700'
-                        : ''
-                    }`}
-                  >
-                    <label className="block text-lg font-semibold text-gray-800 dark:text-white">
-                      {index + 1}. {question}
-                    </label>
-                    <textarea
-                      value={answers[`question_${index}`] || ''}
-                      onChange={(e) => handleAnswerChange(index, e.target.value)}
-                      onInput={handleTextareaInput}
-                      placeholder="Write your answer here..."
-                      className="w-full min-h-[6rem] p-4 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-base leading-relaxed overflow-hidden"
-                      autoFocus={index === 0}
-                      ref={(el) => {
-                        if (el && answers[`question_${index}`]) {
-                          el.style.height = 'auto';
-                          el.style.height = el.scrollHeight + 'px';
-                        }
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              // Free-form journaling for other days
-              <div className="space-y-3">
-                <label className="block text-lg font-semibold text-gray-800 dark:text-white">
-                  Write your journal entry:
+        {/* Title */}
+        <div className="mb-8">
+          <h2 className="font-serif text-xl sm:text-2xl text-sa-cream">
+            {selectedEntry.title}
+          </h2>
+          {template?.quote && (
+            <p className="text-sm text-sa-cream-faint italic mt-3">
+              "{template.quote}"
+            </p>
+          )}
+        </div>
+
+        {/* Questions */}
+        {template && template.questions ? (
+          <div className="space-y-8">
+            {template.questions.map((question, index) => (
+              <div
+                key={index}
+                className={`${
+                  index === template.questions.length - 1 && template.separateLastQuestion
+                    ? 'pt-8 mt-4 border-t border-sa-border'
+                    : ''
+                }`}
+              >
+                <label className="block text-sm text-sa-cream-soft mb-3 leading-relaxed whitespace-pre-line">
+                  <span className="text-sa-gold font-medium">{index + 1}.</span>{' '}
+                  {question}
                 </label>
                 <textarea
-                  value={selectedEntry.content}
-                  onChange={(e) => {
-                    const updatedEntry: JournalEntry = {
-                      ...selectedEntry,
-                      content: e.target.value,
-                      lastModified: new Date().toISOString()
-                    };
-                    onUpdateJournalEntry(updatedEntry);
-                  }}
+                  value={answers[`question_${index}`] || ''}
+                  onChange={(e) => handleAnswerChange(index, e.target.value)}
                   onInput={handleTextareaInput}
-                  placeholder="Start writing your journal entry..."
-                  className="w-full min-h-[20rem] p-4 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-base leading-relaxed overflow-hidden"
-                  autoFocus
+                  placeholder="Write your answer here..."
+                  className="sa-textarea min-h-[5rem]"
+                  autoFocus={index === 0}
                   ref={(el) => {
-                    if (el && selectedEntry.content) {
+                    if (el && answers[`question_${index}`]) {
                       el.style.height = 'auto';
                       el.style.height = el.scrollHeight + 'px';
                     }
                   }}
                 />
               </div>
-            )}
+            ))}
           </div>
+        ) : (
+          <div>
+            <label className="sa-label">Journal Entry</label>
+            <textarea
+              value={selectedEntry.content}
+              onChange={(e) => {
+                const updatedEntry: JournalEntry = {
+                  ...selectedEntry,
+                  content: e.target.value,
+                  lastModified: new Date().toISOString()
+                };
+                onUpdateJournalEntry(updatedEntry);
+              }}
+              onInput={handleTextareaInput}
+              placeholder="Start writing..."
+              className="sa-textarea min-h-[16rem]"
+              autoFocus
+              ref={(el) => {
+                if (el && selectedEntry.content) {
+                  el.style.height = 'auto';
+                  el.style.height = el.scrollHeight + 'px';
+                }
+              }}
+            />
+          </div>
+        )}
 
-          {/* Footer */}
-          <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-600 dark:text-gray-400 italic text-center w-full">
-              "{template?.quote || "When you change the causes you live by, the results have no choice but to change with them."}"
-            </p>
-          </div>
-        </div>
+        {/* Auto-save indicator */}
+        <p className="text-xs text-sa-cream-faint text-center mt-8">
+          Changes save automatically
+        </p>
       </div>
     );
   }
 
-  // Journal grid view
+  // ── GRID VIEW ──
   return (
-    <div className="space-y-6">
-      {/* Upgrade Prompt Modal */}
+    <div className="max-w-3xl mx-auto">
+
+      {/* Upgrade modal */}
       {showUpgradePrompt && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="sa-card-elevated max-w-md w-full">
             <button
               onClick={() => setShowUpgradePrompt(false)}
-              className="float-right text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="float-right sa-btn-ghost p-1"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
-            <UpgradePrompt
-              feature="Unlock Days 8-21"
-              description="Upgrade to the paid plan to access the full 21-day journaling challenge and unlock all premium features."
-            />
-          </div>
-        </div>
-      )}
-
-
-      {/* Locked State for Free Users */}
-      {plan === 'free' && journalAccessDays === 0 && (
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-xl shadow-lg p-8">
-          <div className="text-center max-w-2xl mx-auto">
-            <div className="mb-4">
-              <Lock className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
-              21-Day Journaling Challenge
-            </h3>
-            <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
-              Transform your life with daily guided journaling. Build self-awareness, clarify your goals, and create lasting change through structured reflection.
-            </p>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
-              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">What's Included:</h4>
-              <ul className="text-left space-y-2 text-gray-700 dark:text-gray-300">
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>21 days of guided journaling prompts</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>Structured questions to deepen self-awareness</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>Goal-setting and habit-building frameworks</span>
-                </li>
-                <li className="flex items-start">
-                  <Check className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>Weekly review and reflection sessions</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              {onStartTrial && (
-                <button
-                  onClick={openWhopTrial}
-                  className="px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold text-lg rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center"
-                >
-                  <Crown className="w-6 h-6 mr-2" />
-                  Start Free Access
+            <div className="text-center pt-2">
+              <Lock className="w-8 h-8 text-sa-gold mx-auto mb-3" />
+              <h3 className="font-serif text-lg text-sa-cream mb-2">Unlock Full Installation</h3>
+              <p className="text-sm text-sa-cream-muted mb-6">
+                Upgrade to access Days 8–21 and complete the full system installation.
+              </p>
+              <div className="flex flex-col gap-3">
+                {onStartTrial && (
+                  <button onClick={openWhopTrial} className="sa-btn-secondary w-full">
+                    Start Free Access (Days 1–7)
+                  </button>
+                )}
+                <button onClick={openWhopPaid} className="sa-btn-primary w-full">
+                  Upgrade to Full Access
                 </button>
-              )}
-              <button
-                onClick={openWhopPaid}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl inline-flex items-center"
-              >
-                <Crown className="w-6 h-6 mr-2" />
-                Upgrade to Full Access
-              </button>
+              </div>
             </div>
-
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-6">
-              {onStartTrial && "Start with free access to Days 1-7, or "}upgrade for full access to all 21 days
-            </p>
           </div>
         </div>
       )}
 
-      {/* Header - only show if user has access */}
-      {journalAccessDays > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center mb-4">
-            <BookOpen className="w-6 h-6 mr-3" />
-            21-Day Journaling Challenge
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Complete your daily journaling practice. Click on any day to start writing your thoughts and reflections.
-          </p>
-          {plan === 'paid' && (
-            <p className="text-green-600 dark:text-green-400 mt-2 font-medium">
-              You have full access to all 21 days
-            </p>
-          )}
-          {journalAccessDays > 0 && journalAccessDays < 21 && (
-            <p className="text-amber-600 dark:text-amber-400 mt-2 font-medium">
-              You have access to Days 1-{journalAccessDays}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Journal Grid - only show if user has access */}
-      {journalAccessDays > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {Array.from({ length: 21 }, (_, index) => {
-              const dayNumber = index + 1;
-              const entry = journalEntries.find(e => e.dayNumber === dayNumber);
-              const entryHasContent = entry && hasContent(entry);
-              const isLocked = dayNumber > journalAccessDays;
-
-            return (
-              <button
-                key={dayNumber}
-                onClick={() => handleDayClick(dayNumber)}
-                disabled={isLocked}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  isLocked
-                    ? 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 opacity-60 cursor-not-allowed'
-                    : entryHasContent
-                    ? 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900 hover:border-green-300 dark:hover:border-green-600 hover:shadow-md'
-                    : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md'
-                }`}
-              >
-                <div className="text-center">
-                  <div className={`text-2xl font-bold mb-2 ${
-                    isLocked
-                      ? 'text-gray-400 dark:text-gray-500'
-                      : entryHasContent
-                      ? 'text-green-700 dark:text-green-300'
-                      : 'text-gray-700 dark:text-gray-300'
-                  }`}>
-                    {dayNumber}
-                  </div>
-                  <div className={`text-sm font-medium mb-1 ${
-                    isLocked
-                      ? 'text-gray-400 dark:text-gray-500'
-                      : entryHasContent
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-gray-600 dark:text-gray-400'
-                  }`}>
-                    {entry?.title || `Day ${dayNumber}`}
-                  </div>
-                  <div className="flex items-center justify-center">
-                    {isLocked ? (
-                      <div className="flex items-center text-gray-400 dark:text-gray-500">
-                        <Lock className="w-4 h-4 mr-1" />
-                        <span className="text-xs">Locked</span>
-                      </div>
-                    ) : entryHasContent ? (
-                      <div className="flex items-center text-green-600 dark:text-green-400">
-                        <Check className="w-4 h-4 mr-1" />
-                        <span className="text-xs">Complete</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center text-gray-500 dark:text-gray-400">
-                        <Edit className="w-4 h-4 mr-1" />
-                        <span className="text-xs">Start</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </button>
-            );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Day 1 Preview for Free Users (Optional) */}
+      {/* Free user locked state */}
       {plan === 'free' && journalAccessDays === 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-2 border-blue-200 dark:border-blue-700">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-              Preview: Day 1 — Creating Your North Star
-            </h3>
-            <Lock className="w-5 h-5 text-gray-400" />
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
-            <p className="text-sm italic text-gray-600 dark:text-gray-400 mb-3">
-              "When you change the causes you live by, the results have no choice but to change with them."
-            </p>
-          </div>
-          <div className="space-y-4 opacity-60">
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                1. Over the next 21 days, what does life look like when you are operating at your best?
-              </p>
-              <div className="h-20 bg-gray-100 dark:bg-gray-700 rounded border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                <Lock className="w-6 h-6 text-gray-400" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                2. What are 3–5 specific outcomes that would prove this vision is real?
-              </p>
-              <div className="h-20 bg-gray-100 dark:bg-gray-700 rounded border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                <Lock className="w-6 h-6 text-gray-400" />
-              </div>
-            </div>
-            <p className="text-sm text-center text-gray-500 dark:text-gray-400 mt-4">
-              + 3 more guided questions...
-            </p>
-          </div>
-          <div className="mt-6 text-center">
+        <div className="text-center py-16 animate-rise">
+          <Lock className="w-10 h-10 text-sa-gold mx-auto mb-4" />
+          <h2 className="font-serif text-2xl text-sa-cream mb-3">21-Day Installation</h2>
+          <p className="text-sm text-sa-cream-muted max-w-md mx-auto mb-8">
+            A structured 21-day corridor that installs your personal operating system.
+            Three phases. One component per day. System installed by Day 21.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             {onStartTrial && (
-              <button
-                onClick={openWhopTrial}
-                className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg inline-flex items-center"
-              >
-                <Crown className="w-5 h-5 mr-2" />
+              <button onClick={openWhopTrial} className="sa-btn-secondary">
                 Start Free Access
               </button>
             )}
+            <button onClick={openWhopPaid} className="sa-btn-primary">
+              Upgrade to Full Access
+            </button>
           </div>
         </div>
+      )}
+
+      {/* Installation content */}
+      {journalAccessDays > 0 && (
+        <>
+          {/* Header + Progress */}
+          <div className="mb-10 animate-rise">
+            <h2 className="font-serif text-2xl sm:text-3xl text-sa-cream mb-2">
+              Installation
+            </h2>
+            <p className="text-sm text-sa-cream-muted mb-5">
+              {completedDays} of 21 days completed
+            </p>
+
+            {/* Progress bar */}
+            <div className="sa-progress-track">
+              <div
+                className={completedDays === 21 ? 'sa-progress-fill-green' : 'sa-progress-fill'}
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Phases */}
+          <div className="space-y-8">
+            {PHASES.map((phase, phaseIndex) => (
+              <section key={phase.label} className={`animate-rise delay-${phaseIndex + 1}`}>
+                {/* Phase header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="sa-section-subtitle">{phase.label}</span>
+                  <div className="flex-1 h-px bg-sa-border" />
+                  <span className="text-xs text-sa-cream-faint">
+                    {phase.days.filter(d => {
+                      const entry = journalEntries.find(e => e.dayNumber === d);
+                      return entry && hasContent(entry);
+                    }).length}/{phase.days.length}
+                  </span>
+                </div>
+
+                {/* Day cards */}
+                <div className="grid grid-cols-7 gap-2">
+                  {phase.days.map((dayNumber) => {
+                    const entry = journalEntries.find(e => e.dayNumber === dayNumber);
+                    const completed = entry && hasContent(entry);
+                    const isLocked = dayNumber > journalAccessDays;
+                    const template = JOURNAL_TEMPLATES[dayNumber as keyof typeof JOURNAL_TEMPLATES];
+                    const dayTitle = template?.title?.replace(/^Day \d+ — /, '').replace(/ \(Journal\)$/, '') || `Day ${dayNumber}`;
+
+                    return (
+                      <button
+                        key={dayNumber}
+                        onClick={() => handleDayClick(dayNumber)}
+                        disabled={isLocked}
+                        className={`relative flex flex-col items-center py-3 px-1 rounded-sa transition-all duration-150 ${
+                          isLocked
+                            ? 'opacity-30 cursor-not-allowed'
+                            : completed
+                              ? 'bg-sa-green-soft border border-sa-green-border hover:border-sa-green'
+                              : 'bg-sa-bg-warm border border-sa-border hover:border-sa-gold-border'
+                        }`}
+                        title={dayTitle}
+                      >
+                        <span className={`text-lg font-medium ${
+                          isLocked
+                            ? 'text-sa-cream-faint'
+                            : completed
+                              ? 'text-sa-green'
+                              : 'text-sa-cream'
+                        }`}>
+                          {dayNumber}
+                        </span>
+                        <span className="text-[0.5rem] text-sa-cream-faint mt-0.5 leading-tight text-center line-clamp-1 max-w-full px-0.5 hidden sm:block">
+                          {dayTitle.length > 12 ? dayTitle.substring(0, 12) + '…' : dayTitle}
+                        </span>
+                        {completed && (
+                          <Check className="absolute -top-1 -right-1 w-3.5 h-3.5 text-sa-green bg-sa-bg rounded-full p-0.5" strokeWidth={3} />
+                        )}
+                        {isLocked && (
+                          <Lock className="w-3 h-3 text-sa-cream-faint mt-1" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+
+          {/* Completion message */}
+          {completedDays === 21 && (
+            <div className="mt-10 py-6 px-8 bg-sa-green-soft border border-sa-green-border rounded-sa text-center animate-rise">
+              <p className="text-sa-green font-serif text-lg">System installed.</p>
+              <p className="text-sa-cream-muted text-sm mt-1">
+                All 21 days completed. Operational mode is active.
+              </p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -1,205 +1,128 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { X, Mail, Lock, User, AlertCircle } from 'lucide-react'
+import React, { useState } from 'react';
+import { X, AlertCircle } from 'lucide-react';
 
 interface AuthModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSignIn: (email: string, password: string) => Promise<{ data?: any; error: any }>
-  onSignUp: (email: string, password: string) => Promise<{ data?: any; error: any }>
+  isOpen: boolean;
+  onClose: () => void;
+  onSignIn: (email: string, password: string) => Promise<any>;
+  onSignUp: (email: string, password: string) => Promise<any>;
 }
 
 export function AuthModal({ isOpen, onClose, onSignIn, onSignUp }: AuthModalProps) {
-  const [isSignUp, setIsSignUp] = useState(false)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [authError, setAuthError] = useState('')
-  const prevOpenRef = useRef(false)
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [signUpSuccess, setSignUpSuccess] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && !prevOpenRef.current) {
-      setEmail('')
-      setPassword('')
-      setAuthError('')
-      setIsSignUp(false)
-      setLoading(false)
-    }
-    prevOpenRef.current = isOpen
-  }, [isOpen])
+  if (!isOpen) return null;
 
-  if (!isOpen) return null
-
-  const handleAuthClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    const trimmedEmail = email.trim()
-    if (!trimmedEmail || !password) {
-      setAuthError('Please enter both email and password.')
-      return
-    }
-    if (password.length < 6) {
-      setAuthError('Password must be at least 6 characters.')
-      return
-    }
-
-    console.log('SIGNIN_CLICKED')
-    setLoading(true)
-    setAuthError('')
-
-    let errorMsg = ''
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
     try {
-      const result = isSignUp
-        ? await onSignUp(trimmedEmail, password)
-        : await onSignIn(trimmedEmail, password)
-
-      if (result.error) {
-        console.log('SIGNIN_ERROR', result.error?.message)
-        if (result.error.message === 'Invalid login credentials') {
-          errorMsg = 'Invalid email or password. Please check your credentials or sign up if you don\'t have an account.'
-        } else if (result.error.message?.includes('Email not confirmed')) {
-          errorMsg = 'Please check your email and confirm your account before signing in.'
+      if (mode === 'signin') {
+        const { error } = await onSignIn(email, password);
+        if (error) {
+          setError(error.message || 'Sign in failed');
         } else {
-          errorMsg = result.error.message || 'An error occurred. Please try again.'
+          onClose();
+          resetForm();
         }
       } else {
-        console.log('SIGNIN_SUCCESS')
-        if (isSignUp && result.data?.user && !result.data?.session) {
-          errorMsg = 'Please check your email to confirm your account before signing in.'
+        const { error } = await onSignUp(email, password);
+        if (error) {
+          setError(error.message || 'Sign up failed');
         } else {
-          onClose()
-          return
+          setSignUpSuccess(true);
         }
       }
     } catch (err: any) {
-      console.log('SIGNIN_ERROR', err?.message)
-      errorMsg = err?.message || 'An unexpected error occurred. Please try again.'
+      setError(err.message || 'Something went wrong');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
+  };
 
-    if (errorMsg) {
-      setAuthError(errorMsg)
-    }
-  }
-
-  const handleClose = () => {
-    setEmail('')
-    setPassword('')
-    setAuthError('')
-    setIsSignUp(false)
-    setLoading(false)
-    onClose()
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      e.stopPropagation()
-      const btn = document.getElementById('auth-submit-btn')
-      if (btn) btn.click()
-    }
-  }
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setError('');
+    setSignUpSuccess(false);
+  };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {isSignUp ? 'Create Account' : 'Sign In'}
-          </h2>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-md transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-sm bg-sa-bg-warm border border-[rgba(240,237,230,0.1)] rounded-2xl p-8 animate-rise">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-1 text-sa-cream-faint hover:text-sa-cream transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setAuthError('') }}
-                onKeyDown={handleKeyDown}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
-                placeholder="Enter your email"
-                autoComplete="email"
-              />
-            </div>
+        <h2 className="font-serif text-xl text-sa-cream mb-1">
+          {mode === 'signin' ? 'Welcome back' : 'Create account'}
+        </h2>
+        <p className="text-[0.78rem] text-sa-cream-muted mb-6">
+          {mode === 'signin' ? 'Sign in to sync your system.' : 'Start building your operating system.'}
+        </p>
+
+        {signUpSuccess ? (
+          <div className="bg-[rgba(90,219,126,0.08)] border border-[rgba(90,219,126,0.2)] rounded-lg p-4 text-center">
+            <p className="text-sa-green text-[0.88rem] font-medium mb-1">Account created</p>
+            <p className="text-sa-cream-muted text-[0.78rem]">Check your email to verify, then sign in.</p>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              required
+              className="w-full bg-sa-bg border border-[rgba(240,237,230,0.1)] rounded-lg px-4 py-3 text-[0.88rem] text-sa-cream placeholder:text-sa-cream-faint outline-none focus:border-sa-gold transition-colors"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              required
+              minLength={6}
+              className="w-full bg-sa-bg border border-[rgba(240,237,230,0.1)] rounded-lg px-4 py-3 text-[0.88rem] text-sa-cream placeholder:text-sa-cream-faint outline-none focus:border-sa-gold transition-colors"
+            />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setAuthError('') }}
-                onKeyDown={handleKeyDown}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
-                placeholder="Enter your password"
-                autoComplete={isSignUp ? "new-password" : "current-password"}
-              />
-            </div>
-          </div>
-
-          {authError && (
-            <div className="flex items-start space-x-2 text-red-600 bg-red-50 border border-red-200 p-3 rounded-md">
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <span className="text-sm font-medium">{authError}</span>
-            </div>
-          )}
-
-          <p className="text-xs text-gray-400 font-mono">
-            Auth error state: {authError || 'none'}
-          </p>
-
-          <button
-            id="auth-submit-btn"
-            type="button"
-            onClick={handleAuthClick}
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                <User className="w-5 h-5 mr-2" />
-                {isSignUp ? 'Create Account' : 'Sign In'}
-              </>
+            {error && (
+              <div className="flex items-start gap-2 bg-[rgba(230,100,100,0.08)] border border-[rgba(230,100,100,0.2)] rounded-lg px-3 py-2">
+                <AlertCircle className="w-4 h-4 text-sa-rose flex-shrink-0 mt-0.5" />
+                <p className="text-[0.78rem] text-sa-rose">{error}</p>
+              </div>
             )}
-          </button>
-        </div>
 
-        <div className="mt-6 text-center">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-[rgba(201,169,110,0.15)] border border-[rgba(201,169,110,0.3)] text-sa-gold rounded-lg text-[0.88rem] font-medium hover:bg-[rgba(201,169,110,0.25)] transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Loading...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
+            </button>
+          </form>
+        )}
+
+        <div className="mt-5 text-center">
           <button
-            type="button"
-            onClick={() => {
-              setIsSignUp(!isSignUp)
-              setAuthError('')
-            }}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+            onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); setSignUpSuccess(false); }}
+            className="text-[0.78rem] text-sa-cream-faint hover:text-sa-cream transition-colors"
           >
-            {isSignUp
-              ? 'Already have an account? Sign in'
-              : "Don't have an account? Sign up"
-            }
+            {mode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
