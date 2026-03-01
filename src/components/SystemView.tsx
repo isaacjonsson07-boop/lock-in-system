@@ -179,7 +179,7 @@ export function SystemView({
   const docsWithContent = DOC_TYPES.filter(d => documents[d.key]?.trim()).length;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-full">
 
       {/* Header */}
       <div className="mb-10 animate-rise">
@@ -191,19 +191,23 @@ export function SystemView({
         </p>
       </div>
 
-      {/* ── System Documents ── */}
-      <div className="animate-rise delay-1">
-        <SectionHeader
-          id="documents"
-          title="System Documents"
-          count={docsWithContent}
-          color="var(--gold)"
-        />
-        {activeSection === 'documents' && (
-          <div className="py-4 space-y-3">
-            <p className="text-xs text-sa-cream-faint mb-2">
-              Living documents built during Installation. Update them during monthly recalibrations.
-            </p>
+      {/* ── Two Column Layout ── */}
+      <div className="flex flex-col lg:flex-row gap-8">
+
+        {/* ══════ LEFT: System Documents ══════ */}
+        <div className="flex-1 min-w-0">
+          <div className="animate-rise delay-1">
+            <SectionHeader
+              id="documents"
+              title="System Documents"
+              count={docsWithContent}
+              color="var(--gold)"
+            />
+            {activeSection === 'documents' && (
+              <div className="py-4 space-y-3">
+                <p className="text-xs text-sa-cream-faint mb-2">
+                  Living documents built during Installation. Update them during monthly recalibrations.
+                </p>
 
             {DOC_TYPES.map((doc) => {
               const Icon = doc.icon;
@@ -271,6 +275,10 @@ export function SystemView({
           </div>
         )}
       </div>
+        </div>
+
+        {/* ══════ RIGHT: Operational Components ══════ */}
+        <div className="lg:w-96 flex-shrink-0">
 
       {/* ── Non-Negotiables ── */}
       <div className="animate-rise delay-2">
@@ -539,6 +547,8 @@ export function SystemView({
             )}
           </div>
         )}
+      </div>
+        </div>
       </div>
     </div>
   );
