@@ -6,43 +6,43 @@ export default {
     extend: {
       colors: {
         sa: {
-          // Backgrounds (Claude-style warm cream)
-          bg: '#F4F3EE',
-          'bg-warm': '#EDECE7',
-          'bg-lift': '#E5E4DF',
-          'bg-hover': '#DDDCD7',
+          // Backgrounds — matches lesson aesthetic
+          bg: '#1E1F23',
+          'bg-warm': '#24252A',
+          'bg-lift': '#2A2B31',
+          'bg-hover': '#313238',
 
-          // Text hierarchy (dark text on light bg)
-          cream: '#1A1A1A',
-          'cream-soft': '#2E2E2E',
-          'cream-muted': '#5C5C5C',
-          'cream-faint': '#8A8A85',
+          // Text hierarchy
+          cream: '#FAF8F3',
+          'cream-soft': '#E0DDD6',
+          'cream-muted': '#B0ADA5',
+          'cream-faint': '#787570',
 
           // Accent — gold (primary brand)
-          gold: '#A8863A',
-          'gold-light': '#C09E52',
-          'gold-soft': 'rgba(168, 134, 58, 0.10)',
-          'gold-border': 'rgba(168, 134, 58, 0.25)',
+          gold: '#C9A96E',
+          'gold-light': '#D4BA88',
+          'gold-soft': 'rgba(201, 169, 110, 0.12)',
+          'gold-border': 'rgba(201, 169, 110, 0.25)',
 
           // Semantic — success
-          green: '#2D8A4E',
-          'green-soft': 'rgba(45, 138, 78, 0.10)',
-          'green-border': 'rgba(45, 138, 78, 0.25)',
+          green: '#5ADB7E',
+          'green-soft': 'rgba(90, 219, 126, 0.14)',
+          'green-border': 'rgba(90, 219, 126, 0.30)',
 
           // Semantic — warning / attention
-          rose: '#C94444',
-          'rose-soft': 'rgba(201, 68, 68, 0.08)',
-          'rose-border': 'rgba(201, 68, 68, 0.20)',
+          rose: '#E07070',
+          'rose-soft': 'rgba(230, 100, 100, 0.12)',
+          'rose-border': 'rgba(230, 100, 100, 0.25)',
 
           // Semantic — info / neutral accent
-          blue: '#3B7DD8',
-          'blue-soft': 'rgba(59, 125, 216, 0.10)',
-          'blue-border': 'rgba(59, 125, 216, 0.25)',
+          blue: '#6DB5F5',
+          'blue-soft': 'rgba(109, 181, 245, 0.14)',
+          'blue-border': 'rgba(109, 181, 245, 0.30)',
 
           // Borders and dividers
-          border: 'rgba(0, 0, 0, 0.12)',
-          'border-light': 'rgba(0, 0, 0, 0.18)',
-          'border-active': 'rgba(168, 134, 58, 0.50)',
+          border: 'rgba(240, 237, 230, 0.07)',
+          'border-light': 'rgba(240, 237, 230, 0.12)',
+          'border-active': 'rgba(201, 169, 110, 0.40)',
         }
       },
       fontFamily: {
@@ -68,9 +68,9 @@ export default {
         'sa-lg': '12px',
       },
       boxShadow: {
-        'sa': '0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06)',
-        'sa-lg': '0 4px 12px rgba(0, 0, 0, 0.10), 0 2px 4px rgba(0, 0, 0, 0.06)',
-        'sa-glow': '0 0 20px rgba(168, 134, 58, 0.08)',
+        'sa': '0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)',
+        'sa-lg': '0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3)',
+        'sa-glow': '0 0 20px rgba(201, 169, 110, 0.08)',
       },
       animation: {
         'rise': 'rise 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards',

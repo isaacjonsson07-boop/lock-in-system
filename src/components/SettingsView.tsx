@@ -34,7 +34,7 @@ export function SettingsView({
       </div>
 
       {/* Account */}
-      <div className="bg-white border border-sa-border rounded-xl p-6 mb-6 animate-rise delay-1">
+      <div className="bg-sa-bg-warm border border-sa-border rounded-xl p-6 mb-6 animate-rise delay-1">
         <h3 className="text-[0.7rem] font-medium tracking-[0.1em] uppercase text-sa-gold mb-5">
           Account
         </h3>
@@ -89,7 +89,7 @@ export function SettingsView({
 
       {/* Dev Tools */}
       {showDevTools && (
-        <div className="bg-white border border-sa-gold-border rounded-xl p-6 animate-rise delay-2">
+        <div className="bg-sa-bg-warm border border-sa-gold-border rounded-xl p-6 animate-rise delay-2">
           <h3 className="text-[0.7rem] font-medium tracking-[0.1em] uppercase text-sa-cream-muted mb-4 flex items-center gap-2">
             <Wrench className="w-3.5 h-3.5" />
             Dev Tools

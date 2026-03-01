@@ -120,7 +120,7 @@ export function TodayView({
       className={`group flex items-center gap-4 px-4 py-3.5 rounded-sa border transition-all duration-150 ${
         completed
           ? 'bg-sa-green-soft border-sa-green-border'
-          : 'bg-white border-sa-border hover:border-sa-border-light'
+          : 'bg-sa-bg-warm border-sa-border hover:border-sa-border-light'
       }`}
     >
       <button

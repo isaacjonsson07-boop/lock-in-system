@@ -291,7 +291,7 @@ export function SystemView({
                 .map((nn) => (
                   <div
                     key={nn.id}
-                    className="group flex items-center gap-3 px-4 py-3 bg-white border border-sa-border rounded-sa"
+                    className="group flex items-center gap-3 px-4 py-3 bg-sa-bg-warm border border-sa-border rounded-sa"
                   >
                     <div className="w-2 h-2 rounded-full bg-sa-gold flex-shrink-0" />
                     <span className="flex-1 text-sm text-sa-cream">{nn.title}</span>
@@ -350,7 +350,7 @@ export function SystemView({
               {habits.map((h) => (
                 <div
                   key={h.id}
-                  className="group flex items-center gap-3 px-4 py-3 bg-white border border-sa-border rounded-sa"
+                  className="group flex items-center gap-3 px-4 py-3 bg-sa-bg-warm border border-sa-border rounded-sa"
                 >
                   <div className="w-2 h-2 rounded-full bg-sa-blue flex-shrink-0" />
                   <div className="flex-1 min-w-0">
@@ -463,7 +463,7 @@ export function SystemView({
                     ? Math.min(100, Math.round((g.current_amount / g.target_amount) * 100))
                     : 0;
                   return (
-                    <div key={g.id} className="px-4 py-3 bg-white border border-sa-border rounded-sa">
+                    <div key={g.id} className="px-4 py-3 bg-sa-bg-warm border border-sa-border rounded-sa">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-sa-cream">{g.title}</span>
                         <span className="text-xs text-sa-cream-muted">

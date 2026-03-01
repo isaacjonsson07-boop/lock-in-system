@@ -277,7 +277,8 @@ function App() {
         onSignUp={signUp}
       />
 
-      <main className="max-w-6xl mx-auto px-6 sm:px-10 py-8 pb-24 md:pb-8">
+      <main className="md:ml-60 min-h-screen">
+        <div className="max-w-4xl mx-auto px-6 sm:px-10 py-10 pb-24 md:pb-10">
         {currentTab === 'today' && (
           <TodayView
             nonNegotiables={nonNegotiables}
@@ -341,6 +342,7 @@ function App() {
             devSetPaidPlan={devSetPaidPlan}
           />
         )}
+        </div>
       </main>
     </div>
   );
