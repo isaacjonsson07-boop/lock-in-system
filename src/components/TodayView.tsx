@@ -133,27 +133,23 @@ export function TodayView({
 
       {/* ════ DIRECTION & IDENTITY ════ */}
       {(direction || identity) && (
-        <div className="relative mb-14 text-center animate-rise">
-          {/* Slow drifting light — like candlelight on a wall */}
-          <div className="absolute -inset-10 -top-14 -bottom-8 overflow-hidden pointer-events-none">
-            <div className="absolute w-[300px] h-[200px] rounded-full blur-[80px] opacity-[0.07] animate-[drift_20s_ease-in-out_infinite]"
-              style={{ background: 'var(--gold)', top: '10%', left: '15%' }} />
-            <div className="absolute w-[250px] h-[180px] rounded-full blur-[90px] opacity-[0.05] animate-[drift_25s_ease-in-out_3s_infinite_reverse]"
-              style={{ background: 'var(--gold-light)', top: '20%', right: '10%' }} />
-          </div>
-          <div className="relative z-10">
-            {direction && (
-              <p className="font-serif text-[1.85rem] font-light leading-[1.45] text-sa-cream tracking-[-0.01em]">
-                {direction}
-              </p>
-            )}
-            {identity && (
-              <p className="font-serif text-[1.05rem] italic font-light text-sa-gold mt-5 leading-relaxed">
-                "{identity}"
-              </p>
-            )}
-            <div className="w-[60px] h-px mx-auto mt-7" style={{ background: 'linear-gradient(90deg, transparent, var(--gold), transparent)' }} />
-          </div>
+        <div className="relative mb-14 text-center animate-rise py-10 px-8">
+          {/* Corner accents — like a framed quote */}
+          <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-sa-gold/25" />
+          <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-sa-gold/25" />
+          <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-sa-gold/25" />
+          <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-sa-gold/25" />
+
+          {direction && (
+            <p className="font-serif text-[1.85rem] font-light leading-[1.45] text-sa-cream tracking-[-0.01em]">
+              {direction}
+            </p>
+          )}
+          {identity && (
+            <p className="font-serif text-[1.05rem] italic font-light text-sa-gold mt-5 leading-relaxed">
+              "{identity}"
+            </p>
+          )}
         </div>
       )}
 
