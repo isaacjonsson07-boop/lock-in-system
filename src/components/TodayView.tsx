@@ -46,19 +46,25 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
       <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-sa-gold/25 z-10" />
       <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-sa-gold/25 z-10" />
 
-      {perim > 0 && (
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-[5]" xmlns="http://www.w3.org/2000/svg">
-          <rect
-            ref={rectRef}
-            x="0.5" y="0.5"
-            width="calc(100% - 1px)" height="calc(100% - 1px)"
-            fill="none"
-            stroke="rgba(197,165,90,0.5)"
-            strokeWidth="1.5"
-            strokeDasharray={`${glowLen} ${gapLen}`}
-          />
-        </svg>
-      )}
+      {perim > 0 && (() => {
+        const el = containerRef.current;
+        const w = el ? el.getBoundingClientRect().width : 0;
+        const h = el ? el.getBoundingClientRect().height : 0;
+        return (
+          <svg className="absolute inset-0 w-full h-full pointer-events-none z-[5]" xmlns="http://www.w3.org/2000/svg"
+            viewBox={`0 0 ${w} ${h}`}>
+            <rect
+              ref={rectRef}
+              x="0.5" y="0.5"
+              width={w - 1} height={h - 1}
+              fill="none"
+              stroke="rgba(197,165,90,0.5)"
+              strokeWidth="1.5"
+              strokeDasharray={`${glowLen} ${gapLen}`}
+            />
+          </svg>
+        );
+      })()}
 
       {direction && (
         <p className="relative z-10 font-serif text-[1.85rem] font-light leading-[1.45] text-sa-cream tracking-[-0.01em]">
