@@ -14,9 +14,9 @@ export default {
 
           // Text hierarchy (brightest to faintest)
           cream: '#FAF8F3',
-          'cream-soft': '#E0DDD6',
-          'cream-muted': '#B0ADA5',
-          'cream-faint': '#787570',
+          'cream-soft': '#E8E5DE',
+          'cream-muted': '#C4C0B8',
+          'cream-faint': '#9B9790',
 
           // Accent — gold (primary brand)
           gold: '#C9A96E',
@@ -40,9 +40,9 @@ export default {
           'blue-border': 'rgba(109, 181, 245, 0.30)',
 
           // Borders and dividers
-          border: 'rgba(240, 237, 230, 0.07)',
-          'border-light': 'rgba(240, 237, 230, 0.12)',
-          'border-active': 'rgba(201, 169, 110, 0.40)',
+          border: 'rgba(240, 237, 230, 0.12)',
+          'border-light': 'rgba(240, 237, 230, 0.18)',
+          'border-active': 'rgba(201, 169, 110, 0.50)',
         }
       },
       fontFamily: {
@@ -50,13 +50,13 @@ export default {
         sans: ['Inter', '-apple-system', 'sans-serif'],
       },
       fontSize: {
-        'xs': ['0.75rem', { lineHeight: '1.5' }],
-        'sm': ['0.8125rem', { lineHeight: '1.6' }],
-        'base': ['0.9375rem', { lineHeight: '1.7' }],
-        'lg': ['1.0625rem', { lineHeight: '1.6' }],
-        'xl': ['1.25rem', { lineHeight: '1.4' }],
-        '2xl': ['1.5rem', { lineHeight: '1.3' }],
-        '3xl': ['1.875rem', { lineHeight: '1.2' }],
+        'xs': ['0.8125rem', { lineHeight: '1.5' }],
+        'sm': ['0.9375rem', { lineHeight: '1.6' }],
+        'base': ['1.0625rem', { lineHeight: '1.7' }],
+        'lg': ['1.1875rem', { lineHeight: '1.6' }],
+        'xl': ['1.375rem', { lineHeight: '1.4' }],
+        '2xl': ['1.75rem', { lineHeight: '1.3' }],
+        '3xl': ['2.125rem', { lineHeight: '1.2' }],
       },
       spacing: {
         '18': '4.5rem',

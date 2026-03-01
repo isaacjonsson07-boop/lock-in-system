@@ -277,7 +277,7 @@ function App() {
         onSignUp={signUp}
       />
 
-      <main className="max-w-5xl mx-auto px-5 sm:px-8 py-8 pb-24 md:pb-8">
+      <main className="max-w-6xl mx-auto px-6 sm:px-10 py-8 pb-24 md:pb-8">
         {currentTab === 'today' && (
           <TodayView
             nonNegotiables={nonNegotiables}

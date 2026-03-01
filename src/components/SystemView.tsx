@@ -179,7 +179,7 @@ export function SystemView({
   const docsWithContent = DOC_TYPES.filter(d => documents[d.key]?.trim()).length;
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-4xl mx-auto">
 
       {/* Header */}
       <div className="mb-10 animate-rise">

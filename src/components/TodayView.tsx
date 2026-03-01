@@ -175,7 +175,7 @@ export function TodayView({
   );
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-4xl mx-auto">
 
       {/* ── Date Navigation ── */}
       <div className="flex items-center justify-between mb-8 animate-rise">

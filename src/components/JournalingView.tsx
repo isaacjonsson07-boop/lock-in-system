@@ -388,7 +388,7 @@ export function JournalingView({
     if (!selectedEntry) return null;
 
     return (
-      <div className="max-w-2xl mx-auto animate-rise">
+      <div className="max-w-4xl mx-auto animate-rise">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
@@ -490,7 +490,7 @@ export function JournalingView({
 
   // ── GRID VIEW ──
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto">
 
       {/* Upgrade modal */}
       {showUpgradePrompt && (

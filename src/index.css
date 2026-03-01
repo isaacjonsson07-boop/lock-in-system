@@ -17,9 +17,9 @@
 
   /* Text */
   --cream: #FAF8F3;
-  --cream-soft: #E0DDD6;
-  --cream-muted: #B0ADA5;
-  --cream-faint: #787570;
+  --cream-soft: #E8E5DE;
+  --cream-muted: #C4C0B8;
+  --cream-faint: #9B9790;
 
   /* Gold — primary accent */
   --gold: #C9A96E;
@@ -39,9 +39,9 @@
   --blue-border: rgba(109, 181, 245, 0.30);
 
   /* Borders */
-  --border: rgba(240, 237, 230, 0.07);
-  --border-light: rgba(240, 237, 230, 0.12);
-  --border-active: rgba(201, 169, 110, 0.40);
+  --border: rgba(240, 237, 230, 0.12);
+  --border-light: rgba(240, 237, 230, 0.18);
+  --border-active: rgba(201, 169, 110, 0.50);
 
   /* Typography */
   --serif: 'Playfair Display', Georgia, serif;
@@ -167,7 +167,7 @@ input::placeholder, textarea::placeholder {
 
   /* Checkbox — the non-negotiable check */
   .sa-check {
-    @apply flex-shrink-0 w-5 h-5 rounded-sa-sm border border-sa-border-light
+    @apply flex-shrink-0 w-6 h-6 rounded-sa-sm border border-sa-border-light
            flex items-center justify-center cursor-pointer transition-all duration-150;
   }
 
@@ -217,7 +217,7 @@ input::placeholder, textarea::placeholder {
 
   /* Progress bar */
   .sa-progress-track {
-    @apply w-full h-1.5 bg-sa-bg-lift rounded-full overflow-hidden;
+    @apply w-full h-2 bg-sa-bg-lift rounded-full overflow-hidden;
   }
 
   .sa-progress-fill {

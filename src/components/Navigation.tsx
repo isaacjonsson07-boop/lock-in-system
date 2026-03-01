@@ -37,7 +37,7 @@ export function Navigation({
     <>
       {/* ===== DESKTOP HEADER ===== */}
       <header className="hidden md:block border-b border-sa-border">
-        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+        <div className="max-w-6xl mx-auto px-6 sm:px-10">
           <div className="flex items-center justify-between h-14">
 
             {/* Brand */}
