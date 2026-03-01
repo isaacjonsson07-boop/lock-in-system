@@ -5,59 +5,100 @@ import { fmtDateISO, uid } from '../utils/dateUtils';
 
 function DirectionFrame({ direction, identity }: { direction: string; identity: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const line1Ref = useRef<HTMLDivElement>(null);
-  const line2Ref = useRef<HTMLDivElement>(null);
+  // 4 refs: glow1 leading, glow1 trailing, glow2 leading, glow2 trailing
+  const g1aRef = useRef<HTMLDivElement>(null);
+  const g1bRef = useRef<HTMLDivElement>(null);
+  const g2aRef = useRef<HTMLDivElement>(null);
+  const g2bRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const speed = 80; // pixels per second
+    const speed = 80;
+    const halfLen = 48;
+
+    // Given a distance along perimeter, return x,y on the frame edge
+    function posAt(dist: number, w: number, h: number): [number, number] {
+      const p = 2 * w + 2 * h;
+      const d = ((dist % p) + p) % p;
+      if (d < w) return [d, 0];
+      if (d < w + h) return [w, d - w];
+      if (d < 2 * w + h) return [w - (d - w - h), h];
+      return [0, h - (d - 2 * w - h)];
+    }
+
+    // Position a half-glow element from point A to point B on the frame
+    function positionHalf(el: HTMLDivElement, ax: number, ay: number, bx: number, by: number, isLeading: boolean) {
+      const dx = bx - ax;
+      const dy = by - ay;
+
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        // Horizontal segment
+        const left = Math.min(ax, bx);
+        const width = Math.max(Math.abs(dx), 1);
+        el.style.width = `${width}px`;
+        el.style.height = '2px';
+        const goingRight = dx > 0;
+        // Leading half: transparent→gold if going right, gold→transparent if going left
+        // Trailing half: opposite
+        if ((goingRight && isLeading) || (!goingRight && !isLeading)) {
+          el.style.background = 'linear-gradient(90deg, rgba(197,165,90,0.4), transparent)';
+        } else {
+          el.style.background = 'linear-gradient(90deg, transparent, rgba(197,165,90,0.4))';
+        }
+        el.style.transform = `translate(${left}px, ${ay - 1}px)`;
+      } else {
+        // Vertical segment
+        const top = Math.min(ay, by);
+        const height = Math.max(Math.abs(dy), 1);
+        el.style.width = '2px';
+        el.style.height = `${height}px`;
+        const goingDown = dy > 0;
+        if ((goingDown && isLeading) || (!goingDown && !isLeading)) {
+          el.style.background = 'linear-gradient(180deg, rgba(197,165,90,0.4), transparent)';
+        } else {
+          el.style.background = 'linear-gradient(180deg, transparent, rgba(197,165,90,0.4))';
+        }
+        el.style.transform = `translate(${ax - 1}px, ${top}px)`;
+      }
+
+      el.style.left = '0';
+      el.style.top = '0';
+      el.style.transformOrigin = '0 0';
+      el.style.display = 'block';
+    }
 
     function animate() {
       if (!container) return;
       const { width, height } = container.getBoundingClientRect();
       const perimeter = 2 * width + 2 * height;
       const now = performance.now() / 1000;
-      const glowHalf = 48; // half of 96px glow length
 
-      [line1Ref, line2Ref].forEach((ref, i) => {
-        const el = ref.current;
-        if (!el) return;
+      const glowPairs = [
+        [g1aRef, g1bRef], // glow 1: leading, trailing
+        [g2aRef, g2bRef], // glow 2: leading, trailing
+      ];
 
-        const dist = ((now * speed) + (i * perimeter / 2)) % perimeter;
+      glowPairs.forEach((pair, i) => {
+        const leadEl = pair[0].current;
+        const trailEl = pair[1].current;
+        if (!leadEl || !trailEl) return;
 
-        // Get position on the perimeter as x,y coordinates
-        let x: number, y: number, isHorizontal: boolean;
+        const centerDist = ((now * speed) + (i * perimeter / 2)) % perimeter;
 
-        if (dist < width) {
-          x = dist; y = 0; isHorizontal = true;
-        } else if (dist < width + height) {
-          x = width; y = dist - width; isHorizontal = false;
-        } else if (dist < 2 * width + height) {
-          x = width - (dist - width - height); y = height; isHorizontal = true;
-        } else {
-          x = 0; y = height - (dist - 2 * width - height); isHorizontal = false;
-        }
+        // Center point
+        const [cx, cy] = posAt(centerDist, width, height);
+        // Leading tip (ahead by halfLen)
+        const [lx, ly] = posAt(centerDist + halfLen, width, height);
+        // Trailing tip (behind by halfLen)
+        const [tx, ty] = posAt(centerDist - halfLen, width, height);
 
-        if (isHorizontal) {
-          el.style.width = '96px';
-          el.style.height = '2px';
-          el.style.background = 'linear-gradient(90deg, transparent, rgba(197,165,90,0.4), transparent)';
-          el.style.transform = `translate(${x - glowHalf}px, ${y - 1}px)`;
-        } else {
-          el.style.width = '2px';
-          el.style.height = '96px';
-          el.style.background = 'linear-gradient(180deg, transparent, rgba(197,165,90,0.4), transparent)';
-          el.style.transform = `translate(${x - 1}px, ${y - glowHalf}px)`;
-        }
-
-        el.style.left = '0';
-        el.style.top = '0';
-        el.style.right = 'auto';
-        el.style.bottom = 'auto';
-        el.style.transformOrigin = '0 0';
+        // Leading half: center → leading tip
+        positionHalf(leadEl, cx, cy, lx, ly, true);
+        // Trailing half: trailing tip → center
+        positionHalf(trailEl, tx, ty, cx, cy, false);
       });
 
       animRef.current = requestAnimationFrame(animate);
@@ -75,10 +116,12 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
       <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-sa-gold/25 z-10" />
       <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-sa-gold/25 z-10" />
 
-      {/* Two travelling glows */}
+      {/* Two travelling glows — each split into leading + trailing halves */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div ref={line1Ref} className="absolute" />
-        <div ref={line2Ref} className="absolute" />
+        <div ref={g1aRef} className="absolute" />
+        <div ref={g1bRef} className="absolute" />
+        <div ref={g2aRef} className="absolute" />
+        <div ref={g2bRef} className="absolute" />
       </div>
 
       {direction && (
