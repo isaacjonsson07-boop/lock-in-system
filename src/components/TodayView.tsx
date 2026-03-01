@@ -28,17 +28,6 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
         // Offset second line by exactly half the perimeter
         const dist = ((now * speed) + (i * perimeter / 2)) % perimeter;
 
-        // Distance to nearest corner
-        const corners = [0, width, width + height, 2 * width + height, perimeter];
-        let minCornerDist = perimeter;
-        for (const c of corners) {
-          const d = Math.min(Math.abs(dist - c), perimeter - Math.abs(dist - c));
-          if (d < minCornerDist) minCornerDist = d;
-        }
-        // Hide completely when overlapping corner lines (32px)
-        const cornerSize = 32;
-        el.style.opacity = minCornerDist < cornerSize ? '0' : '1';
-
         if (dist < width) {
           // Top edge: left → right
           el.style.top = `${-1}px`;
@@ -90,6 +79,12 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
 
   return (
     <div ref={containerRef} className="relative mb-14 text-center animate-rise py-10 px-8">
+      {/* Corner masks — hide glow under corners */}
+      <div className="absolute top-0 left-0 w-8 h-8 bg-sa-bg-deep z-[6]" />
+      <div className="absolute top-0 right-0 w-8 h-8 bg-sa-bg-deep z-[6]" />
+      <div className="absolute bottom-0 left-0 w-8 h-8 bg-sa-bg-deep z-[6]" />
+      <div className="absolute bottom-0 right-0 w-8 h-8 bg-sa-bg-deep z-[6]" />
+
       {/* Corner accents */}
       <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-sa-gold/25 z-10" />
       <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-sa-gold/25 z-10" />
