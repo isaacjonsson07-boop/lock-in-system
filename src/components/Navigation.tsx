@@ -36,16 +36,21 @@ export function Navigation({
   return (
     <>
       {/* ===== DESKTOP HEADER ===== */}
-      <header className="hidden md:block border-b border-sa-border">
+      <header className="hidden md:block border-b border-sa-border bg-sa-bg/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 sm:px-10">
-          <div className="flex items-center justify-between h-14">
+          <div className="flex items-center justify-between h-16">
 
             {/* Brand */}
             <button
               onClick={() => onTabChange('today')}
-              className="text-[0.65rem] font-medium tracking-[0.14em] uppercase text-sa-cream-muted hover:text-sa-cream transition-colors"
+              className="flex items-center gap-2.5 group"
             >
-              Structured Achievement
+              <span className="font-serif text-lg text-sa-cream group-hover:text-sa-gold transition-colors">
+                Structured
+              </span>
+              <span className="text-xs tracking-widest uppercase text-sa-cream-muted group-hover:text-sa-cream-soft transition-colors">
+                Achievement
+              </span>
             </button>
 
             {/* Desktop tabs */}
@@ -57,16 +62,16 @@ export function Navigation({
                   <button
                     key={tab.id}
                     onClick={() => onTabChange(tab.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sa-sm text-[0.78rem] font-normal transition-all duration-150 ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-sa text-sm transition-all duration-150 ${
                       isActive
-                        ? 'text-sa-gold bg-sa-gold-soft'
-                        : 'text-sa-cream-muted hover:text-sa-cream-soft hover:bg-sa-bg-lift'
+                        ? 'text-sa-gold bg-sa-gold-soft font-medium'
+                        : 'text-sa-cream-muted hover:text-sa-cream hover:bg-sa-bg-lift'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="w-4 h-4" />
                     <span>{tab.label}</span>
                     {tab.id === 'installation' && installationDay != null && installationDay <= 21 && (
-                      <span className="ml-0.5 text-[0.6rem] text-sa-gold/60 font-medium">
+                      <span className="text-xs text-sa-gold/70 font-medium">
                         {installationDay}/21
                       </span>
                     )}
@@ -77,9 +82,8 @@ export function Navigation({
 
             {/* Right side — user info */}
             <div className="flex items-center gap-3">
-              {/* Plan badge */}
               {user && (
-                <span className={`text-[0.6rem] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
                   plan === 'paid'
                     ? 'bg-sa-green-soft text-sa-green border border-sa-green-border'
                     : isTrialActive
@@ -91,15 +95,15 @@ export function Navigation({
               )}
 
               {user ? (
-                <span className="text-[0.72rem] text-sa-cream-faint truncate max-w-[120px]">
+                <span className="text-sm text-sa-cream-muted truncate max-w-[160px]">
                   {user.email}
                 </span>
               ) : (
                 <button
                   onClick={onShowAuth}
-                  className="flex items-center gap-1.5 text-[0.72rem] text-sa-cream-muted hover:text-sa-gold transition-colors"
+                  className="flex items-center gap-2 text-sm text-sa-cream-muted hover:text-sa-gold transition-colors"
                 >
-                  <User className="w-3.5 h-3.5" />
+                  <User className="w-4 h-4" />
                   <span>Sign In</span>
                 </button>
               )}
@@ -109,32 +113,33 @@ export function Navigation({
       </header>
 
       {/* ===== MOBILE TOP BAR ===== */}
-      <header className="md:hidden border-b border-sa-border">
-        <div className="flex items-center justify-between h-12 px-4">
+      <header className="md:hidden border-b border-sa-border bg-sa-bg/80 backdrop-blur-md sticky top-0 z-40">
+        <div className="flex items-center justify-between h-14 px-5">
           <button
             onClick={() => onTabChange('today')}
-            className="text-[0.6rem] font-medium tracking-[0.14em] uppercase text-sa-cream-muted"
+            className="flex items-center gap-2"
           >
-            Structured Achievement
+            <span className="font-serif text-base text-sa-cream">Structured</span>
+            <span className="text-[0.65rem] tracking-widest uppercase text-sa-cream-muted">Achievement</span>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {user && plan === 'paid' && (
-              <span className="text-[0.55rem] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-sa-green-soft text-sa-green border border-sa-green-border">
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-sa-green-soft text-sa-green border border-sa-green-border">
                 Active
               </span>
             )}
 
             {user ? (
-              <span className="text-[0.65rem] text-sa-cream-faint truncate max-w-[100px]">
+              <span className="text-xs text-sa-cream-muted truncate max-w-[120px]">
                 {user.email}
               </span>
             ) : (
               <button
                 onClick={onShowAuth}
-                className="flex items-center gap-1 text-[0.65rem] text-sa-cream-muted hover:text-sa-gold transition-colors"
+                className="flex items-center gap-1.5 text-xs text-sa-cream-muted hover:text-sa-gold transition-colors"
               >
-                <User className="w-3 h-3" />
+                <User className="w-3.5 h-3.5" />
                 <span>Sign In</span>
               </button>
             )}
@@ -143,8 +148,8 @@ export function Navigation({
       </header>
 
       {/* ===== MOBILE BOTTOM TAB BAR ===== */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-sa-bg-warm border-t border-sa-border">
-        <div className="flex items-center justify-around px-2 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-sa-bg-warm/95 backdrop-blur-md border-t border-sa-border">
+        <div className="flex items-center justify-around px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = currentTab === tab.id;
@@ -152,20 +157,20 @@ export function Navigation({
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`relative flex flex-col items-center justify-center gap-0.5 py-1 px-2 min-w-[3.5rem] rounded-sa-sm transition-colors duration-150 ${
+                className={`relative flex flex-col items-center justify-center gap-1 py-1.5 px-3 min-w-[4rem] rounded-sa-sm transition-colors duration-150 ${
                   isActive
                     ? 'text-sa-gold'
                     : 'text-sa-cream-faint active:text-sa-cream-muted'
                 }`}
               >
-                <Icon className={`w-[1.15rem] h-[1.15rem] ${isActive ? 'stroke-[2.2]' : 'stroke-[1.6]'}`} />
-                <span className={`text-[0.55rem] leading-none ${
+                <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.2]' : 'stroke-[1.6]'}`} />
+                <span className={`text-[0.65rem] leading-none ${
                   isActive ? 'font-medium' : 'font-normal'
                 }`}>
                   {tab.mobileLabel}
                 </span>
                 {tab.id === 'installation' && installationDay != null && installationDay <= 21 && (
-                  <span className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-sa-gold" />
+                  <span className="absolute top-0.5 right-1.5 w-2 h-2 rounded-full bg-sa-gold" />
                 )}
               </button>
             );
