@@ -1,7 +1,80 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Check, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { Habit, HabitCompletion, DailyTask, NonNegotiable, NonNegotiableCompletion } from '../types';
 import { fmtDateISO, uid } from '../utils/dateUtils';
+
+function DirectionFrame({ direction, identity }: { direction: string; identity: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [perimeter, setPerimeter] = useState(0);
+
+  const measure = useCallback(() => {
+    if (containerRef.current) {
+      const { width, height } = containerRef.current.getBoundingClientRect();
+      setPerimeter(2 * width + 2 * height);
+    }
+  }, []);
+
+  useEffect(() => {
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [measure]);
+
+  const glowLen = 120;
+  // Two glows evenly spaced: glow, gap, glow, gap = perimeter
+  // Each gap = (perimeter - 2*glowLen) / 2
+  const gapLen = Math.max(0, (perimeter - 2 * glowLen) / 2);
+
+  return (
+    <div ref={containerRef} className="relative mb-14 text-center animate-rise py-10 px-8">
+      {/* Static dim border */}
+      <div className="absolute inset-0 border border-sa-gold/10 pointer-events-none" />
+
+      {/* Corner accents */}
+      <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-sa-gold/25 z-10" />
+      <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-sa-gold/25 z-10" />
+      <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-sa-gold/25 z-10" />
+      <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-sa-gold/25 z-10" />
+
+      {/* SVG glow lines — one continuous rect path */}
+      {perimeter > 0 && (
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-[5]" xmlns="http://www.w3.org/2000/svg"
+          style={{ ['--perimeter' as string]: `${perimeter}px` }}>
+          <defs>
+            <filter id="glow-blur">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <rect
+            x="1" y="1"
+            width="calc(100% - 2px)" height="calc(100% - 2px)"
+            fill="none"
+            stroke="rgba(197,165,90,0.55)"
+            strokeWidth="2"
+            filter="url(#glow-blur)"
+            strokeDasharray={`${glowLen} ${gapLen}`}
+            className="animate-[dashScroll_10s_linear_infinite]"
+          />
+        </svg>
+      )}
+
+      {direction && (
+        <p className="relative z-10 font-serif text-[1.85rem] font-light leading-[1.45] text-sa-cream tracking-[-0.01em]">
+          {direction}
+        </p>
+      )}
+      {identity && (
+        <p className="relative z-10 font-serif text-[1.05rem] italic font-light text-sa-gold mt-5 leading-relaxed">
+          "{identity}"
+        </p>
+      )}
+    </div>
+  );
+}
 
 interface TodayViewProps {
   nonNegotiables: NonNegotiable[];
@@ -133,32 +206,7 @@ export function TodayView({
 
       {/* ════ DIRECTION & IDENTITY ════ */}
       {(direction || identity) && (
-        <div className="direction-frame relative mb-14 text-center animate-rise py-10 px-8">
-          {/* Static dim border */}
-          <div className="absolute inset-0 border border-sa-gold/10 pointer-events-none" />
-
-          {/* Corner accents */}
-          <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-sa-gold/25 z-10" />
-          <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-sa-gold/25 z-10" />
-          <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-sa-gold/25 z-10" />
-          <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-sa-gold/25 z-10" />
-
-          {/* Glow light 1 */}
-          <div className="direction-glow direction-glow-1" />
-          {/* Glow light 2 — 50% offset */}
-          <div className="direction-glow direction-glow-2" />
-
-          {direction && (
-            <p className="relative z-10 font-serif text-[1.85rem] font-light leading-[1.45] text-sa-cream tracking-[-0.01em]">
-              {direction}
-            </p>
-          )}
-          {identity && (
-            <p className="relative z-10 font-serif text-[1.05rem] italic font-light text-sa-gold mt-5 leading-relaxed">
-              "{identity}"
-            </p>
-          )}
-        </div>
+        <DirectionFrame direction={direction} identity={identity} />
       )}
 
       {/* ════ DATE NAV ════ */}
