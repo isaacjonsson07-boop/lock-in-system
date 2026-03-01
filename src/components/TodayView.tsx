@@ -20,6 +20,7 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
       const { width, height } = container.getBoundingClientRect();
       const perimeter = 2 * width + 2 * height;
       const now = performance.now() / 1000;
+      const glowHalf = 48; // half of 96px glow length
 
       [line1Ref, line2Ref].forEach((ref, i) => {
         const el = ref.current;
@@ -27,43 +28,36 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
 
         const dist = ((now * speed) + (i * perimeter / 2)) % perimeter;
 
-        // Calculate position and angle along perimeter
-        let x = 0, y = 0, angle = 0;
+        // Get position on the perimeter as x,y coordinates
+        let x: number, y: number, isHorizontal: boolean;
 
         if (dist < width) {
-          // Top edge: left → right
-          x = dist;
-          y = 0;
-          angle = 0;
+          x = dist; y = 0; isHorizontal = true;
         } else if (dist < width + height) {
-          // Right edge: top → bottom
-          const d = dist - width;
-          x = width;
-          y = d;
-          angle = 90;
+          x = width; y = dist - width; isHorizontal = false;
         } else if (dist < 2 * width + height) {
-          // Bottom edge: right → left
-          const d = dist - width - height;
-          x = width - d;
-          y = height;
-          angle = 180;
+          x = width - (dist - width - height); y = height; isHorizontal = true;
         } else {
-          // Left edge: bottom → top
-          const d = dist - 2 * width - height;
-          x = 0;
-          y = height - d;
-          angle = 270;
+          x = 0; y = height - (dist - 2 * width - height); isHorizontal = false;
+        }
+
+        if (isHorizontal) {
+          el.style.width = '96px';
+          el.style.height = '2px';
+          el.style.background = 'linear-gradient(90deg, transparent, rgba(197,165,90,0.4), transparent)';
+          el.style.transform = `translate(${x - glowHalf}px, ${y - 1}px)`;
+        } else {
+          el.style.width = '2px';
+          el.style.height = '96px';
+          el.style.background = 'linear-gradient(180deg, transparent, rgba(197,165,90,0.4), transparent)';
+          el.style.transform = `translate(${x - 1}px, ${y - glowHalf}px)`;
         }
 
         el.style.left = '0';
         el.style.top = '0';
         el.style.right = 'auto';
         el.style.bottom = 'auto';
-        el.style.width = '96px';
-        el.style.height = '2px';
-        el.style.background = 'linear-gradient(90deg, transparent, rgba(197,165,90,0.4), transparent)';
-        el.style.transform = `translate(${x - 48}px, ${y - 1}px) rotate(${angle}deg)`;
-        el.style.transformOrigin = '48px 1px';
+        el.style.transformOrigin = '0 0';
       });
 
       animRef.current = requestAnimationFrame(animate);
