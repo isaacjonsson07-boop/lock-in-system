@@ -134,17 +134,12 @@ export function TodayView({
       {/* ════ DIRECTION & IDENTITY ════ */}
       {(direction || identity) && (
         <div className="relative mb-14 text-center animate-rise">
-          {/* Slow breathing gradient glow */}
-          <div className="absolute -inset-8 -top-12 -bottom-6 rounded-2xl overflow-hidden pointer-events-none">
-            <div className="absolute inset-0 animate-[breathe_8s_ease-in-out_infinite]" style={{
-              background: 'radial-gradient(ellipse 70% 60% at 50% 45%, rgba(197, 165, 90, 0.10), transparent 70%)',
-            }} />
-            <div className="absolute inset-0 animate-[breathe_12s_ease-in-out_infinite_reverse]" style={{
-              background: 'radial-gradient(ellipse 50% 70% at 40% 55%, rgba(197, 165, 90, 0.06), transparent 65%)',
-            }} />
-            <div className="absolute inset-0 animate-[breathe_10s_ease-in-out_2s_infinite]" style={{
-              background: 'radial-gradient(ellipse 60% 50% at 60% 40%, rgba(212, 186, 120, 0.05), transparent 60%)',
-            }} />
+          {/* Slow drifting light — like candlelight on a wall */}
+          <div className="absolute -inset-10 -top-14 -bottom-8 overflow-hidden pointer-events-none">
+            <div className="absolute w-[300px] h-[200px] rounded-full blur-[80px] opacity-[0.07] animate-[drift_20s_ease-in-out_infinite]"
+              style={{ background: 'var(--gold)', top: '10%', left: '15%' }} />
+            <div className="absolute w-[250px] h-[180px] rounded-full blur-[90px] opacity-[0.05] animate-[drift_25s_ease-in-out_3s_infinite_reverse]"
+              style={{ background: 'var(--gold-light)', top: '20%', right: '10%' }} />
           </div>
           <div className="relative z-10">
             {direction && (

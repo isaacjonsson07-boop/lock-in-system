@@ -129,9 +129,11 @@ body::after {
   to { opacity: 1; }
 }
 
-@keyframes breathe {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.08); }
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(30px, -10px); }
+  50% { transform: translate(-20px, 15px); }
+  75% { transform: translate(15px, 5px); }
 }
 
 .animate-rise {
