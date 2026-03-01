@@ -141,9 +141,21 @@ body::after {
   to { transform: rotate(360deg); }
 }
 
-@keyframes shimmer {
-  0%, 100% { left: -40px; }
-  50% { left: 100px; }
+@keyframes shimmerRight {
+  0%, 100% { left: -60px; }
+  50% { left: 100%; }
+}
+@keyframes shimmerLeft {
+  0%, 100% { right: -60px; left: auto; }
+  50% { right: 100%; left: auto; }
+}
+@keyframes shimmerDown {
+  0%, 100% { top: -60px; }
+  50% { top: 100%; }
+}
+@keyframes shimmerUp {
+  0%, 100% { bottom: -60px; top: auto; }
+  50% { bottom: 100%; top: auto; }
 }
 
 /* ═══ Direction frame — SVG dash scroll ═══ */

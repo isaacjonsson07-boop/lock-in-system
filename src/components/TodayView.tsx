@@ -5,22 +5,47 @@ import { fmtDateISO, uid } from '../utils/dateUtils';
 
 function DirectionFrame({ direction, identity }: { direction: string; identity: string }) {
   return (
-    <div className="mb-14 text-center animate-rise">
+    <div className="relative mb-14 text-center animate-rise py-10 px-8">
+      {/* Static dim border */}
+      <div className="absolute inset-0 border border-sa-gold/15 pointer-events-none" />
+
+      {/* Shimmer overlay on each edge */}
+      {/* Top */}
+      <div className="absolute top-0 left-0 right-0 h-px overflow-hidden pointer-events-none">
+        <div className="absolute inset-y-0 w-[60px]" style={{
+          background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.5), transparent)',
+          animation: 'shimmerRight 6s ease-in-out infinite',
+        }} />
+      </div>
+      {/* Bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-px overflow-hidden pointer-events-none">
+        <div className="absolute inset-y-0 w-[60px]" style={{
+          background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.5), transparent)',
+          animation: 'shimmerLeft 6s ease-in-out infinite',
+        }} />
+      </div>
+      {/* Left */}
+      <div className="absolute top-0 bottom-0 left-0 w-px overflow-hidden pointer-events-none">
+        <div className="absolute inset-x-0 h-[60px]" style={{
+          background: 'linear-gradient(180deg, transparent, rgba(197,165,90,0.5), transparent)',
+          animation: 'shimmerDown 6s ease-in-out infinite',
+        }} />
+      </div>
+      {/* Right */}
+      <div className="absolute top-0 bottom-0 right-0 w-px overflow-hidden pointer-events-none">
+        <div className="absolute inset-x-0 h-[60px]" style={{
+          background: 'linear-gradient(180deg, transparent, rgba(197,165,90,0.5), transparent)',
+          animation: 'shimmerUp 6s ease-in-out infinite',
+        }} />
+      </div>
+
       {direction && (
-        <p className="font-serif text-[1.85rem] font-light leading-[1.45] text-sa-cream tracking-[-0.01em]">
+        <p className="relative z-10 font-serif text-[1.85rem] font-light leading-[1.45] text-sa-cream tracking-[-0.01em]">
           {direction}
         </p>
       )}
-      {/* Shimmer gold underline */}
-      <div className="w-[100px] h-px mx-auto mt-6 relative overflow-hidden">
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.25), transparent)' }} />
-        <div className="absolute inset-y-0 w-[40px]" style={{ 
-          background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.6), transparent)',
-          animation: 'shimmer 4s ease-in-out infinite',
-        }} />
-      </div>
       {identity && (
-        <p className="font-serif text-[1.05rem] italic font-light text-sa-gold mt-5 leading-relaxed">
+        <p className="relative z-10 font-serif text-[1.05rem] italic font-light text-sa-gold mt-5 leading-relaxed">
           "{identity}"
         </p>
       )}
