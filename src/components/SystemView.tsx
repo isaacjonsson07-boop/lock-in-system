@@ -181,15 +181,8 @@ export function SystemView({
   return (
     <div className="max-w-3xl mx-auto">
 
-      {/* Header */}
-      <div className="mb-10 animate-rise">
-        <h1 className="font-serif text-2xl sm:text-3xl text-sa-cream">
-          Your System
-        </h1>
-        <p className="text-sm text-sa-cream-muted mt-2">
-          The components of your operating system. Edit and reconfigure as needed.
-        </p>
-      </div>
+      {/* Header handled by TabCover */}
+      <div className="mb-4 animate-rise" />
 
       {/* ── Two Column Layout ── */}
       <div>

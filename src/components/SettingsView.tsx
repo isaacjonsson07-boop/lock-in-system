@@ -29,9 +29,7 @@ export function SettingsView({
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-10 animate-rise">
-        <h1 className="font-serif text-2xl sm:text-3xl font-normal text-sa-cream">Settings</h1>
-      </div>
+      <div className="mb-4 animate-rise" />
 
       {/* Account */}
       <div className="bg-sa-bg-warm border border-sa-border rounded-xl p-6 mb-6 animate-rise delay-1">

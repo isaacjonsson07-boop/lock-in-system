@@ -280,7 +280,7 @@ function App() {
 
       <main className="md:ml-[260px] min-h-screen">
         <TabCover tab={currentTab} />
-        <div className="px-6 sm:px-10 lg:px-14 pb-24 md:pb-12">
+        <div className={`px-6 sm:px-10 lg:px-14 pb-24 md:pb-12 ${currentTab === 'today' ? 'pt-12' : ''}`}>
         {currentTab === 'today' && (
           <TodayView
             nonNegotiables={nonNegotiables}

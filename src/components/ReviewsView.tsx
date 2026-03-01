@@ -176,13 +176,8 @@ export function ReviewsView({
   return (
     <div className="max-w-3xl mx-auto">
 
-      {/* Header */}
-      <div className="mb-8 animate-rise">
-        <h1 className="font-serif text-2xl sm:text-3xl text-sa-cream">Reviews</h1>
-        <p className="text-sm text-sa-cream-muted mt-2">
-          Review your system performance and recalibrate.
-        </p>
-      </div>
+      {/* Header handled by TabCover */}
+      <div className="mb-4 animate-rise" />
 
       {/* Tabs */}
       <div className="flex gap-1 mb-8 animate-rise delay-1">
