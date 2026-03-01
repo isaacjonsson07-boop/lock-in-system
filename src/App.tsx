@@ -278,7 +278,7 @@ function App() {
       />
 
       <main className="md:ml-60 min-h-screen">
-        <div className="max-w-4xl mx-auto px-6 sm:px-10 py-10 pb-24 md:pb-10">
+        <div className="px-6 sm:px-10 lg:px-12 py-10 pb-24 md:pb-10">
         {currentTab === 'today' && (
           <TodayView
             nonNegotiables={nonNegotiables}
