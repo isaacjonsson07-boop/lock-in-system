@@ -59,7 +59,7 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
               width={w - 1} height={h - 1}
               fill="none"
               stroke="rgba(197,165,90,0.5)"
-              strokeWidth="1.5"
+              strokeWidth="0.5"
               strokeDasharray={`${glowLen} ${gapLen}`}
             />
           </svg>
