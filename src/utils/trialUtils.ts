@@ -8,9 +8,8 @@ export function getJournalAccessDays(
   plan: 'free' | 'paid',
   trialEndsAt: string | null
 ): number {
-  if (plan === 'paid') return 21;
-  if (isTrialActive(trialEndsAt)) return 7;
-  return 0;
+  // DEV: unlocked for testing — restore paywall before launch
+  return 21;
 }
 
 export function getTrialDaysRemaining(trialEndsAt: string | null): number {
