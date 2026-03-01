@@ -76,7 +76,7 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
       <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-sa-gold/25 z-10" />
 
       {/* Two travelling glows */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div ref={line1Ref} className="absolute" />
         <div ref={line2Ref} className="absolute" />
       </div>
