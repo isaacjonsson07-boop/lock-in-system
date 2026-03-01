@@ -30,43 +30,43 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
 
         if (dist < width) {
           // Top edge: left → right
-          el.style.top = '-4px';
+          el.style.top = `${-16}px`;
           el.style.left = `${dist - 48}px`;
           el.style.bottom = 'auto';
           el.style.right = 'auto';
           el.style.width = '96px';
-          el.style.height = '8px';
-          el.style.background = 'radial-gradient(ellipse at center, rgba(197,165,90,0.45) 0%, transparent 70%)';
+          el.style.height = '32px';
+          el.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)';
         } else if (dist < width + height) {
           // Right edge: top → bottom
           const d = dist - width;
           el.style.top = `${d - 48}px`;
-          el.style.right = '-4px';
-          el.style.left = 'auto';
+          el.style.left = `${width - 16}px`;
+          el.style.right = 'auto';
           el.style.bottom = 'auto';
-          el.style.width = '8px';
+          el.style.width = '32px';
           el.style.height = '96px';
-          el.style.background = 'radial-gradient(ellipse at center, rgba(197,165,90,0.45) 0%, transparent 70%)';
+          el.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)';
         } else if (dist < 2 * width + height) {
           // Bottom edge: right → left
           const d = dist - width - height;
-          el.style.bottom = '-4px';
+          el.style.top = `${height - 16}px`;
           el.style.left = `${width - d - 48}px`;
-          el.style.top = 'auto';
+          el.style.bottom = 'auto';
           el.style.right = 'auto';
           el.style.width = '96px';
-          el.style.height = '8px';
-          el.style.background = 'radial-gradient(ellipse at center, rgba(197,165,90,0.45) 0%, transparent 70%)';
+          el.style.height = '32px';
+          el.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)';
         } else {
           // Left edge: bottom → top
           const d = dist - 2 * width - height;
           el.style.top = `${height - d - 48}px`;
-          el.style.left = '-4px';
+          el.style.left = `${-16}px`;
           el.style.right = 'auto';
           el.style.bottom = 'auto';
-          el.style.width = '8px';
+          el.style.width = '32px';
           el.style.height = '96px';
-          el.style.background = 'radial-gradient(ellipse at center, rgba(197,165,90,0.45) 0%, transparent 70%)';
+          el.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)';
         }
       });
 
@@ -85,8 +85,8 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
       <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-sa-gold/25 z-10" />
       <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-sa-gold/25 z-10" />
 
-      {/* Two travelling lines */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Two travelling glows */}
+      <div className="absolute inset-0 pointer-events-none">
         <div ref={line1Ref} className="absolute" />
         <div ref={line2Ref} className="absolute" />
       </div>
