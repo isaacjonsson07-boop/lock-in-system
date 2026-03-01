@@ -23,12 +23,18 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
 
   useEffect(() => {
     if (perim <= 0) return;
-    const speed = 80; // px per second — same as before
+    const speed = 80;
 
     function animate() {
-      if (!rectRef.current) return;
       const offset = -((performance.now() / 1000) * speed) % perim;
-      rectRef.current.style.strokeDashoffset = `${offset}`;
+      // Update both the sharp core and the glow
+      if (rectRef.current) {
+        rectRef.current.style.strokeDashoffset = `${offset}`;
+      }
+      const glowRect = containerRef.current?.querySelector('.direction-glow-rect') as SVGElement | null;
+      if (glowRect) {
+        glowRect.style.strokeDashoffset = `${offset}`;
+      }
       animRef.current = requestAnimationFrame(animate);
     }
     animRef.current = requestAnimationFrame(animate);
@@ -53,6 +59,23 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
         return (
           <svg className="absolute inset-0 w-full h-full pointer-events-none z-[5]" xmlns="http://www.w3.org/2000/svg"
             viewBox={`0 0 ${w} ${h}`}>
+            <defs>
+              <filter id="glow-f" x="-10%" y="-10%" width="120%" height="120%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+              </filter>
+            </defs>
+            {/* Soft glow behind */}
+            <rect
+              x="0.5" y="0.5"
+              width={w - 1} height={h - 1}
+              fill="none"
+              stroke="rgba(197,165,90,0.5)"
+              strokeWidth="3"
+              filter="url(#glow-f)"
+              strokeDasharray={`${glowLen} ${gapLen}`}
+              className="direction-glow-rect"
+            />
+            {/* Sharp thin core */}
             <rect
               ref={rectRef}
               x="0.5" y="0.5"
