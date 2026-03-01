@@ -20,7 +20,7 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
     return () => window.removeEventListener('resize', measure);
   }, [measure]);
 
-  const glowLen = 120;
+  const glowLen = 80;
   // Two glows evenly spaced: glow, gap, glow, gap = perimeter
   // Each gap = (perimeter - 2*glowLen) / 2
   const gapLen = Math.max(0, (perimeter - 2 * glowLen) / 2);
@@ -42,7 +42,7 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
           style={{ ['--perimeter' as string]: `${perimeter}px` }}>
           <defs>
             <filter id="glow-blur">
-              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feGaussianBlur stdDeviation="1" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -53,8 +53,8 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
             x="1" y="1"
             width="calc(100% - 2px)" height="calc(100% - 2px)"
             fill="none"
-            stroke="rgba(197,165,90,0.55)"
-            strokeWidth="2"
+            stroke="rgba(197,165,90,0.5)"
+            strokeWidth="1"
             filter="url(#glow-blur)"
             strokeDasharray={`${glowLen} ${gapLen}`}
             className="animate-[dashScroll_10s_linear_infinite]"
