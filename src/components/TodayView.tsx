@@ -5,7 +5,9 @@ import { fmtDateISO, uid } from '../utils/dateUtils';
 
 function DirectionFrame({ direction, identity }: { direction: string; identity: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const rectRef = useRef<SVGRectElement>(null);
   const [perim, setPerim] = useState(0);
+  const animRef = useRef<number>(0);
 
   useEffect(() => {
     function measure() {
@@ -19,6 +21,20 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
     return () => window.removeEventListener('resize', measure);
   }, []);
 
+  useEffect(() => {
+    if (perim <= 0) return;
+    const speed = 80; // px per second — same as before
+
+    function animate() {
+      if (!rectRef.current) return;
+      const offset = -((performance.now() / 1000) * speed) % perim;
+      rectRef.current.style.strokeDashoffset = `${offset}`;
+      animRef.current = requestAnimationFrame(animate);
+    }
+    animRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [perim]);
+
   const glowLen = 96;
   const gapLen = perim > 0 ? (perim - 2 * glowLen) / 2 : 0;
 
@@ -31,16 +47,15 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
       <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-sa-gold/25 z-10" />
 
       {perim > 0 && (
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-[5]" xmlns="http://www.w3.org/2000/svg"
-          style={{ ['--perimeter' as string]: `${perim}px` }}>
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-[5]" xmlns="http://www.w3.org/2000/svg">
           <rect
+            ref={rectRef}
             x="0.5" y="0.5"
             width="calc(100% - 1px)" height="calc(100% - 1px)"
             fill="none"
-            stroke="rgba(197,165,90,0.4)"
+            stroke="rgba(197,165,90,0.5)"
             strokeWidth="1.5"
             strokeDasharray={`${glowLen} ${gapLen}`}
-            className="animate-[dashScroll_10s_linear_infinite]"
           />
         </svg>
       )}
