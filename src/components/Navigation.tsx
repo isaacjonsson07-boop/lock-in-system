@@ -36,21 +36,21 @@ export function Navigation({
   return (
     <>
       {/* ===== DESKTOP SIDEBAR ===== */}
-      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 flex-col bg-sa-bg-warm border-r border-sa-border z-40">
+      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[260px] flex-col bg-sa-bg border-r border-sa-border z-40">
 
         {/* Brand */}
-        <div className="px-6 pt-7 pb-6">
-          <h1 className="font-serif text-lg text-sa-cream tracking-tight">
-            Structured Achievement
+        <div className="px-7 pt-9 pb-7">
+          <h1 className="font-serif text-[1.5rem] text-sa-cream font-normal tracking-[-0.01em] leading-tight">
+            Structured<br/>Achievement
           </h1>
-          <p className="text-xs text-sa-cream-faint mt-1">Personal operating system</p>
+          <p className="text-[0.7rem] text-sa-cream-faint mt-1.5 uppercase tracking-[0.12em]">Operating System</p>
         </div>
 
-        {/* Divider */}
-        <div className="mx-5 border-t border-sa-border" />
+        {/* Gold gradient divider */}
+        <div className="mx-6 h-px" style={{ background: 'linear-gradient(90deg, var(--gold-border), transparent 80%)' }} />
 
         {/* Nav tabs */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-5 space-y-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = currentTab === tab.id;
@@ -58,13 +58,13 @@ export function Navigation({
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-sa text-sm transition-all duration-150 ${
+                className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-[10px] text-[0.88rem] transition-all duration-200 border ${
                   isActive
-                    ? 'text-sa-gold bg-sa-gold-soft font-medium'
-                    : 'text-sa-cream-muted hover:text-sa-cream hover:bg-sa-bg-lift'
+                    ? 'text-sa-gold bg-sa-gold-glow border-sa-gold-border'
+                    : 'text-sa-cream-muted border-transparent hover:text-sa-cream-soft hover:bg-sa-gold-soft'
                 }`}
               >
-                <Icon className="w-4 h-4 flex-shrink-0" />
+                <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'opacity-100' : 'opacity-70'}`} />
                 <span className="flex-1 text-left">{tab.label}</span>
                 {tab.id === 'installation' && installationDay != null && installationDay <= 21 && (
                   <span className="text-xs text-sa-gold/60 font-medium tabular-nums">
@@ -77,11 +77,11 @@ export function Navigation({
         </nav>
 
         {/* Bottom section — user */}
-        <div className="px-4 pb-5 space-y-3">
-          <div className="border-t border-sa-border pt-4" />
+        <div className="px-5 pb-5 space-y-3">
+          <div className="border-t border-sa-border pt-4" style={{ borderImage: 'linear-gradient(90deg, var(--gold-border), transparent 80%) 1' }} />
 
           {user && (
-            <div className="px-2">
+            <div className="px-1">
               <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
                 plan === 'paid'
                   ? 'bg-sa-green-soft text-sa-green border border-sa-green-border'
@@ -95,11 +95,13 @@ export function Navigation({
           )}
 
           {user ? (
-            <div className="flex items-center gap-2 px-2">
-              <div className="w-7 h-7 rounded-full bg-sa-bg-lift border border-sa-border-light flex items-center justify-center flex-shrink-0">
-                <User className="w-3.5 h-3.5 text-sa-cream-faint" />
+            <div className="flex items-center gap-2.5 px-1">
+              <div className="w-8 h-8 rounded-full bg-sa-bg-lift border border-sa-gold-border flex items-center justify-center flex-shrink-0">
+                <span className="text-[0.7rem] text-sa-gold font-medium">
+                  {(user.email || '?')[0].toUpperCase()}
+                </span>
               </div>
-              <span className="text-xs text-sa-cream-muted truncate flex-1">
+              <span className="text-xs text-sa-cream-faint truncate flex-1">
                 {user.email}
               </span>
               <button

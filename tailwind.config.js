@@ -6,28 +6,32 @@ export default {
     extend: {
       colors: {
         sa: {
-          // Backgrounds — matches lesson aesthetic
-          bg: '#1E1F23',
-          'bg-warm': '#24252A',
-          'bg-lift': '#2A2B31',
-          'bg-hover': '#313238',
+          // Backgrounds — deep, atmospheric
+          bg: '#131316',
+          'bg-deep': '#0D0D0F',
+          'bg-warm': '#1A1A1E',
+          'bg-lift': '#222226',
+          'bg-card': '#1E1E22',
+          'bg-hover': '#28282D',
 
           // Text hierarchy
-          cream: '#FAF8F3',
-          'cream-soft': '#E0DDD6',
-          'cream-muted': '#B0ADA5',
-          'cream-faint': '#787570',
+          cream: '#F2EDE4',
+          'cream-soft': '#D8D2C7',
+          'cream-muted': '#A69F93',
+          'cream-faint': '#6B665D',
 
           // Accent — gold (primary brand)
-          gold: '#C9A96E',
-          'gold-light': '#D4BA88',
-          'gold-soft': 'rgba(201, 169, 110, 0.12)',
-          'gold-border': 'rgba(201, 169, 110, 0.25)',
+          gold: '#C5A55A',
+          'gold-light': '#D4BA78',
+          'gold-deep': '#A68B3C',
+          'gold-soft': 'rgba(197, 165, 90, 0.06)',
+          'gold-glow': 'rgba(197, 165, 90, 0.08)',
+          'gold-border': 'rgba(197, 165, 90, 0.20)',
 
           // Semantic — success
-          green: '#5ADB7E',
-          'green-soft': 'rgba(90, 219, 126, 0.14)',
-          'green-border': 'rgba(90, 219, 126, 0.30)',
+          green: '#6ECB8B',
+          'green-soft': 'rgba(110, 203, 139, 0.10)',
+          'green-border': 'rgba(110, 203, 139, 0.25)',
 
           // Semantic — warning / attention
           rose: '#E07070',
@@ -40,14 +44,14 @@ export default {
           'blue-border': 'rgba(109, 181, 245, 0.30)',
 
           // Borders and dividers
-          border: 'rgba(240, 237, 230, 0.07)',
-          'border-light': 'rgba(240, 237, 230, 0.12)',
-          'border-active': 'rgba(201, 169, 110, 0.40)',
+          border: 'rgba(197, 165, 90, 0.08)',
+          'border-light': 'rgba(197, 165, 90, 0.12)',
+          'border-active': 'rgba(197, 165, 90, 0.30)',
         }
       },
       fontFamily: {
-        serif: ['Playfair Display', 'Georgia', 'serif'],
-        sans: ['Inter', '-apple-system', 'sans-serif'],
+        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+        sans: ['DM Sans', '-apple-system', 'sans-serif'],
       },
       fontSize: {
         'xs': ['0.8125rem', { lineHeight: '1.5' }],

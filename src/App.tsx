@@ -277,8 +277,8 @@ function App() {
         onSignUp={signUp}
       />
 
-      <main className="md:ml-60 min-h-screen">
-        <div className="px-6 sm:px-10 lg:px-12 py-10 pb-24 md:pb-10">
+      <main className="md:ml-[260px] min-h-screen">
+        <div className="px-6 sm:px-10 lg:px-14 py-12 pb-24 md:pb-12">
         {currentTab === 'today' && (
           <TodayView
             nonNegotiables={nonNegotiables}
