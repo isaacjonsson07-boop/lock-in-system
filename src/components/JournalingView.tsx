@@ -601,7 +601,7 @@ export function JournalingView({
                             ? 'opacity-30 cursor-not-allowed'
                             : completed
                               ? 'bg-sa-green-soft border border-sa-green-border hover:border-sa-green'
-                              : 'bg-sa-bg-warm border border-sa-border hover:border-sa-gold-border'
+                              : 'bg-white border border-sa-border hover:border-sa-gold-border'
                         }`}
                         title={dayTitle}
                       >

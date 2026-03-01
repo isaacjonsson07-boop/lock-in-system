@@ -39,9 +39,9 @@
   --blue-border: rgba(59, 125, 216, 0.25);
 
   /* Borders */
-  --border: rgba(0, 0, 0, 0.08);
-  --border-light: rgba(0, 0, 0, 0.12);
-  --border-active: rgba(168, 134, 58, 0.40);
+  --border: rgba(0, 0, 0, 0.12);
+  --border-light: rgba(0, 0, 0, 0.18);
+  --border-active: rgba(168, 134, 58, 0.50);
 
   /* Typography */
   --serif: 'Playfair Display', Georgia, serif;
@@ -123,11 +123,11 @@ input::placeholder, textarea::placeholder {
 
   /* Cards */
   .sa-card {
-    @apply bg-sa-bg-warm border border-sa-border rounded-sa p-5;
+    @apply bg-white border border-sa-border rounded-sa p-5 shadow-sa;
   }
 
   .sa-card-elevated {
-    @apply bg-sa-bg-lift border border-sa-border-light rounded-sa-lg p-6 shadow-sa;
+    @apply bg-white border border-sa-border-light rounded-sa-lg p-6 shadow-sa-lg;
   }
 
   /* Buttons */
@@ -154,13 +154,13 @@ input::placeholder, textarea::placeholder {
 
   /* Inputs */
   .sa-input {
-    @apply w-full px-3.5 py-2.5 bg-sa-bg-lift border border-sa-border-light rounded-sa
+    @apply w-full px-3.5 py-2.5 bg-sa-bg border border-sa-border-light rounded-sa
            text-sa-cream text-sm placeholder:text-sa-cream-faint
            focus:border-sa-border-active focus:outline-none transition-colors duration-150;
   }
 
   .sa-textarea {
-    @apply w-full px-3.5 py-2.5 bg-sa-bg-lift border border-sa-border-light rounded-sa
+    @apply w-full px-3.5 py-2.5 bg-sa-bg border border-sa-border-light rounded-sa
            text-sa-cream text-sm placeholder:text-sa-cream-faint resize-none
            focus:border-sa-border-active focus:outline-none transition-colors duration-150;
   }

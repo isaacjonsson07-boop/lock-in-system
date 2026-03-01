@@ -40,9 +40,9 @@ export default {
           'blue-border': 'rgba(59, 125, 216, 0.25)',
 
           // Borders and dividers
-          border: 'rgba(0, 0, 0, 0.08)',
-          'border-light': 'rgba(0, 0, 0, 0.12)',
-          'border-active': 'rgba(168, 134, 58, 0.40)',
+          border: 'rgba(0, 0, 0, 0.12)',
+          'border-light': 'rgba(0, 0, 0, 0.18)',
+          'border-active': 'rgba(168, 134, 58, 0.50)',
         }
       },
       fontFamily: {
@@ -68,9 +68,9 @@ export default {
         'sa-lg': '12px',
       },
       boxShadow: {
-        'sa': '0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)',
-        'sa-lg': '0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3)',
-        'sa-glow': '0 0 20px rgba(201, 169, 110, 0.08)',
+        'sa': '0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06)',
+        'sa-lg': '0 4px 12px rgba(0, 0, 0, 0.10), 0 2px 4px rgba(0, 0, 0, 0.06)',
+        'sa-glow': '0 0 20px rgba(168, 134, 58, 0.08)',
       },
       animation: {
         'rise': 'rise 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards',
