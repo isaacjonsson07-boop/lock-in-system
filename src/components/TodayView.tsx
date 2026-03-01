@@ -28,12 +28,7 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
     function animate() {
       const offset = -((performance.now() / 1000) * speed) % perim;
       if (rectRef.current) {
-        // Core is shorter, offset to center it on the glow
-        rectRef.current.style.strokeDashoffset = `${offset + (glowLen - coreLen) / 2}`;
-      }
-      const glowRect = containerRef.current?.querySelector('.direction-glow-rect') as SVGElement | null;
-      if (glowRect) {
-        glowRect.style.strokeDashoffset = `${offset}`;
+        rectRef.current.style.strokeDashoffset = `${offset}`;
       }
       animRef.current = requestAnimationFrame(animate);
     }
@@ -41,8 +36,7 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
     return () => cancelAnimationFrame(animRef.current);
   }, [perim]);
 
-  const glowLen = 96;
-  const coreLen = 40;
+  const glowLen = 160;
   const gapLen = perim > 0 ? (perim - 2 * glowLen) / 2 : 0;
 
   return (
@@ -62,29 +56,18 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
             viewBox={`0 0 ${w} ${h}`} style={{ overflow: 'visible' }}>
             <defs>
               <filter id="glow-f" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
               </filter>
             </defs>
-            {/* Wide soft glow — long dash, thin blur */}
-            <rect
-              x="0.5" y="0.5"
-              width={w - 1} height={h - 1}
-              fill="none"
-              stroke="rgba(197,165,90,0.45)"
-              strokeWidth="3"
-              filter="url(#glow-f)"
-              strokeDasharray={`${glowLen} ${gapLen}`}
-              className="direction-glow-rect"
-            />
-            {/* Sharp thin core — shorter, centered on glow */}
             <rect
               ref={rectRef}
               x="0.5" y="0.5"
               width={w - 1} height={h - 1}
               fill="none"
               stroke="rgba(197,165,90,0.5)"
-              strokeWidth="0.5"
-              strokeDasharray={`${coreLen} ${gapLen + glowLen - coreLen}`}
+              strokeWidth="1.5"
+              filter="url(#glow-f)"
+              strokeDasharray={`${glowLen} ${gapLen}`}
             />
           </svg>
         );
