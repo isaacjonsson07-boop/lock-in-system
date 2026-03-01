@@ -163,7 +163,7 @@ export function TodayView({
       {/* ════════════════════════════════════════
           OPERATING CONTEXT — who you are & where you're going
           ════════════════════════════════════════ */}
-      {(direction || identity) && isToday && (
+      {(direction || identity) && (
         <div className="mb-12 text-center animate-rise">
           {direction && (
             <p className="font-serif text-xl sm:text-2xl text-sa-cream font-light leading-relaxed">
