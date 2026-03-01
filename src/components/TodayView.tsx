@@ -42,19 +42,34 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
           style={{ ['--perimeter' as string]: `${perimeter}px` }}>
           <defs>
             <filter id="glow-soft">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feComposite in="blur" in2="blur" operator="over" />
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
             </filter>
           </defs>
+          {/* Bright center layer */}
           <rect
             x="1" y="1"
             width="calc(100% - 2px)" height="calc(100% - 2px)"
             fill="none"
-            stroke="rgba(197,165,90,0.4)"
-            strokeWidth="4"
+            stroke="rgba(197,165,90,0.5)"
+            strokeWidth="1"
             strokeLinecap="round"
             filter="url(#glow-soft)"
-            filter="url(#glow-blur)"
+            strokeDasharray={`${glowLen} ${gapLen}`}
+            className="animate-[dashScroll_10s_linear_infinite]"
+          />
+          {/* Wider soft glow behind — creates the fading edge effect */}
+          <rect
+            x="1" y="1"
+            width="calc(100% - 2px)" height="calc(100% - 2px)"
+            fill="none"
+            stroke="rgba(197,165,90,0.15)"
+            strokeWidth="6"
+            strokeLinecap="round"
+            filter="url(#glow-soft)"
             strokeDasharray={`${glowLen} ${gapLen}`}
             className="animate-[dashScroll_10s_linear_infinite]"
           />
