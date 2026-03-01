@@ -5,39 +5,72 @@ import { fmtDateISO, uid } from '../utils/dateUtils';
 
 function DirectionFrame({ direction, identity }: { direction: string; identity: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const rectRef = useRef<SVGRectElement>(null);
-  const [perim, setPerim] = useState(0);
+  const line1Ref = useRef<HTMLDivElement>(null);
+  const line2Ref = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
 
   useEffect(() => {
-    function measure() {
-      if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect();
-        setPerim(2 * width + 2 * height);
-      }
-    }
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, []);
+    const container = containerRef.current;
+    if (!container) return;
 
-  useEffect(() => {
-    if (perim <= 0) return;
     const speed = 80;
 
     function animate() {
-      const offset = -((performance.now() / 1000) * speed) % perim;
-      if (rectRef.current) {
-        rectRef.current.style.strokeDashoffset = `${offset}`;
-      }
+      if (!container) return;
+      const { width, height } = container.getBoundingClientRect();
+      const perimeter = 2 * width + 2 * height;
+      const now = performance.now() / 1000;
+
+      [line1Ref, line2Ref].forEach((ref, i) => {
+        const el = ref.current;
+        if (!el) return;
+
+        const dist = ((now * speed) + (i * perimeter / 2)) % perimeter;
+
+        if (dist < width) {
+          el.style.top = `${-1}px`;
+          el.style.left = `${dist - 48}px`;
+          el.style.bottom = 'auto';
+          el.style.right = 'auto';
+          el.style.width = '96px';
+          el.style.height = '2px';
+          el.style.background = 'linear-gradient(90deg, transparent, rgba(197,165,90,0.4), transparent)';
+        } else if (dist < width + height) {
+          const d = dist - width;
+          el.style.top = `${d - 48}px`;
+          el.style.left = `${width - 1}px`;
+          el.style.right = 'auto';
+          el.style.bottom = 'auto';
+          el.style.width = '2px';
+          el.style.height = '96px';
+          el.style.background = 'linear-gradient(180deg, transparent, rgba(197,165,90,0.4), transparent)';
+        } else if (dist < 2 * width + height) {
+          const d = dist - width - height;
+          el.style.top = `${height - 1}px`;
+          el.style.left = `${width - d - 48}px`;
+          el.style.bottom = 'auto';
+          el.style.right = 'auto';
+          el.style.width = '96px';
+          el.style.height = '2px';
+          el.style.background = 'linear-gradient(90deg, transparent, rgba(197,165,90,0.4), transparent)';
+        } else {
+          const d = dist - 2 * width - height;
+          el.style.top = `${height - d - 48}px`;
+          el.style.left = `${-1}px`;
+          el.style.right = 'auto';
+          el.style.bottom = 'auto';
+          el.style.width = '2px';
+          el.style.height = '96px';
+          el.style.background = 'linear-gradient(180deg, transparent, rgba(197,165,90,0.4), transparent)';
+        }
+      });
+
       animRef.current = requestAnimationFrame(animate);
     }
+
     animRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animRef.current);
-  }, [perim]);
-
-  const glowLen = 160;
-  const gapLen = perim > 0 ? (perim - 2 * glowLen) / 2 : 0;
+  }, []);
 
   return (
     <div ref={containerRef} className="relative mb-14 text-center animate-rise py-10 px-8">
@@ -47,31 +80,11 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
       <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-sa-gold/25 z-10" />
       <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-sa-gold/25 z-10" />
 
-      {perim > 0 && (() => {
-        const el = containerRef.current;
-        const w = el ? el.getBoundingClientRect().width : 0;
-        const h = el ? el.getBoundingClientRect().height : 0;
-        return (
-          <svg className="absolute inset-0 w-full h-full pointer-events-none z-[5] overflow-visible" xmlns="http://www.w3.org/2000/svg"
-            viewBox={`0 0 ${w} ${h}`} style={{ overflow: 'visible' }}>
-            <defs>
-              <filter id="glow-f" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
-              </filter>
-            </defs>
-            <rect
-              ref={rectRef}
-              x="0.5" y="0.5"
-              width={w - 1} height={h - 1}
-              fill="none"
-              stroke="rgba(197,165,90,0.5)"
-              strokeWidth="1.5"
-              filter="url(#glow-f)"
-              strokeDasharray={`${glowLen} ${gapLen}`}
-            />
-          </svg>
-        );
-      })()}
+      {/* Two travelling glows */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div ref={line1Ref} className="absolute" />
+        <div ref={line2Ref} className="absolute" />
+      </div>
 
       {direction && (
         <p className="relative z-10 font-serif text-[1.85rem] font-light leading-[1.45] text-sa-cream tracking-[-0.01em]">
