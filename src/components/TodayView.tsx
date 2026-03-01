@@ -11,11 +11,14 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
           {direction}
         </p>
       )}
-      {/* Breathing gold underline */}
-      <div className="mx-auto mt-6 h-px" style={{ 
-        background: 'linear-gradient(90deg, transparent, var(--gold), transparent)',
-        animation: 'underlineBreathe 6s ease-in-out infinite',
-      }} />
+      {/* Shimmer gold underline */}
+      <div className="w-[100px] h-px mx-auto mt-6 relative overflow-hidden">
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.25), transparent)' }} />
+        <div className="absolute inset-y-0 w-[40px]" style={{ 
+          background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.6), transparent)',
+          animation: 'shimmer 4s ease-in-out infinite',
+        }} />
+      </div>
       {identity && (
         <p className="font-serif text-[1.05rem] italic font-light text-sa-gold mt-5 leading-relaxed">
           "{identity}"
