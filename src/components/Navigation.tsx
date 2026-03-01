@@ -41,7 +41,7 @@ export function Navigation({
           <div className="flex items-center justify-between h-16">
 
             {/* Brand */}
-            <span className="text-sm tracking-widest uppercase text-sa-cream-muted">
+            <span className="font-serif text-lg text-sa-cream-muted">
               Structured Achievement
             </span>
 
@@ -107,7 +107,7 @@ export function Navigation({
       {/* ===== MOBILE TOP BAR ===== */}
       <header className="md:hidden border-b border-sa-border bg-sa-bg/80 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center justify-between h-14 px-5">
-          <span className="text-xs tracking-widest uppercase text-sa-cream-muted">
+          <span className="font-serif text-base text-sa-cream-muted">
             Structured Achievement
           </span>
 
