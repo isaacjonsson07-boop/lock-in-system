@@ -30,43 +30,43 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
 
         if (dist < width) {
           // Top edge: left → right
-          el.style.top = '-0.5px';
+          el.style.top = '-4px';
           el.style.left = `${dist - 48}px`;
           el.style.bottom = 'auto';
           el.style.right = 'auto';
           el.style.width = '96px';
-          el.style.height = '1px';
-          el.style.background = 'linear-gradient(90deg, transparent, rgba(197,165,90,0.5), transparent)';
+          el.style.height = '8px';
+          el.style.background = 'radial-gradient(ellipse at center, rgba(197,165,90,0.45) 0%, transparent 70%)';
         } else if (dist < width + height) {
           // Right edge: top → bottom
           const d = dist - width;
           el.style.top = `${d - 48}px`;
-          el.style.right = '-0.5px';
+          el.style.right = '-4px';
           el.style.left = 'auto';
           el.style.bottom = 'auto';
-          el.style.width = '1px';
+          el.style.width = '8px';
           el.style.height = '96px';
-          el.style.background = 'linear-gradient(180deg, transparent, rgba(197,165,90,0.5), transparent)';
+          el.style.background = 'radial-gradient(ellipse at center, rgba(197,165,90,0.45) 0%, transparent 70%)';
         } else if (dist < 2 * width + height) {
           // Bottom edge: right → left
           const d = dist - width - height;
-          el.style.bottom = '-0.5px';
+          el.style.bottom = '-4px';
           el.style.left = `${width - d - 48}px`;
           el.style.top = 'auto';
           el.style.right = 'auto';
           el.style.width = '96px';
-          el.style.height = '1px';
-          el.style.background = 'linear-gradient(90deg, transparent, rgba(197,165,90,0.5), transparent)';
+          el.style.height = '8px';
+          el.style.background = 'radial-gradient(ellipse at center, rgba(197,165,90,0.45) 0%, transparent 70%)';
         } else {
           // Left edge: bottom → top
           const d = dist - 2 * width - height;
           el.style.top = `${height - d - 48}px`;
-          el.style.left = '-0.5px';
+          el.style.left = '-4px';
           el.style.right = 'auto';
           el.style.bottom = 'auto';
-          el.style.width = '1px';
+          el.style.width = '8px';
           el.style.height = '96px';
-          el.style.background = 'linear-gradient(180deg, transparent, rgba(197,165,90,0.5), transparent)';
+          el.style.background = 'radial-gradient(ellipse at center, rgba(197,165,90,0.45) 0%, transparent 70%)';
         }
       });
 
