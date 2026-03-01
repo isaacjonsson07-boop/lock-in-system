@@ -27,49 +27,22 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
 
   return (
     <div ref={containerRef} className="relative mb-14 text-center animate-rise py-10 px-8">
-      {/* Static dim border */}
-      <div className="absolute inset-0 border border-sa-gold/10 pointer-events-none" />
-
-      {/* Corner accents */}
+      {/* Corner accents only — no full border */}
       <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-sa-gold/25 z-10" />
       <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-sa-gold/25 z-10" />
       <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-sa-gold/25 z-10" />
       <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-sa-gold/25 z-10" />
 
-      {/* SVG glow lines — one continuous rect path */}
+      {/* SVG glow — single clean stroke, no blur */}
       {perimeter > 0 && (
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-[5]" xmlns="http://www.w3.org/2000/svg"
           style={{ ['--perimeter' as string]: `${perimeter}px` }}>
-          <defs>
-            <filter id="glow-soft">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-          {/* Bright center layer */}
           <rect
             x="1" y="1"
             width="calc(100% - 2px)" height="calc(100% - 2px)"
             fill="none"
             stroke="rgba(197,165,90,0.5)"
-            strokeWidth="1"
-            strokeLinecap="round"
-            filter="url(#glow-soft)"
-            strokeDasharray={`${glowLen} ${gapLen}`}
-            className="animate-[dashScroll_10s_linear_infinite]"
-          />
-          {/* Wider soft glow behind — creates the fading edge effect */}
-          <rect
-            x="1" y="1"
-            width="calc(100% - 2px)" height="calc(100% - 2px)"
-            fill="none"
-            stroke="rgba(197,165,90,0.15)"
-            strokeWidth="6"
-            strokeLinecap="round"
-            filter="url(#glow-soft)"
+            strokeWidth="1.5"
             strokeDasharray={`${glowLen} ${gapLen}`}
             className="animate-[dashScroll_10s_linear_infinite]"
           />
