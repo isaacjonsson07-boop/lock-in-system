@@ -29,40 +29,40 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
         const dist = ((now * speed) + (i * perimeter / 2)) % perimeter;
 
         if (dist < width) {
-          el.style.top = `${-2}px`;
+          el.style.top = `${-1}px`;
           el.style.left = `${dist - 48}px`;
           el.style.bottom = 'auto';
           el.style.right = 'auto';
           el.style.width = '96px';
-          el.style.height = '4px';
-          el.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.5) 0%, transparent 60%)';
+          el.style.height = '2px';
+          el.style.background = 'linear-gradient(90deg, transparent, rgba(197,165,90,0.4), transparent)';
         } else if (dist < width + height) {
           const d = dist - width;
           el.style.top = `${d - 48}px`;
-          el.style.left = `${width - 2}px`;
+          el.style.left = `${width - 1}px`;
           el.style.right = 'auto';
           el.style.bottom = 'auto';
-          el.style.width = '4px';
+          el.style.width = '2px';
           el.style.height = '96px';
-          el.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.5) 0%, transparent 60%)';
+          el.style.background = 'linear-gradient(180deg, transparent, rgba(197,165,90,0.4), transparent)';
         } else if (dist < 2 * width + height) {
           const d = dist - width - height;
-          el.style.top = `${height - 2}px`;
+          el.style.top = `${height - 1}px`;
           el.style.left = `${width - d - 48}px`;
           el.style.bottom = 'auto';
           el.style.right = 'auto';
           el.style.width = '96px';
-          el.style.height = '4px';
-          el.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.5) 0%, transparent 60%)';
+          el.style.height = '2px';
+          el.style.background = 'linear-gradient(90deg, transparent, rgba(197,165,90,0.4), transparent)';
         } else {
           const d = dist - 2 * width - height;
           el.style.top = `${height - d - 48}px`;
-          el.style.left = `${-2}px`;
+          el.style.left = `${-1}px`;
           el.style.right = 'auto';
           el.style.bottom = 'auto';
-          el.style.width = '4px';
+          el.style.width = '2px';
           el.style.height = '96px';
-          el.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.5) 0%, transparent 60%)';
+          el.style.background = 'linear-gradient(180deg, transparent, rgba(197,165,90,0.4), transparent)';
         }
       });
 
