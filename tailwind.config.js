@@ -6,17 +6,17 @@ export default {
     extend: {
       colors: {
         sa: {
-          // Backgrounds (lighter for better readability)
-          bg: '#252730',
-          'bg-warm': '#2C2E38',
-          'bg-lift': '#343640',
-          'bg-hover': '#3C3E49',
+          // Backgrounds (darker, more depth)
+          bg: '#1A1B22',
+          'bg-warm': '#21222A',
+          'bg-lift': '#282A33',
+          'bg-hover': '#31333D',
 
-          // Text hierarchy (brighter across the board)
+          // Text hierarchy (much whiter/brighter)
           cream: '#FFFFFF',
-          'cream-soft': '#F0EDE6',
-          'cream-muted': '#D4D0C8',
-          'cream-faint': '#ADA9A0',
+          'cream-soft': '#F2F0EB',
+          'cream-muted': '#DDD9D1',
+          'cream-faint': '#B8B4AB',
 
           // Accent — gold (primary brand)
           gold: '#D4B478',
