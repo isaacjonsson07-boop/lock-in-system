@@ -587,7 +587,7 @@ export function JournalingView({
           display: flex;
           align-items: center;
           gap: 20px;
-          padding: 18px 24px;
+          padding: 20px 28px;
           background: var(--bg-warm, #24252A);
           border: 1px solid rgba(240,237,230,0.05);
           border-radius: 12px;
@@ -727,7 +727,7 @@ export function JournalingView({
           {/* Hero branding */}
           <div className="text-center pt-6 pb-4 animate-rise">
             <div className="sa-brand-line flex items-center justify-center gap-4 mb-10"
-              style={{ fontSize: '0.62rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'var(--gold, #C5A55A)' }}>
+              style={{ fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'var(--gold, #C5A55A)' }}>
               Structured Achievement
             </div>
 
@@ -735,29 +735,29 @@ export function JournalingView({
               Build your personal<br /><em className="text-sa-gold italic">operating system</em>
             </h2>
 
-            <p className="text-sa-cream-soft mx-auto mb-10" style={{ fontSize: '1.05rem', fontWeight: 300, lineHeight: 1.75, maxWidth: 560 }}>
+            <p className="text-sa-cream-soft mx-auto mb-10" style={{ fontSize: '1.1rem', fontWeight: 300, lineHeight: 1.75, maxWidth: 580 }}>
               21 days. Three phases. One system designed to replace chaos with structure, intention with identity, and effort with compounding results.
             </p>
 
             {/* Stats bar */}
-            <div className="flex justify-center gap-12 py-6 mb-0" style={{ borderTop: '1px solid rgba(240,237,230,0.07)', borderBottom: '1px solid rgba(240,237,230,0.07)' }}>
+            <div className="flex justify-center gap-12 py-8 mb-0" style={{ borderTop: '1px solid rgba(240,237,230,0.07)', borderBottom: '1px solid rgba(240,237,230,0.07)' }}>
               <div className="text-center">
-                <div className="font-serif text-sa-cream" style={{ fontSize: '1.8rem', lineHeight: 1 }}>{completedDays > 0 ? completedDays : 21}</div>
-                <div style={{ fontSize: '0.68rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 6 }}>
+                <div className="font-serif text-sa-cream" style={{ fontSize: '2.2rem', lineHeight: 1 }}>{completedDays > 0 ? completedDays : 21}</div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 8 }}>
                   {completedDays > 0 ? 'Completed' : 'Lessons'}
                 </div>
               </div>
               <div className="text-center">
-                <div className="font-serif text-sa-cream" style={{ fontSize: '1.8rem', lineHeight: 1 }}>3</div>
-                <div style={{ fontSize: '0.68rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 6 }}>Phases</div>
+                <div className="font-serif text-sa-cream" style={{ fontSize: '2.2rem', lineHeight: 1 }}>3</div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 8 }}>Phases</div>
               </div>
               <div className="text-center">
-                <div className="font-serif text-sa-cream" style={{ fontSize: '1.8rem', lineHeight: 1 }}>12</div>
-                <div style={{ fontSize: '0.68rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 6 }}>Principles</div>
+                <div className="font-serif text-sa-cream" style={{ fontSize: '2.2rem', lineHeight: 1 }}>12</div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 8 }}>Principles</div>
               </div>
               <div className="text-center">
-                <div className="font-serif text-sa-cream" style={{ fontSize: '1.8rem', lineHeight: 1 }}>∞</div>
-                <div style={{ fontSize: '0.68rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 6 }}>Compound effect</div>
+                <div className="font-serif text-sa-cream" style={{ fontSize: '2.2rem', lineHeight: 1 }}>∞</div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 8 }}>Compound effect</div>
               </div>
             </div>
           </div>
@@ -771,17 +771,17 @@ export function JournalingView({
               <section key={phase.label} className="animate-rise" style={{ paddingTop: 72 }}>
                 {/* Phase header */}
                 <div className="flex items-center gap-4 mb-3">
-                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: colorVar }} />
-                  <span style={{ fontSize: '0.65rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: colorVar }}>
+                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: colorVar }} />
+                  <span style={{ fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: colorVar }}>
                     {phase.label}
                   </span>
                 </div>
-                <p className="mb-7" style={{ fontSize: '0.92rem', fontWeight: 300, color: 'var(--cream-muted, #A69F93)', lineHeight: 1.7, paddingLeft: 24 }}>
+                <p className="mb-7" style={{ fontSize: '1.05rem', fontWeight: 300, color: 'var(--cream-muted, #A69F93)', lineHeight: 1.7, paddingLeft: 28 }}>
                   {phase.description}
                 </p>
 
                 {/* Lesson cards */}
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   {phase.days.map((dayNumber) => {
                     const entry = journalEntries.find(e => e.dayNumber === dayNumber);
                     const completed = entry && hasContent(entry);
@@ -799,32 +799,32 @@ export function JournalingView({
                         className={`sa-lesson-card sa-${phaseColor}-accent${isReview ? ' sa-review-day' : ''}${isLocked ? ' sa-locked' : ''}${completed ? ' sa-completed' : ''}`}
                       >
                         {/* Day number — phase colored */}
-                        <span className="font-serif flex-shrink-0" style={{ fontSize: '0.82rem', width: 20, textAlign: 'right' as const, color: isLocked ? 'var(--cream-faint, #6B665D)' : colorVar }}>
+                        <span className="font-serif flex-shrink-0" style={{ fontSize: '1.05rem', width: 28, textAlign: 'right' as const, color: isLocked ? 'var(--cream-faint, #6B665D)' : colorVar }}>
                           {completed ? (
-                            <Check className="w-4 h-4 inline" strokeWidth={2.5} style={{ color: colorVar }} />
+                            <Check className="w-5 h-5 inline" strokeWidth={2.5} style={{ color: colorVar }} />
                           ) : (
                             dayNumber
                           )}
                         </span>
 
                         {/* Divider */}
-                        <div className="flex-shrink-0" style={{ width: 1, height: 20, background: 'rgba(240,237,230,0.08)' }} />
+                        <div className="flex-shrink-0" style={{ width: 1, height: 28, background: 'rgba(240,237,230,0.08)' }} />
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <div className="font-serif" style={{ fontSize: '0.98rem', fontWeight: 400, color: 'var(--cream, #F2EDE4)', lineHeight: 1.35 }}>
+                          <div className="font-serif" style={{ fontSize: '1.1rem', fontWeight: 400, color: 'var(--cream, #F2EDE4)', lineHeight: 1.35 }}>
                             {title}
                           </div>
-                          <div className="sa-card-principle truncate" style={{ fontSize: '0.72rem', fontWeight: 300, color: 'var(--cream-faint, #6B665D)', marginTop: 3 }}>
+                          <div className="sa-card-principle truncate" style={{ fontSize: '0.85rem', fontWeight: 300, color: 'var(--cream-faint, #6B665D)', marginTop: 4 }}>
                             {principle}
                           </div>
                         </div>
 
                         {/* Arrow or lock */}
                         {isLocked ? (
-                          <Lock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--cream-faint, #6B665D)' }} />
+                          <Lock className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--cream-faint, #6B665D)' }} />
                         ) : (
-                          <span className="sa-card-arrow" style={{ fontSize: '1rem', color: 'var(--cream-faint, #6B665D)' }}>→</span>
+                          <span className="sa-card-arrow" style={{ fontSize: '1.15rem', color: 'var(--cream-faint, #6B665D)' }}>→</span>
                         )}
                       </button>
                     );
@@ -838,28 +838,28 @@ export function JournalingView({
           <div className="text-center animate-rise" style={{ paddingTop: 80, paddingBottom: 40 }}>
             {/* Diamond divider */}
             <div className="sa-diamond-divider flex items-center justify-center gap-5 mb-12">
-              <div style={{ width: 6, height: 6, border: '1px solid var(--cream-faint, #6B665D)', transform: 'rotate(45deg)' }} />
+              <div style={{ width: 7, height: 7, border: '1px solid var(--cream-faint, #6B665D)', transform: 'rotate(45deg)' }} />
             </div>
 
-            <p className="font-serif italic mx-auto mb-4" style={{ fontSize: '1.25rem', fontWeight: 400, color: 'var(--cream-soft, #D8D2C7)', lineHeight: 1.6, maxWidth: 520 }}>
+            <p className="font-serif italic mx-auto mb-4" style={{ fontSize: '1.4rem', fontWeight: 400, color: 'var(--cream-soft, #D8D2C7)', lineHeight: 1.6, maxWidth: 540 }}>
               Every result has a cause. The system you build here becomes the cause of <strong className="not-italic font-medium text-sa-cream">everything that follows</strong>.
             </p>
-            <p style={{ fontSize: '0.72rem', color: 'var(--cream-faint, #6B665D)', letterSpacing: '0.04em' }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--cream-faint, #6B665D)', letterSpacing: '0.04em' }}>
               — The Law of Cause and Effect
             </p>
 
             {/* Phase dots footer */}
             <div className="flex justify-center gap-7" style={{ marginTop: 56, paddingTop: 28, borderTop: '1px solid rgba(240,237,230,0.05)' }}>
-              <span className="flex items-center gap-2" style={{ fontSize: '0.68rem', color: 'var(--cream-faint, #6B665D)' }}>
-                <span className="rounded-full" style={{ width: 5, height: 5, background: 'var(--gold, #C5A55A)', display: 'inline-block' }} />
+              <span className="flex items-center gap-2" style={{ fontSize: '0.8rem', color: 'var(--cream-faint, #6B665D)' }}>
+                <span className="rounded-full" style={{ width: 6, height: 6, background: 'var(--gold, #C5A55A)', display: 'inline-block' }} />
                 Stabilize
               </span>
-              <span className="flex items-center gap-2" style={{ fontSize: '0.68rem', color: 'var(--cream-faint, #6B665D)' }}>
-                <span className="rounded-full" style={{ width: 5, height: 5, background: 'var(--blue, #6DB5F5)', display: 'inline-block' }} />
+              <span className="flex items-center gap-2" style={{ fontSize: '0.8rem', color: 'var(--cream-faint, #6B665D)' }}>
+                <span className="rounded-full" style={{ width: 6, height: 6, background: 'var(--blue, #6DB5F5)', display: 'inline-block' }} />
                 Reconstruct
               </span>
-              <span className="flex items-center gap-2" style={{ fontSize: '0.68rem', color: 'var(--cream-faint, #6B665D)' }}>
-                <span className="rounded-full" style={{ width: 5, height: 5, background: 'var(--green, #6ECB8B)', display: 'inline-block' }} />
+              <span className="flex items-center gap-2" style={{ fontSize: '0.8rem', color: 'var(--cream-faint, #6B665D)' }}>
+                <span className="rounded-full" style={{ width: 6, height: 6, background: 'var(--green, #6ECB8B)', display: 'inline-block' }} />
                 Install
               </span>
             </div>
