@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Check, X, ArrowLeft, Lock } from 'lucide-react';
+import { Check, X, ArrowLeft, Lock, ChevronRight, BookOpen } from 'lucide-react';
 import { JournalEntry } from '../types';
 import { uid } from '../utils/dateUtils';
 import { getJournalAccessDays } from '../utils/trialUtils';
 import { openWhopPaid, openWhopTrial } from '../constants';
+import { LESSON_DATA, getLessonByDay } from '../data/lessonContent';
+import { LessonRenderer } from './LessonRenderer';
+
+// ============================================
+// STRUCTURED ACHIEVEMENT — Installation View
+// Unified: editorial landing + lesson + journal
+// ============================================
 
 // Journal templates with specific content for each day
 const JOURNAL_TEMPLATES = {
@@ -262,6 +269,12 @@ const JOURNAL_TEMPLATES = {
   }
 };
 
+const PHASES = [
+  { label: 'Phase I — Stabilize', shortLabel: 'Stabilize', days: [1, 2, 3, 4, 5, 6, 7], description: 'Set your direction, build your structure, and lock your foundation.' },
+  { label: 'Phase II — Reconstruct', shortLabel: 'Reconstruct', days: [8, 9, 10, 11, 12, 13, 14], description: 'Go deeper. Rebuild your identity, habits, and priorities.' },
+  { label: 'Phase III — Install', shortLabel: 'Install', days: [15, 16, 17, 18, 19, 20, 21], description: 'Make it permanent. Stress-test, consolidate, activate.' },
+];
+
 interface JournalingViewProps {
   journalEntries: JournalEntry[];
   onUpdateJournalEntry: (entry: JournalEntry) => void;
@@ -270,12 +283,6 @@ interface JournalingViewProps {
   trialEndsAt?: string | null;
   onStartTrial?: () => Promise<void>;
 }
-
-const PHASES = [
-  { label: 'Phase I — Stabilize', days: [1, 2, 3, 4, 5, 6, 7] },
-  { label: 'Phase II — Reconstruct', days: [8, 9, 10, 11, 12, 13, 14] },
-  { label: 'Phase III — Install', days: [15, 16, 17, 18, 19, 20, 21] },
-];
 
 export function JournalingView({
   journalEntries,
@@ -288,6 +295,7 @@ export function JournalingView({
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [activeTab, setActiveTab] = useState<'lesson' | 'journal'>('lesson');
 
   const journalAccessDays = getJournalAccessDays(plan, trialEndsAt);
 
@@ -295,7 +303,6 @@ export function JournalingView({
   const initializeJournalEntries = () => {
     const existingDays = new Set(journalEntries.map(entry => entry.dayNumber));
     const newEntries: JournalEntry[] = [];
-
     for (let day = 1; day <= 21; day++) {
       if (!existingDays.has(day)) {
         const template = JOURNAL_TEMPLATES[day as keyof typeof JOURNAL_TEMPLATES];
@@ -312,15 +319,12 @@ export function JournalingView({
         });
       }
     }
-
     newEntries.forEach(entry => onUpdateJournalEntry(entry));
   };
 
-  useEffect(() => {
-    initializeJournalEntries();
-  }, [user]);
+  useEffect(() => { initializeJournalEntries(); }, [user]);
 
-  // Auto-save
+  // Auto-save journal answers
   useEffect(() => {
     if (selectedDay && Object.keys(answers).length > 0) {
       const existingEntry = journalEntries.find(entry => entry.dayNumber === selectedDay);
@@ -328,7 +332,6 @@ export function JournalingView({
         const hasChanges = Object.keys(answers).some(key =>
           (existingEntry.answers?.[key] || '') !== answers[key]
         );
-
         if (hasChanges) {
           const updatedEntry: JournalEntry = {
             ...existingEntry,
@@ -342,10 +345,7 @@ export function JournalingView({
   }, [answers, selectedDay]);
 
   const handleAnswerChange = (questionIndex: number, value: string) => {
-    setAnswers(prev => ({
-      ...prev,
-      [`question_${questionIndex}`]: value
-    }));
+    setAnswers(prev => ({ ...prev, [`question_${questionIndex}`]: value }));
   };
 
   const handleTextareaInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
@@ -363,12 +363,32 @@ export function JournalingView({
     if (entry) {
       setSelectedDay(dayNumber);
       setAnswers(entry.answers || {});
+      setActiveTab('lesson');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleClose = () => {
     setSelectedDay(null);
     setAnswers({});
+    setActiveTab('lesson');
+  };
+
+  const handleNextDay = () => {
+    if (selectedDay && selectedDay < 21) {
+      const nextDay = selectedDay + 1;
+      if (nextDay > journalAccessDays) {
+        setShowUpgradePrompt(true);
+        return;
+      }
+      const entry = journalEntries.find(e => e.dayNumber === nextDay);
+      if (entry) {
+        setSelectedDay(nextDay);
+        setAnswers(entry.answers || {});
+        setActiveTab('lesson');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
   };
 
   const hasContent = (entry: JournalEntry) => {
@@ -376,7 +396,6 @@ export function JournalingView({
       (entry.answers && Object.values(entry.answers).some(a => a && a.trim() !== ''));
   };
 
-  // Installation progress
   const completedDays = journalEntries.filter(e => e.dayNumber && hasContent(e)).length;
   const progressPercent = Math.round((completedDays / 21) * 100);
 
@@ -384,122 +403,189 @@ export function JournalingView({
   if (selectedDay) {
     const selectedEntry = journalEntries.find(e => e.dayNumber === selectedDay);
     const template = JOURNAL_TEMPLATES[selectedDay as keyof typeof JOURNAL_TEMPLATES];
-
+    const lesson = getLessonByDay(selectedDay);
     if (!selectedEntry) return null;
 
     return (
-      <div className="max-w-4xl mx-auto animate-rise">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={handleClose}
-            className="sa-btn-ghost flex items-center gap-2"
-          >
+      <div className="max-w-3xl mx-auto animate-rise">
+        {/* Top bar */}
+        <div className="flex items-center justify-between mb-6 sticky top-14 md:top-0 z-10 py-3 -mx-6 px-6 bg-sa-bg/95 backdrop-blur-sm border-b border-sa-border/50">
+          <button onClick={handleClose} className="sa-btn-ghost flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
+            <span className="hidden sm:inline">Back</span>
           </button>
-          <span className="sa-badge-gold">Day {selectedDay} of 21</span>
-          <button
-            onClick={handleClose}
-            className="sa-btn-primary flex items-center gap-2"
-          >
-            <Check className="w-4 h-4" />
-            <span>Done</span>
-          </button>
+
+          {/* Lesson / Journal toggle */}
+          <div className="flex items-center bg-sa-bg-warm rounded-sa-sm border border-sa-border p-0.5">
+            <button
+              onClick={() => setActiveTab('lesson')}
+              className={`px-3 py-1.5 text-xs rounded-sa-sm transition-all ${
+                activeTab === 'lesson'
+                  ? 'bg-sa-gold-glow text-sa-gold border border-sa-gold-border'
+                  : 'text-sa-cream-faint hover:text-sa-cream-muted border border-transparent'
+              }`}
+            >
+              Lesson
+            </button>
+            <button
+              onClick={() => setActiveTab('journal')}
+              className={`px-3 py-1.5 text-xs rounded-sa-sm transition-all ${
+                activeTab === 'journal'
+                  ? 'bg-sa-gold-glow text-sa-gold border border-sa-gold-border'
+                  : 'text-sa-cream-faint hover:text-sa-cream-muted border border-transparent'
+              }`}
+            >
+              Journal
+            </button>
+          </div>
+
+          <span className="text-xs text-sa-gold font-medium px-2.5 py-1 rounded-full bg-sa-gold-soft border border-sa-gold-border">
+            Day {selectedDay}/21
+          </span>
         </div>
 
-        {/* Title */}
-        <div className="mb-8">
-          <h2 className="font-serif text-xl sm:text-2xl text-sa-cream">
-            {selectedEntry.title}
-          </h2>
-          {template?.quote && (
-            <p className="text-sm text-sa-cream-faint italic mt-3">
-              "{template.quote}"
-            </p>
-          )}
-        </div>
+        {/* === LESSON TAB === */}
+        {activeTab === 'lesson' && lesson && (
+          <>
+            <LessonRenderer lesson={lesson} />
 
-        {/* Questions */}
-        {template && template.questions ? (
-          <div className="space-y-8">
-            {template.questions.map((question, index) => (
-              <div
-                key={index}
-                className={`${
-                  index === template.questions.length - 1 && template.separateLastQuestion
-                    ? 'pt-8 mt-4 border-t border-sa-border'
-                    : ''
-                }`}
+            {/* Continue to journal CTA */}
+            <div className="mt-10 mb-6 p-5 rounded-sa border border-sa-gold-border bg-sa-gold-soft text-center">
+              <p className="text-sm text-sa-cream-soft mb-3">
+                Finished reading? Reflect on what you learned.
+              </p>
+              <button
+                onClick={() => { setActiveTab('journal'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="sa-btn-primary inline-flex items-center gap-2"
               >
-                <label className="block text-sm text-sa-cream-soft mb-3 leading-relaxed whitespace-pre-line">
-                  <span className="text-sa-gold font-medium">{index + 1}.</span>{' '}
-                  {question}
-                </label>
+                <BookOpen className="w-4 h-4" />
+                Open Journal
+              </button>
+            </div>
+
+            {/* Next day link */}
+            {selectedDay < 21 && (
+              <button
+                onClick={handleNextDay}
+                className="w-full mt-4 mb-6 p-4 rounded-sa border border-sa-border bg-sa-bg-warm flex items-center justify-between hover:border-sa-gold-border transition-colors"
+              >
+                <div>
+                  <div className="text-xs text-sa-cream-faint">
+                    {lesson.nextDay?.eyebrow || `Tomorrow — Day ${selectedDay + 1}`}
+                  </div>
+                  <div className="text-sm text-sa-cream mt-0.5">
+                    {lesson.nextDay?.title || LESSON_DATA[selectedDay]?.title || ''}
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-sa-cream-faint" />
+              </button>
+            )}
+          </>
+        )}
+
+        {/* === JOURNAL TAB === */}
+        {activeTab === 'journal' && (
+          <>
+            <div className="mb-8">
+              <h2 className="font-serif text-xl sm:text-2xl text-sa-cream">
+                {selectedEntry.title}
+              </h2>
+              {template?.quote && (
+                <p className="text-sm text-sa-cream-faint italic mt-3">
+                  &ldquo;{template.quote}&rdquo;
+                </p>
+              )}
+            </div>
+
+            {template && template.questions ? (
+              <div className="space-y-8">
+                {template.questions.map((question: string, index: number) => (
+                  <div
+                    key={index}
+                    className={`${
+                      index === template.questions.length - 1 && template.separateLastQuestion
+                        ? 'pt-8 mt-4 border-t border-sa-border'
+                        : ''
+                    }`}
+                  >
+                    <label className="block text-sm text-sa-cream-soft mb-3 leading-relaxed whitespace-pre-line">
+                      <span className="text-sa-gold font-medium">{index + 1}.</span>{' '}
+                      {question}
+                    </label>
+                    <textarea
+                      value={answers[`question_${index}`] || ''}
+                      onChange={(e) => handleAnswerChange(index, e.target.value)}
+                      onInput={handleTextareaInput}
+                      placeholder="Write your answer here..."
+                      className="sa-textarea min-h-[5rem]"
+                      autoFocus={index === 0}
+                      ref={(el) => {
+                        if (el && answers[`question_${index}`]) {
+                          el.style.height = 'auto';
+                          el.style.height = el.scrollHeight + 'px';
+                        }
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div>
+                <label className="sa-label">Journal Entry</label>
                 <textarea
-                  value={answers[`question_${index}`] || ''}
-                  onChange={(e) => handleAnswerChange(index, e.target.value)}
+                  value={selectedEntry.content}
+                  onChange={(e) => {
+                    const updatedEntry: JournalEntry = {
+                      ...selectedEntry,
+                      content: e.target.value,
+                      lastModified: new Date().toISOString()
+                    };
+                    onUpdateJournalEntry(updatedEntry);
+                  }}
                   onInput={handleTextareaInput}
-                  placeholder="Write your answer here..."
-                  className="sa-textarea min-h-[5rem]"
-                  autoFocus={index === 0}
+                  placeholder="Start writing..."
+                  className="sa-textarea min-h-[16rem]"
+                  autoFocus
                   ref={(el) => {
-                    if (el && answers[`question_${index}`]) {
+                    if (el && selectedEntry.content) {
                       el.style.height = 'auto';
                       el.style.height = el.scrollHeight + 'px';
                     }
                   }}
                 />
               </div>
-            ))}
-          </div>
-        ) : (
-          <div>
-            <label className="sa-label">Journal Entry</label>
-            <textarea
-              value={selectedEntry.content}
-              onChange={(e) => {
-                const updatedEntry: JournalEntry = {
-                  ...selectedEntry,
-                  content: e.target.value,
-                  lastModified: new Date().toISOString()
-                };
-                onUpdateJournalEntry(updatedEntry);
-              }}
-              onInput={handleTextareaInput}
-              placeholder="Start writing..."
-              className="sa-textarea min-h-[16rem]"
-              autoFocus
-              ref={(el) => {
-                if (el && selectedEntry.content) {
-                  el.style.height = 'auto';
-                  el.style.height = el.scrollHeight + 'px';
-                }
-              }}
-            />
-          </div>
-        )}
+            )}
 
-        {/* Auto-save indicator */}
-        <p className="text-xs text-sa-cream-faint text-center mt-8">
-          Changes save automatically
-        </p>
+            <div className="flex gap-3 mt-10">
+              <button onClick={() => { setActiveTab('lesson'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="sa-btn-ghost flex items-center gap-2 flex-1">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Lesson
+              </button>
+              {selectedDay < 21 && (
+                <button onClick={handleNextDay} className="sa-btn-primary flex items-center gap-2 flex-1">
+                  Day {selectedDay + 1}
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <p className="text-xs text-sa-cream-faint text-center mt-6 mb-4">
+              Changes save automatically
+            </p>
+          </>
+        )}
       </div>
     );
   }
 
-  // ── GRID VIEW ──
+  // ── EDITORIAL LANDING / GRID VIEW ──
   return (
-    <div className="max-w-4xl mx-auto">
-
+    <div className="max-w-3xl mx-auto">
       {/* Upgrade modal */}
       {showUpgradePrompt && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="sa-card-elevated max-w-md w-full">
-            <button
-              onClick={() => setShowUpgradePrompt(false)}
-              className="float-right sa-btn-ghost p-1"
-            >
+            <button onClick={() => setShowUpgradePrompt(false)} className="float-right sa-btn-ghost p-1">
               <X className="w-4 h-4" />
             </button>
             <div className="text-center pt-2">
@@ -548,16 +634,11 @@ export function JournalingView({
       {/* Installation content */}
       {journalAccessDays > 0 && (
         <>
-          {/* Header + Progress */}
+          {/* Editorial header */}
           <div className="mb-10 animate-rise">
-            <h2 className="font-serif text-2xl sm:text-3xl text-sa-cream mb-2">
-              Installation
-            </h2>
-            <p className="text-sm text-sa-cream-muted mb-5">
-              {completedDays} of 21 days completed
-            </p>
-
-            {/* Progress bar */}
+            <h2 className="font-serif text-2xl sm:text-3xl text-sa-cream mb-1">Installation</h2>
+            <p className="text-sm text-sa-cream-muted mb-1">21 days. 3 phases. One operating system.</p>
+            <p className="text-xs text-sa-cream-faint mb-5">{completedDays} of 21 completed</p>
             <div className="sa-progress-track">
               <div
                 className={completedDays === 21 ? 'sa-progress-fill-green' : 'sa-progress-fill'}
@@ -566,78 +647,118 @@ export function JournalingView({
             </div>
           </div>
 
-          {/* Phases */}
-          <div className="space-y-8">
-            {PHASES.map((phase, phaseIndex) => (
-              <section key={phase.label} className={`animate-rise delay-${phaseIndex + 1}`}>
-                {/* Phase header */}
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="sa-section-subtitle">{phase.label}</span>
-                  <div className="flex-1 h-px bg-sa-border" />
-                  <span className="text-xs text-sa-cream-faint">
-                    {phase.days.filter(d => {
-                      const entry = journalEntries.find(e => e.dayNumber === d);
-                      return entry && hasContent(entry);
-                    }).length}/{phase.days.length}
-                  </span>
-                </div>
-
-                {/* Day cards */}
-                <div className="grid grid-cols-7 gap-2">
-                  {phase.days.map((dayNumber) => {
-                    const entry = journalEntries.find(e => e.dayNumber === dayNumber);
-                    const completed = entry && hasContent(entry);
-                    const isLocked = dayNumber > journalAccessDays;
-                    const template = JOURNAL_TEMPLATES[dayNumber as keyof typeof JOURNAL_TEMPLATES];
-                    const dayTitle = template?.title?.replace(/^Day \d+ — /, '').replace(/ \(Journal\)$/, '') || `Day ${dayNumber}`;
-
-                    return (
-                      <button
-                        key={dayNumber}
-                        onClick={() => handleDayClick(dayNumber)}
-                        disabled={isLocked}
-                        className={`relative flex flex-col items-center py-3 px-1 rounded-sa transition-all duration-150 ${
-                          isLocked
-                            ? 'opacity-30 cursor-not-allowed'
-                            : completed
-                              ? 'bg-sa-green-soft border border-sa-green-border hover:border-sa-green'
-                              : 'bg-sa-bg-warm border border-sa-border hover:border-sa-gold-border'
-                        }`}
-                        title={dayTitle}
-                      >
-                        <span className={`text-lg font-medium ${
-                          isLocked
-                            ? 'text-sa-cream-faint'
-                            : completed
-                              ? 'text-sa-green'
-                              : 'text-sa-cream'
-                        }`}>
-                          {dayNumber}
-                        </span>
-                        <span className="text-[0.5rem] text-sa-cream-faint mt-0.5 leading-tight text-center line-clamp-1 max-w-full px-0.5 hidden sm:block">
-                          {dayTitle.length > 12 ? dayTitle.substring(0, 12) + '…' : dayTitle}
-                        </span>
-                        {completed && (
-                          <Check className="absolute -top-1 -right-1 w-3.5 h-3.5 text-sa-green bg-sa-bg rounded-full p-0.5" strokeWidth={3} />
-                        )}
-                        {isLocked && (
-                          <Lock className="w-3 h-3 text-sa-cream-faint mt-1" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
+          {/* Stats row */}
+          <div className="grid grid-cols-3 gap-3 mb-10 animate-rise">
+            <div className="text-center p-3 rounded-sa border border-sa-border bg-sa-bg-warm">
+              <div className="text-lg font-serif text-sa-gold">{completedDays}</div>
+              <div className="text-xs text-sa-cream-faint">Completed</div>
+            </div>
+            <div className="text-center p-3 rounded-sa border border-sa-border bg-sa-bg-warm">
+              <div className="text-lg font-serif text-sa-cream">{21 - completedDays}</div>
+              <div className="text-xs text-sa-cream-faint">Remaining</div>
+            </div>
+            <div className="text-center p-3 rounded-sa border border-sa-border bg-sa-bg-warm">
+              <div className="text-lg font-serif text-sa-cream">3</div>
+              <div className="text-xs text-sa-cream-faint">Phases</div>
+            </div>
           </div>
 
-          {/* Completion message */}
+          {/* Phase sections with lesson cards */}
+          <div className="space-y-10">
+            {PHASES.map((phase, phaseIndex) => {
+              const phaseColor = phaseIndex === 0 ? 'gold' : phaseIndex === 1 ? 'blue' : 'green';
+              const completedInPhase = phase.days.filter(d => {
+                const entry = journalEntries.find(e => e.dayNumber === d);
+                return entry && hasContent(entry);
+              }).length;
+
+              return (
+                <section key={phase.label} className="animate-rise">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      phaseColor === 'gold' ? 'bg-sa-gold' : phaseColor === 'blue' ? 'bg-sa-blue' : 'bg-sa-green'
+                    }`} />
+                    <span className={`text-xs font-medium uppercase tracking-widest ${
+                      phaseColor === 'gold' ? 'text-sa-gold' : phaseColor === 'blue' ? 'text-sa-blue' : 'text-sa-green'
+                    }`}>
+                      {phase.label}
+                    </span>
+                    <div className="flex-1 h-px bg-sa-border" />
+                    <span className="text-xs text-sa-cream-faint">{completedInPhase}/{phase.days.length}</span>
+                  </div>
+                  <p className="text-xs text-sa-cream-faint mb-4 ml-5">{phase.description}</p>
+
+                  <div className="space-y-2">
+                    {phase.days.map((dayNumber) => {
+                      const entry = journalEntries.find(e => e.dayNumber === dayNumber);
+                      const completed = entry && hasContent(entry);
+                      const isLocked = dayNumber > journalAccessDays;
+                      const lessonData = getLessonByDay(dayNumber);
+                      const title = lessonData?.title || `Day ${dayNumber}`;
+                      const principle = lessonData?.principleLabel || '';
+
+                      const accentVar = phaseColor === 'gold' ? '--gold' : phaseColor === 'blue' ? '--blue' : '--green';
+                      const borderVar = accentVar + '-border';
+                      const softVar = accentVar + '-soft';
+
+                      return (
+                        <button
+                          key={dayNumber}
+                          onClick={() => handleDayClick(dayNumber)}
+                          disabled={isLocked}
+                          className={`w-full flex items-center gap-4 p-3.5 rounded-sa border transition-all duration-150 text-left ${
+                            isLocked
+                              ? 'opacity-35 cursor-not-allowed border-sa-border bg-sa-bg-warm'
+                              : completed
+                                ? 'hover:brightness-110'
+                                : 'border-sa-border bg-sa-bg-warm hover:border-sa-gold-border hover:bg-sa-bg-lift'
+                          }`}
+                          style={completed ? {
+                            borderColor: `var(${borderVar})`,
+                            backgroundColor: `var(${softVar})`,
+                          } : undefined}
+                        >
+                          <div
+                            className="w-9 h-9 rounded-sa-sm flex items-center justify-center flex-shrink-0 text-sm font-medium"
+                            style={completed ? {
+                              backgroundColor: `color-mix(in srgb, var(${accentVar}) 20%, transparent)`,
+                              color: `var(${accentVar})`,
+                            } : undefined}
+                          >
+                            {completed ? (
+                              <Check className="w-4 h-4" strokeWidth={2.5} />
+                            ) : (
+                              <span className={isLocked ? 'text-sa-cream-faint' : 'text-sa-cream-muted'}>{dayNumber}</span>
+                            )}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className={`text-sm font-medium ${
+                              completed ? 'text-sa-cream' : isLocked ? 'text-sa-cream-faint' : 'text-sa-cream-soft'
+                            }`}>{title}</div>
+                            {principle && (
+                              <div className="text-xs text-sa-cream-faint mt-0.5 truncate">{principle}</div>
+                            )}
+                          </div>
+
+                          {isLocked ? (
+                            <Lock className="w-3.5 h-3.5 text-sa-cream-faint flex-shrink-0" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4 text-sa-cream-faint flex-shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+
           {completedDays === 21 && (
             <div className="mt-10 py-6 px-8 bg-sa-green-soft border border-sa-green-border rounded-sa text-center animate-rise">
               <p className="text-sa-green font-serif text-lg">System installed.</p>
-              <p className="text-sa-cream-muted text-sm mt-1">
-                All 21 days completed. Operational mode is active.
-              </p>
+              <p className="text-sa-cream-muted text-sm mt-1">All 21 days completed. Operational mode is active.</p>
             </div>
           )}
         </>
