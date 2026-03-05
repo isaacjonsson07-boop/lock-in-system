@@ -20,6 +20,12 @@ const COVERS: Record<string, { url: string; alt: string; title: string; subtitle
     title: 'Reviews',
     subtitle: 'Measure, reflect, recalibrate.',
   },
+  achievements: {
+    url: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1400&h=500&fit=crop&crop=center&auto=format&q=80',
+    alt: 'Mountain peak at night',
+    title: 'Achievements',
+    subtitle: 'Your operational history. Measured and recorded.',
+  },
   system: {
     url: 'https://images.unsplash.com/photo-1493612276216-ee3925520721?w=1400&h=500&fit=crop&crop=center&auto=format&q=80',
     alt: 'Abstract structure',
