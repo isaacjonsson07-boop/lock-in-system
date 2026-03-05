@@ -14,6 +14,7 @@ import { SettingsView } from './components/SettingsView';
 import { JournalingView } from './components/JournalingView';
 import { ReviewsView } from './components/ReviewsView';
 import { SystemView } from './components/SystemView';
+import { AchievementsView } from './components/AchievementsView';
 
 function App() {
   const {
@@ -315,6 +316,17 @@ function App() {
             habitCompletions={habitCompletions}
             dailyTasks={dailyTasks}
             goals={goals}
+          />
+        )}
+
+        {currentTab === 'achievements' && (
+          <AchievementsView
+            nonNegotiables={nonNegotiables}
+            nnCompletions={nnCompletions}
+            habits={habits}
+            habitCompletions={habitCompletions}
+            dailyTasks={dailyTasks}
+            userId={userId}
           />
         )}
 
