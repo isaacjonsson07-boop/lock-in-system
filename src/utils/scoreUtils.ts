@@ -12,18 +12,18 @@ import { uid } from './dateUtils';
 // ── Tier logic ──
 
 export function getTier(score: number): ReportTier {
-  if (score >= 100) return 'gold-perfect';
+  if (score >= 100) return 'diamond';
   if (score >= 75) return 'gold';
   if (score >= 50) return 'silver';
   return 'bronze';
 }
 
 export const TIER_CONFIG: Record<ReportTier, { label: string; color: string; border: string; bg: string }> = {
-  'gold-perfect': {
-    label: 'Perfect',
-    color: '#C5A55A',
-    border: 'rgba(197, 165, 90, 0.6)',
-    bg: 'rgba(197, 165, 90, 0.08)',
+  diamond: {
+    label: 'Diamond',
+    color: '#B8D4E8',
+    border: 'rgba(184, 212, 232, 0.50)',
+    bg: 'rgba(184, 212, 232, 0.06)',
   },
   gold: {
     label: 'Gold',
