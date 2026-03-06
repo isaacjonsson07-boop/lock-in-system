@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart3, ChevronDown, ChevronUp, Check, ArrowRight, ArrowLeft, RotateCcw } from 'lucide-react';
-import { NonNegotiable, NonNegotiableCompletion, Habit, HabitCompletion, DailyTask, Goal } from '../types';
+import { NonNegotiable, NonNegotiableCompletion, Habit, HabitCompletion, DailyTask, Goal, SavedReview } from '../types';
 import { fmtDateISO, uid } from '../utils/dateUtils';
 
 interface ReviewsViewProps {
@@ -12,14 +12,10 @@ interface ReviewsViewProps {
   goals: Goal[];
   systemDocuments: Record<string, string>;
   onUpdateSystemDocument?: (key: string, content: string) => void;
-}
-
-interface SavedReview {
-  id: string;
-  type: 'weekly' | 'monthly' | 'quarterly';
-  date: string;
-  answers: Record<string, string>;
-  stats?: { nnRate: number; habitRate: number; taskRate: number; overall: number };
+  savedReviews: SavedReview[];
+  onSaveReview: (review: SavedReview) => void;
+  recalPending: object | null;
+  onUpdateRecalPending: (data: object | null) => void;
 }
 
 interface RecalibrationData {
@@ -49,15 +45,13 @@ export function ReviewsView({
   goals,
   systemDocuments,
   onUpdateSystemDocument,
+  savedReviews,
+  onSaveReview,
+  recalPending,
+  onUpdateRecalPending,
 }: ReviewsViewProps) {
   const [activeTab, setActiveTab] = useState<'snapshot' | 'weekly' | 'quarterly'>('snapshot');
   const [weeklyAnswers, setWeeklyAnswers] = useState<Record<string, string>>({});
-  const [savedReviews, setSavedReviews] = useState<SavedReview[]>(() => {
-    try {
-      const raw = localStorage.getItem('sa_reviews');
-      return raw ? JSON.parse(raw) : [];
-    } catch { return []; }
-  });
   const [showPastReviews, setShowPastReviews] = useState(false);
 
   // Quarterly Recalibration state
@@ -165,9 +159,7 @@ export function ReviewsView({
       },
     };
 
-    const updated = [review, ...savedReviews];
-    setSavedReviews(updated);
-    localStorage.setItem('sa_reviews', JSON.stringify(updated));
+    onSaveReview(review);
     setWeeklyAnswers({});
   };
 
@@ -696,12 +688,12 @@ export function ReviewsView({
                     const nnToRemove = Object.entries(recalData.nnActions).filter(([, a]) => a === 'remove').map(([id]) => id);
                     const habitsToRotate = Object.entries(recalData.habitActions).filter(([, a]) => a === 'rotate').map(([id]) => id);
                     if (nnToRemove.length > 0 || habitsToRotate.length > 0 || recalData.newNNs || recalData.newHabits) {
-                      localStorage.setItem('sa_recal_pending', JSON.stringify({
+                      onUpdateRecalPending({
                         nnToRemove,
                         habitsToRotate,
                         newNNs: recalData.newNNs,
                         newHabits: recalData.newHabits,
-                      }));
+                      });
                     }
 
                     // Save as a quarterly review
@@ -723,9 +715,7 @@ export function ReviewsView({
                         newHabits: recalData.newHabits,
                       },
                     };
-                    const updated = [review, ...savedReviews];
-                    setSavedReviews(updated);
-                    localStorage.setItem('sa_reviews', JSON.stringify(updated));
+                    onSaveReview(review);
 
                     setRecalStep(6);
                   }}

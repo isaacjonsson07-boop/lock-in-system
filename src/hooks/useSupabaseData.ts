@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import {
   NonNegotiable, NonNegotiableCompletion,
   DailyTask, JournalEntry,
+  SavedReview, SystemReport,
 } from '../types';
 import { uid } from '../utils/dateUtils';
 
@@ -22,6 +23,11 @@ export function useSupabaseData({ user, authLoading }: UseSupabaseDataProps) {
   const [dailyTasks, setDailyTasks] = useState<DailyTask[]>([]);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [systemDocuments, setSystemDocuments] = useState<Record<string, string>>({});
+  const [savedReviews, setSavedReviews] = useState<SavedReview[]>([]);
+  const [systemReports, setSystemReports] = useState<SystemReport[]>([]);
+  const [readPatches, setReadPatches] = useState<string[]>([]);
+  const [installationCompleteDate, setInstallationCompleteDate] = useState<string | null>(null);
+  const [recalPending, setRecalPending] = useState<object | null>(null);
   const [loading, setLoading] = useState(true);
 
   const isFirstRender = useRef(true);
@@ -65,6 +71,21 @@ export function useSupabaseData({ user, authLoading }: UseSupabaseDataProps) {
 
       const docsRaw = localStorage.getItem('sa_system_documents');
       if (docsRaw) setSystemDocuments(JSON.parse(docsRaw));
+
+      const reviewsRaw = localStorage.getItem('sa_reviews');
+      if (reviewsRaw) setSavedReviews(JSON.parse(reviewsRaw));
+
+      const reportsRaw = localStorage.getItem('sa_system_reports');
+      if (reportsRaw) setSystemReports(JSON.parse(reportsRaw));
+
+      const patchesRaw = localStorage.getItem('sa_read_patches');
+      if (patchesRaw) setReadPatches(JSON.parse(patchesRaw));
+
+      const installDateRaw = localStorage.getItem('sa_installation_complete_date');
+      if (installDateRaw) setInstallationCompleteDate(installDateRaw);
+
+      const recalRaw = localStorage.getItem('sa_recal_pending');
+      if (recalRaw) setRecalPending(JSON.parse(recalRaw));
     } catch (e) {
       console.warn('Failed to load data from localStorage:', e);
     }
@@ -81,7 +102,18 @@ export function useSupabaseData({ user, authLoading }: UseSupabaseDataProps) {
     localStorage.setItem('sa_nn_completions', JSON.stringify(nnCompletions));
     localStorage.setItem('sa_daily_tasks', JSON.stringify(dailyTasks));
     localStorage.setItem('sa_journal_entries', JSON.stringify(journalEntries));
-  }, [nonNegotiables, nnCompletions, dailyTasks, journalEntries]);
+    localStorage.setItem('sa_reviews', JSON.stringify(savedReviews));
+    localStorage.setItem('sa_system_reports', JSON.stringify(systemReports));
+    localStorage.setItem('sa_read_patches', JSON.stringify(readPatches));
+    if (installationCompleteDate) {
+      localStorage.setItem('sa_installation_complete_date', installationCompleteDate);
+    }
+    if (recalPending) {
+      localStorage.setItem('sa_recal_pending', JSON.stringify(recalPending));
+    } else {
+      localStorage.removeItem('sa_recal_pending');
+    }
+  }, [nonNegotiables, nnCompletions, dailyTasks, journalEntries, savedReviews, systemReports, readPatches, installationCompleteDate, recalPending]);
 
   useEffect(() => {
     if (Object.keys(systemDocuments).length > 0) {
@@ -101,23 +133,30 @@ export function useSupabaseData({ user, authLoading }: UseSupabaseDataProps) {
     setLoading(true);
 
     try {
-      const [nnRes, nnCompRes, tasksRes, journalRes, docsRes] = await Promise.all([
+      const [nnRes, nnCompRes, tasksRes, journalRes, docsRes, reviewsRes, reportsRes, progressRes] = await Promise.all([
         supabase.from('non_negotiables').select('*').order('order', { ascending: true }),
         supabase.from('nn_completions').select('*').order('completion_date', { ascending: false }),
         supabase.from('daily_tasks').select('*').order('task_date', { ascending: false }),
         supabase.from('journal_entries').select('*').order('entry_date', { ascending: true }),
         supabase.from('system_documents').select('*'),
+        supabase.from('saved_reviews').select('*').order('review_date', { ascending: false }),
+        supabase.from('system_reports').select('*').order('month', { ascending: false }),
+        supabase.from('user_progress').select('*').maybeSingle(),
       ]);
 
-      for (const res of [nnRes, nnCompRes, tasksRes, journalRes, docsRes]) {
+      for (const res of [nnRes, nnCompRes, tasksRes, journalRes, docsRes, reviewsRes, reportsRes]) {
         if (res.error) throw res.error;
       }
+      if (progressRes.error && progressRes.error.code !== 'PGRST116') throw progressRes.error;
 
       const supabaseHasData =
         (nnRes.data?.length ?? 0) > 0 ||
         (tasksRes.data?.length ?? 0) > 0 ||
         (journalRes.data?.length ?? 0) > 0 ||
-        (docsRes.data?.length ?? 0) > 0;
+        (docsRes.data?.length ?? 0) > 0 ||
+        (reviewsRes.data?.length ?? 0) > 0 ||
+        (reportsRes.data?.length ?? 0) > 0 ||
+        progressRes.data != null;
 
       if (supabaseHasData) {
         // Supabase is source of truth
@@ -154,6 +193,34 @@ export function useSupabaseData({ user, authLoading }: UseSupabaseDataProps) {
           const docsMap: Record<string, string> = {};
           docsRes.data.forEach((d: any) => { docsMap[d.doc_type] = d.content; });
           setSystemDocuments(docsMap);
+        }
+        if (reviewsRes.data?.length) {
+          setSavedReviews(reviewsRes.data.map((r: any) => ({
+            id: r.id, type: r.review_type, date: r.review_date,
+            answers: r.answers || {}, stats: r.stats || undefined,
+          })));
+        }
+        if (reportsRes.data?.length) {
+          setSystemReports(reportsRes.data.map((r: any) => ({
+            id: r.id, user_id: r.user_id, month: r.month,
+            score: r.score, tier: r.tier,
+            meetsMinimums: r.meets_minimums, scoreCapped: r.score_capped,
+            habitsScore: r.habits_score, habitsCount: r.habits_count,
+            tasksScore: r.tasks_score, tasksAvgPerDay: r.tasks_avg_per_day,
+            nnScore: r.nn_score, nnCount: r.nn_count,
+            totalTasksCompleted: r.total_tasks_completed,
+            totalDaysActive: r.total_days_active,
+            longestStreak: r.longest_streak,
+            personalHighlight: r.personal_highlight,
+            scoreDelta: r.score_delta,
+            created_at: r.created_at,
+            isInstallationReport: r.is_installation_report,
+          })));
+        }
+        if (progressRes.data) {
+          setReadPatches(progressRes.data.read_patches || []);
+          setInstallationCompleteDate(progressRes.data.installation_complete_date || null);
+          setRecalPending(progressRes.data.recal_pending || null);
         }
       } else {
         // Supabase is empty — seed from localStorage
@@ -258,6 +325,53 @@ export function useSupabaseData({ user, authLoading }: UseSupabaseDataProps) {
       }));
       const { error } = await supabase.from('system_documents').insert(rows);
       if (error) console.error('Error seeding system_documents:', error);
+    }
+
+    // Seed saved_reviews
+    const localReviews: SavedReview[] = JSON.parse(localStorage.getItem('sa_reviews') || '[]');
+    if (localReviews.length > 0) {
+      const rows = localReviews.map(r => ({
+        id: newUUID(), user_id: userId,
+        review_type: r.type, review_date: r.date,
+        answers: r.answers, stats: r.stats || null,
+      }));
+      const { error } = await supabase.from('saved_reviews').insert(rows);
+      if (error) console.error('Error seeding saved_reviews:', error);
+    }
+
+    // Seed system_reports
+    const localReports: SystemReport[] = JSON.parse(localStorage.getItem('sa_system_reports') || '[]');
+    if (localReports.length > 0) {
+      const rows = localReports.map(r => ({
+        id: newUUID(), user_id: userId, month: r.month,
+        score: r.score, tier: r.tier,
+        meets_minimums: r.meetsMinimums, score_capped: r.scoreCapped,
+        habits_score: r.habitsScore, habits_count: r.habitsCount,
+        tasks_score: r.tasksScore, tasks_avg_per_day: r.tasksAvgPerDay,
+        nn_score: r.nnScore, nn_count: r.nnCount,
+        total_tasks_completed: r.totalTasksCompleted,
+        total_days_active: r.totalDaysActive,
+        longest_streak: r.longestStreak,
+        personal_highlight: r.personalHighlight,
+        score_delta: r.scoreDelta ?? null,
+        is_installation_report: r.isInstallationReport ?? false,
+      }));
+      const { error } = await supabase.from('system_reports').insert(rows);
+      if (error) console.error('Error seeding system_reports:', error);
+    }
+
+    // Seed user_progress
+    const localReadPatches: string[] = JSON.parse(localStorage.getItem('sa_read_patches') || '[]');
+    const localInstallDate = localStorage.getItem('sa_installation_complete_date') || null;
+    const localRecalPending = JSON.parse(localStorage.getItem('sa_recal_pending') || 'null');
+    if (localReadPatches.length > 0 || localInstallDate || localRecalPending) {
+      const { error } = await supabase.from('user_progress').upsert({
+        user_id: userId,
+        read_patches: localReadPatches,
+        installation_complete_date: localInstallDate,
+        recal_pending: localRecalPending,
+      }, { onConflict: 'user_id' });
+      if (error) console.error('Error seeding user_progress:', error);
     }
   };
 
@@ -393,12 +507,78 @@ export function useSupabaseData({ user, authLoading }: UseSupabaseDataProps) {
     }
   }, [user]);
 
+  const saveSavedReview = useCallback(async (review: SavedReview) => {
+    setSavedReviews(prev => [review, ...prev]);
+    if (user) {
+      await supabase.from('saved_reviews').insert({
+        id: newUUID(), user_id: user.id,
+        review_type: review.type, review_date: review.date,
+        answers: review.answers, stats: review.stats || null,
+      });
+    }
+  }, [user]);
+
+  const saveSystemReport = useCallback(async (report: SystemReport) => {
+    setSystemReports(prev => {
+      const filtered = prev.filter(r => r.month !== report.month);
+      return [...filtered, report];
+    });
+    if (user) {
+      await supabase.from('system_reports').upsert({
+        id: report.id, user_id: user.id, month: report.month,
+        score: report.score, tier: report.tier,
+        meets_minimums: report.meetsMinimums, score_capped: report.scoreCapped,
+        habits_score: report.habitsScore, habits_count: report.habitsCount,
+        tasks_score: report.tasksScore, tasks_avg_per_day: report.tasksAvgPerDay,
+        nn_score: report.nnScore, nn_count: report.nnCount,
+        total_tasks_completed: report.totalTasksCompleted,
+        total_days_active: report.totalDaysActive,
+        longest_streak: report.longestStreak,
+        personal_highlight: report.personalHighlight,
+        score_delta: report.scoreDelta ?? null,
+        is_installation_report: report.isInstallationReport ?? false,
+      }, { onConflict: 'user_id,month' });
+    }
+  }, [user]);
+
+  const updateReadPatches = useCallback(async (patches: string[]) => {
+    setReadPatches(patches);
+    if (user) {
+      await supabase.from('user_progress').upsert({
+        user_id: user.id, read_patches: patches,
+      }, { onConflict: 'user_id' });
+    }
+  }, [user]);
+
+  const updateInstallationDate = useCallback(async (date: string) => {
+    setInstallationCompleteDate(date);
+    if (user) {
+      await supabase.from('user_progress').upsert({
+        user_id: user.id, installation_complete_date: date,
+      }, { onConflict: 'user_id' });
+    }
+  }, [user]);
+
+  const updateRecalPending = useCallback(async (data: object | null) => {
+    setRecalPending(data);
+    if (user) {
+      await supabase.from('user_progress').upsert({
+        user_id: user.id, recal_pending: data,
+      }, { onConflict: 'user_id' });
+    }
+  }, [user]);
+
   const clearAll = useCallback(() => {
     setNonNegotiables([]);
     setNNCompletions([]);
     setDailyTasks([]);
     setJournalEntries([]);
     setSystemDocuments({});
+    setSavedReviews([]);
+    setSystemReports([]);
+    setReadPatches([]);
+    setInstallationCompleteDate(null);
+    setRecalPending(null);
     hasLoadedSupabase.current = false;
   }, []);
 
@@ -409,6 +589,11 @@ export function useSupabaseData({ user, authLoading }: UseSupabaseDataProps) {
     dailyTasks,
     journalEntries,
     systemDocuments,
+    savedReviews,
+    systemReports,
+    readPatches,
+    installationCompleteDate,
+    recalPending,
 
     // Mutations
     handleToggleNN,
@@ -419,6 +604,11 @@ export function useSupabaseData({ user, authLoading }: UseSupabaseDataProps) {
     deleteDailyTask,
     updateJournalEntry,
     updateSystemDocument,
+    saveSavedReview,
+    saveSystemReport,
+    updateReadPatches,
+    updateInstallationDate,
+    updateRecalPending,
 
     // Utility
     loading: loading,

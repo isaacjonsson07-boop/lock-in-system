@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Trophy, TrendingUp, TrendingDown, Minus, Target, Flame, Calendar, CheckCircle, AlertTriangle, X } from 'lucide-react';
 import {
   NonNegotiable, NonNegotiableCompletion,
@@ -15,6 +15,8 @@ interface AchievementsViewProps {
   habitCompletions: HabitCompletion[];
   dailyTasks: DailyTask[];
   userId?: string;
+  systemReports: SystemReport[];
+  onSaveSystemReport: (report: SystemReport) => void;
 }
 
 // ── Month helpers ──
@@ -387,14 +389,10 @@ function EmptyState({ onGenerate }: { onGenerate: () => void }) {
 
 export function AchievementsView({
   nonNegotiables, nnCompletions, habits, habitCompletions, dailyTasks, userId,
+  systemReports, onSaveSystemReport,
 }: AchievementsViewProps) {
-  const [reports, setReports] = useState<SystemReport[]>(() => {
-    try { const raw = localStorage.getItem('sa_system_reports'); return raw ? JSON.parse(raw) : []; }
-    catch { return []; }
-  });
+  const reports = systemReports;
   const [expandedReport, setExpandedReport] = useState<SystemReport | null>(null);
-
-  useEffect(() => { localStorage.setItem('sa_system_reports', JSON.stringify(reports)); }, [reports]);
 
   const currentMonth = useMemo(() => {
     const now = new Date();
@@ -409,10 +407,7 @@ export function AchievementsView({
     const report = generateMonthlyReport(
       currentMonth, nonNegotiables, nnCompletions, habits, habitCompletions, dailyTasks, previousReport, userId,
     );
-    setReports(prev => {
-      const filtered = prev.filter(r => r.month !== currentMonth);
-      return [...filtered, report];
-    });
+    onSaveSystemReport(report);
     setExpandedReport(report);
   };
 

@@ -283,6 +283,10 @@ interface JournalingViewProps {
   plan?: 'free' | 'paid';
   trialEndsAt?: string | null;
   onStartTrial?: () => Promise<void>;
+  readPatches: string[];
+  onUpdateReadPatches: (patches: string[]) => void;
+  installationCompleteDate: string | null;
+  onUpdateInstallationDate: (date: string) => void;
 }
 
 export function JournalingView({
@@ -291,14 +295,14 @@ export function JournalingView({
   user,
   plan = 'free',
   trialEndsAt = null,
-  onStartTrial
+  onStartTrial,
+  readPatches,
+  onUpdateReadPatches,
+  installationCompleteDate,
+  onUpdateInstallationDate,
 }: JournalingViewProps) {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedPatch, setSelectedPatch] = useState<SystemPatchData | null>(null);
-  const [readPatches, setReadPatches] = useState<string[]>(() => {
-    try { const raw = localStorage.getItem('sa_read_patches'); return raw ? JSON.parse(raw) : []; }
-    catch { return []; }
-  });
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [activeTab, setActiveTab] = useState<'lesson' | 'journal'>('lesson');
@@ -410,10 +414,10 @@ export function JournalingView({
     if (completedDays < 21) {
       return { unlocked: false, unlockDate: 'After Day 21' };
     }
-    let completionDate = localStorage.getItem('sa_installation_complete_date');
+    let completionDate = installationCompleteDate;
     if (!completionDate) {
       completionDate = new Date().toISOString().split('T')[0];
-      localStorage.setItem('sa_installation_complete_date', completionDate);
+      onUpdateInstallationDate(completionDate);
     }
     const start = new Date(completionDate + 'T00:00:00');
     const unlock = new Date(start);
@@ -485,8 +489,7 @@ export function JournalingView({
             <button
               onClick={() => {
                 const updated = [...readPatches, selectedPatch.id];
-                setReadPatches(updated);
-                localStorage.setItem('sa_read_patches', JSON.stringify(updated));
+                onUpdateReadPatches(updated);
               }}
               className="sa-btn-primary w-full mt-8"
             >

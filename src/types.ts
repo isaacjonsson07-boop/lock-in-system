@@ -183,6 +183,16 @@ export interface SystemReport {
   isInstallationReport?: boolean; // true for the Day 21 report
 }
 
+// === SAVED REVIEWS (Weekly/Monthly/Quarterly) ===
+
+export interface SavedReview {
+  id: string;
+  type: 'weekly' | 'monthly' | 'quarterly';
+  date: string;
+  answers: Record<string, string>;
+  stats?: { nnRate: number; habitRate: number; taskRate: number; overall: number };
+}
+
 // === INSTALLATION PROGRESS ===
 
 export interface InstallationProgress {

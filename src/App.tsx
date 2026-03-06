@@ -30,9 +30,13 @@ function App() {
   const {
     nonNegotiables, nnCompletions,
     dailyTasks, journalEntries, systemDocuments,
+    savedReviews, systemReports, readPatches,
+    installationCompleteDate, recalPending,
     handleToggleNN, addNonNegotiable, deleteNonNegotiable,
     addDailyTask, toggleDailyTask, deleteDailyTask,
     updateJournalEntry, updateSystemDocument,
+    saveSavedReview, saveSystemReport,
+    updateReadPatches, updateInstallationDate, updateRecalPending,
     loading: dataLoading, clearAll,
   } = useSupabaseData({ user, authLoading });
 
@@ -211,6 +215,10 @@ function App() {
             plan={plan}
             trialEndsAt={trialEndsAt}
             onStartTrial={startTrial}
+            readPatches={readPatches}
+            onUpdateReadPatches={updateReadPatches}
+            installationCompleteDate={installationCompleteDate}
+            onUpdateInstallationDate={updateInstallationDate}
           />
         )}
 
@@ -224,6 +232,10 @@ function App() {
             goals={goals}
             systemDocuments={systemDocuments}
             onUpdateSystemDocument={updateSystemDocument}
+            savedReviews={savedReviews}
+            onSaveReview={saveSavedReview}
+            recalPending={recalPending}
+            onUpdateRecalPending={updateRecalPending}
           />
         )}
 
@@ -235,6 +247,8 @@ function App() {
             habitCompletions={habitCompletions}
             dailyTasks={dailyTasks}
             userId={userId}
+            systemReports={systemReports}
+            onSaveSystemReport={saveSystemReport}
           />
         )}
 
