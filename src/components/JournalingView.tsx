@@ -405,6 +405,27 @@ export function JournalingView({
   const completedDays = journalEntries.filter(e => e.dayNumber && hasContent(e)).length;
   const progressPercent = Math.round((completedDays / 21) * 100);
 
+  // Patch unlock logic — one per week, starting 1 week after Day 21 completion
+  const getPatchUnlockInfo = (patchWeek: number): { unlocked: boolean; unlockDate: string } => {
+    if (completedDays < 21) {
+      return { unlocked: false, unlockDate: 'After Day 21' };
+    }
+    let completionDate = localStorage.getItem('sa_installation_complete_date');
+    if (!completionDate) {
+      completionDate = new Date().toISOString().split('T')[0];
+      localStorage.setItem('sa_installation_complete_date', completionDate);
+    }
+    const start = new Date(completionDate + 'T00:00:00');
+    const unlock = new Date(start);
+    unlock.setDate(unlock.getDate() + patchWeek * 7);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return {
+      unlocked: now >= unlock,
+      unlockDate: unlock.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    };
+  };
+
   // ── PATCH DETAIL VIEW ──
   if (selectedPatch) {
     const accentColor = 'var(--cream-muted, #A69F93)';
@@ -967,56 +988,83 @@ export function JournalingView({
                 </p>
               </div>
 
-              {/* Patch cards */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {PATCH_DATA.map((patch) => {
-                  const isRead = readPatches.includes(patch.id);
+              {/* Before Day 21 — locked message */}
+              {completedDays < 21 && (
+                <div className="py-8 px-6 rounded-sa text-center" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <Lock className="w-5 h-5 mx-auto mb-3" style={{ color: 'var(--cream-faint, #6B665D)' }} />
+                  <p className="text-sm text-sa-cream-muted">Complete all 21 days to unlock System Patches.</p>
+                  <p className="text-xs text-sa-cream-faint mt-1">{completedDays}/21 days completed</p>
+                </div>
+              )}
 
-                  return (
-                    <button
-                      key={patch.id}
-                      onClick={() => {
-                        setSelectedPatch(patch);
-                      }}
-                      className="sa-lesson-card"
-                      style={{
-                        borderColor: isRead ? 'rgba(110, 203, 139, 0.15)' : 'rgba(240,237,230,0.05)',
-                      }}
-                    >
-                      {/* Patch number */}
-                      <div style={{
-                        width: 44, height: 44, borderRadius: 8, flexShrink: 0,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontFamily: 'var(--serif)', fontSize: '1.1rem', fontWeight: 400,
-                        color: isRead ? 'var(--green, #6ECB8B)' : 'var(--cream-muted, #A69F93)',
-                        border: `1px solid ${isRead ? 'rgba(110, 203, 139, 0.25)' : 'rgba(240,237,230,0.08)'}`,
-                        background: isRead ? 'rgba(110, 203, 139, 0.06)' : 'rgba(240,237,230,0.02)',
-                      }}>
-                        {isRead ? <Check className="w-4 h-4" /> : String(patch.week).padStart(3, '0')}
-                      </div>
+              {/* After Day 21 — patch cards */}
+              {completedDays >= 21 && (
+                <>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {PATCH_DATA.map((patch) => {
+                      const isRead = readPatches.includes(patch.id);
+                      const { unlocked, unlockDate } = getPatchUnlockInfo(patch.week);
 
-                      {/* Title + subtitle */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{
-                          fontFamily: 'var(--serif)', fontSize: '1.05rem', fontWeight: 400,
-                          color: 'var(--cream, #F2EDE4)', lineHeight: 1.3, marginBottom: 2,
-                        }}>
-                          {patch.title}
-                        </p>
-                        <p style={{
-                          fontSize: '0.8rem', color: 'var(--cream-faint, #6B665D)',
-                          lineHeight: 1.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                        }}>
-                          {patch.subtitle}
-                        </p>
-                      </div>
+                      return (
+                        <button
+                          key={patch.id}
+                          onClick={() => {
+                            if (unlocked) setSelectedPatch(patch);
+                          }}
+                          className="sa-lesson-card"
+                          style={{
+                            borderColor: isRead ? 'rgba(110, 203, 139, 0.15)' : 'rgba(240,237,230,0.05)',
+                            opacity: unlocked ? 1 : 0.5,
+                            cursor: unlocked ? 'pointer' : 'default',
+                          }}
+                        >
+                          {/* Patch number / status */}
+                          <div style={{
+                            width: 44, height: 44, borderRadius: 8, flexShrink: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontFamily: 'var(--serif)', fontSize: '1.1rem', fontWeight: 400,
+                            color: !unlocked ? 'var(--cream-faint, #6B665D)' : isRead ? 'var(--green, #6ECB8B)' : 'var(--cream-muted, #A69F93)',
+                            border: `1px solid ${!unlocked ? 'rgba(240,237,230,0.05)' : isRead ? 'rgba(110, 203, 139, 0.25)' : 'rgba(240,237,230,0.08)'}`,
+                            background: !unlocked ? 'rgba(240,237,230,0.01)' : isRead ? 'rgba(110, 203, 139, 0.06)' : 'rgba(240,237,230,0.02)',
+                          }}>
+                            {!unlocked ? <Lock className="w-3.5 h-3.5" /> : isRead ? <Check className="w-4 h-4" /> : String(patch.week).padStart(3, '0')}
+                          </div>
 
-                      {/* Arrow */}
-                      <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--cream-faint, #6B665D)', opacity: 0.5 }} />
-                    </button>
-                  );
-                })}
-              </div>
+                          {/* Title + subtitle / unlock date */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{
+                              fontFamily: 'var(--serif)', fontSize: '1.05rem', fontWeight: 400,
+                              color: unlocked ? 'var(--cream, #F2EDE4)' : 'var(--cream-faint, #6B665D)', lineHeight: 1.3, marginBottom: 2,
+                            }}>
+                              {patch.title}
+                            </p>
+                            <p style={{
+                              fontSize: '0.8rem', color: 'var(--cream-faint, #6B665D)',
+                              lineHeight: 1.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                            }}>
+                              {unlocked ? patch.subtitle : `Unlocks ${unlockDate}`}
+                            </p>
+                          </div>
+
+                          {/* Arrow or lock */}
+                          {unlocked ? (
+                            <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--cream-faint, #6B665D)', opacity: 0.5 }} />
+                          ) : (
+                            <span style={{ fontSize: '0.7rem', color: 'var(--cream-faint, #6B665D)', whiteSpace: 'nowrap' }}>
+                              Week {patch.week}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* More coming message */}
+                  <div className="mt-6 py-4 text-center">
+                    <p className="text-xs text-sa-cream-faint italic">New patches are released weekly. More coming soon.</p>
+                  </div>
+                </>
+              )}
             </section>
           )}
         </>
