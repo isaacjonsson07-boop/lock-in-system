@@ -24,6 +24,8 @@ interface RecalibrationData {
   direction: string;
   identity: string;
   priorities: string;
+  nnActions: Record<string, 'keep' | 'remove'>;
+  newNNs: string;
   habitActions: Record<string, 'keep' | 'rotate'>;
   newHabits: string;
   focusNextQuarter: string;
@@ -55,7 +57,7 @@ export function ReviewsView({
   const [showPastReviews, setShowPastReviews] = useState(false);
 
   // Quarterly Recalibration state
-  const [recalStep, setRecalStep] = useState(0); // 0 = overview, 1-4 = steps, 5 = complete
+  const [recalStep, setRecalStep] = useState(0); // 0 = overview, 1-5 = steps, 6 = complete
   const [recalData, setRecalData] = useState<RecalibrationData>(() => {
     try {
       const docs = JSON.parse(localStorage.getItem('sa_system_documents') || '{}');
@@ -63,12 +65,14 @@ export function ReviewsView({
         direction: docs.direction || '',
         identity: docs.identity || '',
         priorities: docs.priorities || '',
+        nnActions: {},
+        newNNs: '',
         habitActions: {},
         newHabits: '',
         focusNextQuarter: '',
       };
     } catch {
-      return { direction: '', identity: '', priorities: '', habitActions: {}, newHabits: '', focusNextQuarter: '' };
+      return { direction: '', identity: '', priorities: '', nnActions: {}, newNNs: '', habitActions: {}, newHabits: '', focusNextQuarter: '' };
     }
   });
   const lastRecalibration = useMemo(() => {
@@ -395,8 +399,8 @@ export function ReviewsView({
                   <h3 className="font-serif text-lg text-sa-cream">Quarterly Recalibration</h3>
                 </div>
                 <p className="text-sm text-sa-cream-soft leading-relaxed mb-4">
-                  Every quarter, your system needs a structural review. Not a reflection — a reconfiguration. 
-                  You'll walk through your direction, habits, priorities, and identity. Update what's evolved. Remove what's stale. Realign what's drifted.
+                  Every quarter, your system needs a structural review. Not a reflection — a reconfiguration.
+                  You'll walk through your direction, non-negotiables, habits, priorities, and identity. Update what's evolved. Remove what's stale. Realign what's drifted.
                 </p>
                 <p className="text-sm text-sa-cream-soft leading-relaxed">
                   This takes 20-30 minutes. Don't rush it.
@@ -422,7 +426,7 @@ export function ReviewsView({
           {recalStep === 1 && (
             <div className="space-y-6">
               <div>
-                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 1 of 4</p>
+                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 1 of 5</p>
                 <h3 className="font-serif text-xl text-sa-cream mb-2">Direction Check</h3>
                 <p className="text-sm text-sa-cream-muted leading-relaxed">
                   Is your operating direction still accurate? Three months of execution changes what you know, what you want, and what's possible. Update it if it's evolved.
@@ -448,20 +452,98 @@ export function ReviewsView({
                   <ArrowLeft className="w-3.5 h-3.5" /> Back
                 </button>
                 <button onClick={() => setRecalStep(2)} className="sa-btn-primary flex-1 flex items-center justify-center gap-2">
+                  Next: Non-Negotiables <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2 — Non-Negotiables Audit */}
+          {recalStep === 2 && (
+            <div className="space-y-6">
+              <div>
+                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 2 of 5</p>
+                <h3 className="font-serif text-xl text-sa-cream mb-2">Non-Negotiables Audit</h3>
+                <p className="text-sm text-sa-cream-muted leading-relaxed">
+                  Non-negotiables are the daily commitments you never skip. Review each one — are they still the right foundation? Remove what no longer serves your direction. Add what's missing.
+                </p>
+              </div>
+
+              {nonNegotiables.filter(nn => nn.active).length > 0 ? (
+                <div className="space-y-3">
+                  {nonNegotiables.filter(nn => nn.active).map(nn => {
+                    const action = recalData.nnActions[nn.id] || 'keep';
+                    return (
+                      <div key={nn.id} className="sa-card flex items-center gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-sa-cream">{nn.title}</p>
+                          {nn.description && <p className="text-xs text-sa-cream-faint">{nn.description}</p>}
+                        </div>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => setRecalData(prev => ({
+                              ...prev,
+                              nnActions: { ...prev.nnActions, [nn.id]: 'keep' },
+                            }))}
+                            className={`px-3 py-1.5 text-xs rounded-sa-sm transition-colors ${
+                              action === 'keep' ? 'bg-sa-green-soft text-sa-green border border-sa-green-border' : 'text-sa-cream-faint hover:text-sa-cream-muted'
+                            }`}
+                          >
+                            Keep
+                          </button>
+                          <button
+                            onClick={() => setRecalData(prev => ({
+                              ...prev,
+                              nnActions: { ...prev.nnActions, [nn.id]: 'remove' },
+                            }))}
+                            className={`px-3 py-1.5 text-xs rounded-sa-sm transition-colors ${
+                              action === 'remove' ? 'bg-sa-rose-soft text-sa-rose border border-sa-rose-border' : 'text-sa-cream-faint hover:text-sa-cream-muted'
+                            }`}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="sa-card text-center">
+                  <p className="text-sm text-sa-cream-faint">No active non-negotiables configured.</p>
+                </div>
+              )}
+
+              <div>
+                <label className="sa-label">New non-negotiables to add</label>
+                <textarea
+                  value={recalData.newNNs}
+                  onChange={(e) => setRecalData(prev => ({ ...prev, newNNs: e.target.value }))}
+                  placeholder="List any new non-negotiables for next quarter (one per line)..."
+                  rows={3}
+                  className="sa-textarea"
+                />
+                <p className="text-xs text-sa-cream-faint mt-1.5">Add these in the System tab after completing the recalibration.</p>
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setRecalStep(1)} className="sa-btn-ghost flex items-center gap-1">
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back
+                </button>
+                <button onClick={() => setRecalStep(3)} className="sa-btn-primary flex-1 flex items-center justify-center gap-2">
                   Next: Habit Audit <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* Step 2 — Habit Audit */}
-          {recalStep === 2 && (
+          {/* Step 3 — Habit Audit */}
+          {recalStep === 3 && (
             <div className="space-y-6">
               <div>
-                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 2 of 4</p>
+                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 3 of 5</p>
                 <h3 className="font-serif text-xl text-sa-cream mb-2">Habit Audit</h3>
                 <p className="text-sm text-sa-cream-muted leading-relaxed">
-                  Review each habit. Some are now automatic — keep them. Some have gone stale or no longer serve your direction — mark them for rotation. Then add any new habits you need.
+                  Review each habit. Some are now automatic — keep them. Some have gone stale or no longer serve your direction — mark them for rotation.
                 </p>
               </div>
 
@@ -473,7 +555,7 @@ export function ReviewsView({
                       <div key={habit.id} className="sa-card flex items-center gap-4">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-sa-cream">{habit.name}</p>
-                          <p className="text-xs text-sa-cream-faint">{habit.description || 'No description'}</p>
+                          {habit.description && <p className="text-xs text-sa-cream-faint">{habit.description}</p>}
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
                           <button
@@ -510,32 +592,33 @@ export function ReviewsView({
               )}
 
               <div>
-                <label className="sa-label">New habits to add</label>
+                <label className="sa-label">New habits to install</label>
                 <textarea
                   value={recalData.newHabits}
                   onChange={(e) => setRecalData(prev => ({ ...prev, newHabits: e.target.value }))}
-                  placeholder="List any new habits you want to install this quarter..."
+                  placeholder="List any new habits for next quarter (one per line)..."
                   rows={3}
                   className="sa-textarea"
                 />
+                <p className="text-xs text-sa-cream-faint mt-1.5">Add these in the System tab after completing the recalibration.</p>
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setRecalStep(1)} className="sa-btn-ghost flex items-center gap-1">
+                <button onClick={() => setRecalStep(2)} className="sa-btn-ghost flex items-center gap-1">
                   <ArrowLeft className="w-3.5 h-3.5" /> Back
                 </button>
-                <button onClick={() => setRecalStep(3)} className="sa-btn-primary flex-1 flex items-center justify-center gap-2">
+                <button onClick={() => setRecalStep(4)} className="sa-btn-primary flex-1 flex items-center justify-center gap-2">
                   Next: Priorities <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* Step 3 — Priority Realignment */}
-          {recalStep === 3 && (
+          {/* Step 4 — Priority Realignment */}
+          {recalStep === 4 && (
             <div className="space-y-6">
               <div>
-                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 3 of 4</p>
+                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 4 of 5</p>
                 <h3 className="font-serif text-xl text-sa-cream mb-2">Priority Realignment</h3>
                 <p className="text-sm text-sa-cream-muted leading-relaxed">
                   Your priorities determine what gets your best energy and what gets cut when time runs short. Review and update your stack to match where you are now, not where you were 3 months ago.
@@ -554,24 +637,24 @@ export function ReviewsView({
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setRecalStep(2)} className="sa-btn-ghost flex items-center gap-1">
+                <button onClick={() => setRecalStep(3)} className="sa-btn-ghost flex items-center gap-1">
                   <ArrowLeft className="w-3.5 h-3.5" /> Back
                 </button>
-                <button onClick={() => setRecalStep(4)} className="sa-btn-primary flex-1 flex items-center justify-center gap-2">
-                  Next: Identity <ArrowRight className="w-3.5 h-3.5" />
+                <button onClick={() => setRecalStep(5)} className="sa-btn-primary flex-1 flex items-center justify-center gap-2">
+                  Next: Identity & Focus <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* Step 4 — Identity Update */}
-          {recalStep === 4 && (
+          {/* Step 5 — Identity & Quarterly Focus */}
+          {recalStep === 5 && (
             <div className="space-y-6">
               <div>
-                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 4 of 4</p>
-                <h3 className="font-serif text-xl text-sa-cream mb-2">Identity Update</h3>
+                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 5 of 5</p>
+                <h3 className="font-serif text-xl text-sa-cream mb-2">Identity & Quarterly Focus</h3>
                 <p className="text-sm text-sa-cream-muted leading-relaxed">
-                  Your identity statement defines who you are becoming through this system. Three months of execution may have shifted how you see yourself. Update it to match who you've become — not who you were when you wrote it.
+                  Your identity statement defines who you are becoming. Update it to match who you've become through execution. Then set one clear focus for the next quarter.
                 </p>
               </div>
 
@@ -587,7 +670,7 @@ export function ReviewsView({
               </div>
 
               <div>
-                <label className="sa-label">Focus for next quarter</label>
+                <label className="sa-label">Quarterly Focus</label>
                 <textarea
                   value={recalData.focusNextQuarter}
                   onChange={(e) => setRecalData(prev => ({ ...prev, focusNextQuarter: e.target.value }))}
@@ -595,10 +678,11 @@ export function ReviewsView({
                   rows={3}
                   className="sa-textarea"
                 />
+                <p className="text-xs text-sa-cream-faint mt-1.5">This will be saved to your system documents for reference.</p>
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setRecalStep(3)} className="sa-btn-ghost flex items-center gap-1">
+                <button onClick={() => setRecalStep(4)} className="sa-btn-ghost flex items-center gap-1">
                   <ArrowLeft className="w-3.5 h-3.5" /> Back
                 </button>
                 <button
@@ -609,10 +693,24 @@ export function ReviewsView({
                       if (recalData.direction) docs.direction = recalData.direction;
                       if (recalData.identity) docs.identity = recalData.identity;
                       if (recalData.priorities) docs.priorities = recalData.priorities;
+                      if (recalData.focusNextQuarter) docs.quarterly_focus = recalData.focusNextQuarter;
                       localStorage.setItem('sa_system_documents', JSON.stringify(docs));
                     } catch { /* ignore */ }
 
+                    // Save pending NN/habit changes for action items
+                    const nnToRemove = Object.entries(recalData.nnActions).filter(([, a]) => a === 'remove').map(([id]) => id);
+                    const habitsToRotate = Object.entries(recalData.habitActions).filter(([, a]) => a === 'rotate').map(([id]) => id);
+                    if (nnToRemove.length > 0 || habitsToRotate.length > 0 || recalData.newNNs || recalData.newHabits) {
+                      localStorage.setItem('sa_recal_pending', JSON.stringify({
+                        nnToRemove,
+                        habitsToRotate,
+                        newNNs: recalData.newNNs,
+                        newHabits: recalData.newHabits,
+                      }));
+                    }
+
                     // Save as a quarterly review
+                    const nnNames = nonNegotiables.filter(nn => nn.active);
                     const review: SavedReview = {
                       id: uid(),
                       type: 'quarterly',
@@ -621,16 +719,20 @@ export function ReviewsView({
                         direction: recalData.direction,
                         identity: recalData.identity,
                         priorities: recalData.priorities,
-                        habitActions: JSON.stringify(recalData.habitActions),
+                        quarterlyFocus: recalData.focusNextQuarter,
+                        nnKept: nnNames.filter(nn => recalData.nnActions[nn.id] !== 'remove').map(nn => nn.title).join(', '),
+                        nnRemoved: nnNames.filter(nn => recalData.nnActions[nn.id] === 'remove').map(nn => nn.title).join(', '),
+                        newNNs: recalData.newNNs,
+                        habitsKept: habits.filter(h => recalData.habitActions[h.id] !== 'rotate').map(h => h.name).join(', '),
+                        habitsRotated: habits.filter(h => recalData.habitActions[h.id] === 'rotate').map(h => h.name).join(', '),
                         newHabits: recalData.newHabits,
-                        focusNextQuarter: recalData.focusNextQuarter,
                       },
                     };
                     const updated = [review, ...savedReviews];
                     setSavedReviews(updated);
                     localStorage.setItem('sa_reviews', JSON.stringify(updated));
 
-                    setRecalStep(5);
+                    setRecalStep(6);
                   }}
                   className="sa-btn-primary flex-1"
                 >
@@ -640,29 +742,68 @@ export function ReviewsView({
             </div>
           )}
 
-          {/* Step 5 — Complete */}
-          {recalStep === 5 && (
-            <div className="text-center py-10 space-y-4">
-              <div className="w-14 h-14 rounded-full bg-sa-green-soft border border-sa-green-border flex items-center justify-center mx-auto">
-                <Check className="w-6 h-6 text-sa-green" />
+          {/* Step 6 — Complete */}
+          {recalStep === 6 && (() => {
+            const nnRemoved = Object.values(recalData.nnActions).filter(a => a === 'remove').length;
+            const habitsRotated = Object.values(recalData.habitActions).filter(a => a === 'rotate').length;
+            const hasNewNNs = recalData.newNNs.trim().length > 0;
+            const hasNewHabits = recalData.newHabits.trim().length > 0;
+            const hasActionItems = nnRemoved > 0 || habitsRotated > 0 || hasNewNNs || hasNewHabits;
+
+            return (
+              <div className="py-8 space-y-6">
+                <div className="text-center space-y-4">
+                  <div className="w-14 h-14 rounded-full bg-sa-green-soft border border-sa-green-border flex items-center justify-center mx-auto">
+                    <Check className="w-6 h-6 text-sa-green" />
+                  </div>
+                  <h3 className="font-serif text-xl text-sa-cream">System Recalibrated</h3>
+                  <p className="text-sm text-sa-cream-muted max-w-sm mx-auto leading-relaxed">
+                    Your direction, priorities, identity, and quarterly focus have been saved to your system documents.
+                  </p>
+                </div>
+
+                {hasActionItems && (
+                  <div className="sa-card-elevated">
+                    <p className="sa-section-subtitle text-sa-gold mb-3">Action Items — System Tab</p>
+                    <p className="text-xs text-sa-cream-faint mb-4">Complete these in the System tab to finalize your recalibration:</p>
+                    <div className="space-y-2">
+                      {nnRemoved > 0 && (
+                        <div className="flex items-start gap-2">
+                          <span className="text-sa-rose text-xs mt-0.5">●</span>
+                          <p className="text-xs text-sa-cream-soft">Remove {nnRemoved} non-negotiable{nnRemoved > 1 ? 's' : ''} marked for removal</p>
+                        </div>
+                      )}
+                      {hasNewNNs && (
+                        <div className="flex items-start gap-2">
+                          <span className="text-sa-green text-xs mt-0.5">●</span>
+                          <p className="text-xs text-sa-cream-soft">Add new non-negotiables: {recalData.newNNs}</p>
+                        </div>
+                      )}
+                      {habitsRotated > 0 && (
+                        <div className="flex items-start gap-2">
+                          <span className="text-sa-rose text-xs mt-0.5">●</span>
+                          <p className="text-xs text-sa-cream-soft">Rotate {habitsRotated} habit{habitsRotated > 1 ? 's' : ''} marked for rotation</p>
+                        </div>
+                      )}
+                      {hasNewHabits && (
+                        <div className="flex items-start gap-2">
+                          <span className="text-sa-green text-xs mt-0.5">●</span>
+                          <p className="text-xs text-sa-cream-soft">Install new habits: {recalData.newHabits}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => { setRecalStep(0); setActiveTab('snapshot'); }}
+                  className="sa-btn-secondary w-full"
+                >
+                  Back to Snapshot
+                </button>
               </div>
-              <h3 className="font-serif text-xl text-sa-cream">System Recalibrated</h3>
-              <p className="text-sm text-sa-cream-muted max-w-sm mx-auto leading-relaxed">
-                Your direction, priorities, and identity have been updated. Your system documents reflect who you are now. The next quarter starts today.
-              </p>
-              {Object.values(recalData.habitActions).filter(a => a === 'rotate').length > 0 && (
-                <p className="text-xs text-sa-cream-faint">
-                  You marked {Object.values(recalData.habitActions).filter(a => a === 'rotate').length} habit{Object.values(recalData.habitActions).filter(a => a === 'rotate').length > 1 ? 's' : ''} for rotation. Head to the System tab to update your habit stack.
-                </p>
-              )}
-              <button
-                onClick={() => { setRecalStep(0); setActiveTab('snapshot'); }}
-                className="sa-btn-secondary mt-4"
-              >
-                Back to Snapshot
-              </button>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
 
@@ -679,30 +820,90 @@ export function ReviewsView({
 
           {showPastReviews && (
             <div className="mt-4 space-y-3">
-              {savedReviews.slice(0, 10).map((review) => (
-                <div key={review.id} className="sa-card">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`sa-badge ${review.type === 'weekly' ? 'sa-badge-gold' : review.type === 'quarterly' ? 'sa-badge-green' : 'sa-badge-muted'}`}>
-                      {review.type === 'weekly' ? 'Weekly' : review.type === 'quarterly' ? 'Quarterly' : 'Monthly'}
-                    </span>
-                    <span className="text-xs text-sa-cream-faint">
-                      {new Date(review.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </span>
-                  </div>
-                  {review.stats && (
-                    <p className="text-xs text-sa-cream-muted mb-2">
-                      System: {review.stats.overall}% · NN: {review.stats.nnRate}% · Habits: {review.stats.habitRate}%
-                    </p>
-                  )}
-                  {Object.entries(review.answers).slice(0, 2).map(([key, val]) => (
-                    val.trim() && (
-                      <p key={key} className="text-xs text-sa-cream-soft line-clamp-2 mb-1">
-                        {val}
-                      </p>
-                    )
-                  ))}
-                </div>
-              ))}
+              {savedReviews.slice(0, 20).map((review) => {
+                const REVIEW_LABELS: Record<string, string> = {
+                  direction: 'Direction',
+                  identity: 'Identity',
+                  priorities: 'Priorities',
+                  quarterlyFocus: 'Quarterly Focus',
+                  nnKept: 'NNs Kept',
+                  nnRemoved: 'NNs Removed',
+                  newNNs: 'New NNs',
+                  habitsKept: 'Habits Kept',
+                  habitsRotated: 'Habits Rotated',
+                  newHabits: 'New Habits',
+                };
+
+                return (
+                  <details key={review.id} className="sa-card group">
+                    <summary className="cursor-pointer list-none flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className={`sa-badge ${review.type === 'weekly' ? 'sa-badge-gold' : review.type === 'quarterly' ? 'sa-badge-green' : 'sa-badge-muted'}`}>
+                          {review.type === 'weekly' ? 'Weekly' : review.type === 'quarterly' ? 'Quarterly' : 'Monthly'}
+                        </span>
+                        <span className="text-xs text-sa-cream-faint">
+                          {new Date(review.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5 text-sa-cream-faint transition-transform group-open:rotate-180" />
+                    </summary>
+
+                    <div className="mt-4 pt-4 border-t border-sa-border space-y-3">
+                      {review.stats && (
+                        <div className="flex gap-4 text-xs text-sa-cream-muted">
+                          <span>System: {review.stats.overall}%</span>
+                          <span>NN: {review.stats.nnRate}%</span>
+                          <span>Habits: {review.stats.habitRate}%</span>
+                          <span>Tasks: {review.stats.taskRate}%</span>
+                        </div>
+                      )}
+
+                      {review.type === 'weekly' && (
+                        <div className="space-y-3">
+                          {WEEKLY_QUESTIONS.map((question, i) => {
+                            const answer = review.answers[`q${i}`];
+                            if (!answer?.trim()) return null;
+                            return (
+                              <div key={i}>
+                                <p className="text-xs text-sa-cream-faint mb-1">{question}</p>
+                                <p className="text-xs text-sa-cream-soft leading-relaxed">{answer}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {review.type === 'quarterly' && (
+                        <div className="space-y-3">
+                          {Object.entries(review.answers).map(([key, val]) => {
+                            if (!val?.trim()) return null;
+                            const label = REVIEW_LABELS[key] || key;
+                            return (
+                              <div key={key}>
+                                <p className="text-xs text-sa-cream-faint mb-1">{label}</p>
+                                <p className="text-xs text-sa-cream-soft leading-relaxed">{val}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {review.type === 'monthly' && (
+                        <div className="space-y-3">
+                          {Object.entries(review.answers).map(([key, val]) => {
+                            if (!val?.trim()) return null;
+                            return (
+                              <div key={key}>
+                                <p className="text-xs text-sa-cream-soft leading-relaxed">{val}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                );
+              })}
             </div>
           )}
         </div>
