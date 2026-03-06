@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { BarChart3, ChevronDown, ChevronUp, Check, ArrowRight, ArrowLeft, RotateCcw } from 'lucide-react';
 import { NonNegotiable, NonNegotiableCompletion, Habit, HabitCompletion, DailyTask, Goal } from '../types';
 import { fmtDateISO, uid } from '../utils/dateUtils';
 
@@ -14,10 +14,19 @@ interface ReviewsViewProps {
 
 interface SavedReview {
   id: string;
-  type: 'weekly' | 'monthly';
+  type: 'weekly' | 'monthly' | 'quarterly';
   date: string;
   answers: Record<string, string>;
   stats?: { nnRate: number; habitRate: number; taskRate: number; overall: number };
+}
+
+interface RecalibrationData {
+  direction: string;
+  identity: string;
+  priorities: string;
+  habitActions: Record<string, 'keep' | 'rotate'>;
+  newHabits: string;
+  focusNextQuarter: string;
 }
 
 const WEEKLY_QUESTIONS = [
@@ -25,15 +34,6 @@ const WEEKLY_QUESTIONS = [
   'Where did you lose focus or drift? What was the cause?',
   'What one adjustment will you make to your system next week?',
   'What is your single focus for the coming week?',
-];
-
-const MONTHLY_QUESTIONS = [
-  'Is your direction statement still valid? If not, how has it shifted?',
-  'On a scale of 1–10, how aligned are your daily actions with your identity statement?',
-  'Have your priorities changed? What needs to move up or down the stack?',
-  'What was your biggest win this month?',
-  'What was your biggest challenge, and what did it teach you?',
-  'What is your primary focus for next month?',
 ];
 
 export function ReviewsView({
@@ -44,9 +44,8 @@ export function ReviewsView({
   dailyTasks,
   goals,
 }: ReviewsViewProps) {
-  const [activeTab, setActiveTab] = useState<'snapshot' | 'weekly' | 'monthly'>('snapshot');
+  const [activeTab, setActiveTab] = useState<'snapshot' | 'weekly' | 'quarterly'>('snapshot');
   const [weeklyAnswers, setWeeklyAnswers] = useState<Record<string, string>>({});
-  const [monthlyAnswers, setMonthlyAnswers] = useState<Record<string, string>>({});
   const [savedReviews, setSavedReviews] = useState<SavedReview[]>(() => {
     try {
       const raw = localStorage.getItem('sa_reviews');
@@ -54,6 +53,28 @@ export function ReviewsView({
     } catch { return []; }
   });
   const [showPastReviews, setShowPastReviews] = useState(false);
+
+  // Quarterly Recalibration state
+  const [recalStep, setRecalStep] = useState(0); // 0 = overview, 1-4 = steps, 5 = complete
+  const [recalData, setRecalData] = useState<RecalibrationData>(() => {
+    try {
+      const docs = JSON.parse(localStorage.getItem('sa_system_documents') || '{}');
+      return {
+        direction: docs.direction || '',
+        identity: docs.identity || '',
+        priorities: docs.priorities || '',
+        habitActions: {},
+        newHabits: '',
+        focusNextQuarter: '',
+      };
+    } catch {
+      return { direction: '', identity: '', priorities: '', habitActions: {}, newHabits: '', focusNextQuarter: '' };
+    }
+  });
+  const lastRecalibration = useMemo(() => {
+    const quarterly = savedReviews.filter(r => r.type === 'quarterly');
+    return quarterly.length > 0 ? quarterly[0].date : null;
+  }, [savedReviews]);
 
   // ── Week stats (last 7 days) ──
   const weekStats = useMemo(() => {
@@ -126,30 +147,27 @@ export function ReviewsView({
   }, [nonNegotiables, nnCompletions, habits, habitCompletions, dailyTasks]);
 
   // ── Save review ──
-  const handleSaveReview = (type: 'weekly' | 'monthly') => {
-    const answers = type === 'weekly' ? weeklyAnswers : monthlyAnswers;
-    const hasContent = Object.values(answers).some(a => a.trim());
+  const handleSaveWeeklyReview = () => {
+    const hasContent = Object.values(weeklyAnswers).some(a => a.trim());
     if (!hasContent) return;
 
     const review: SavedReview = {
       id: uid(),
-      type,
+      type: 'weekly',
       date: new Date().toISOString(),
-      answers: { ...answers },
-      stats: type === 'weekly' ? {
+      answers: { ...weeklyAnswers },
+      stats: {
         nnRate: weekStats.nnRate,
         habitRate: weekStats.habitRate,
         taskRate: weekStats.taskRate,
         overall: weekStats.weekPercentage,
-      } : undefined,
+      },
     };
 
     const updated = [review, ...savedReviews];
     setSavedReviews(updated);
     localStorage.setItem('sa_reviews', JSON.stringify(updated));
-
-    if (type === 'weekly') setWeeklyAnswers({});
-    else setMonthlyAnswers({});
+    setWeeklyAnswers({});
   };
 
   // ── Rate color helper ──
@@ -182,8 +200,8 @@ export function ReviewsView({
       {/* Tabs */}
       <div className="flex gap-1 mb-8 animate-rise delay-1">
         <TabBtn id="snapshot" label="Snapshot" />
-        <TabBtn id="weekly" label="Weekly Review" />
-        <TabBtn id="monthly" label="Monthly Recalibration" />
+        <TabBtn id="weekly" label="Weekly" />
+        <TabBtn id="quarterly" label="Quarterly" />
       </div>
 
       {/* ════════ SNAPSHOT TAB ════════ */}
@@ -328,7 +346,7 @@ export function ReviewsView({
                 </div>
               ))}
             </div>
-            <button onClick={() => handleSaveReview('weekly')}
+            <button onClick={handleSaveWeeklyReview}
               disabled={!Object.values(weeklyAnswers).some(a => a.trim())}
               className="sa-btn-primary w-full disabled:opacity-30">
               Save Weekly Review
@@ -364,65 +382,287 @@ export function ReviewsView({
         </div>
       )}
 
-      {/* ════════ MONTHLY RECALIBRATION TAB ════════ */}
-      {activeTab === 'monthly' && (
+      {/* ════════ QUARTERLY RECALIBRATION TAB ════════ */}
+      {activeTab === 'quarterly' && (
         <div className="space-y-6 animate-rise delay-2">
 
-          {/* Left: form */}
-          <div className="space-y-6">
-            <div className="sa-card">
-              <p className="text-sm text-sa-cream-soft">
-                The monthly recalibration is a deeper review. Revisit your direction, identity, and priorities.
-                Update your system documents after completing this review.
-              </p>
-            </div>
+          {/* Step 0 — Overview */}
+          {recalStep === 0 && (
             <div className="space-y-6">
-              {MONTHLY_QUESTIONS.map((question, i) => (
-                <div key={i}>
-                  <label className="block text-sm text-sa-cream-soft mb-2">
-                    <span className="text-sa-gold font-medium">{i + 1}.</span> {question}
-                  </label>
-                  <textarea value={monthlyAnswers[`q${i}`] || ''}
-                    onChange={(e) => setMonthlyAnswers(prev => ({ ...prev, [`q${i}`]: e.target.value }))}
-                    placeholder="Write your reflection..." rows={3} className="sa-textarea" />
+              <div className="sa-card">
+                <div className="flex items-center gap-3 mb-3">
+                  <RotateCcw className="w-5 h-5 text-sa-gold" />
+                  <h3 className="font-serif text-lg text-sa-cream">Quarterly Recalibration</h3>
                 </div>
-              ))}
-            </div>
-            <button onClick={() => handleSaveReview('monthly')}
-              disabled={!Object.values(monthlyAnswers).some(a => a.trim())}
-              className="sa-btn-primary w-full disabled:opacity-30">
-              Save Monthly Recalibration
-            </button>
-          </div>
+                <p className="text-sm text-sa-cream-soft leading-relaxed mb-4">
+                  Every quarter, your system needs a structural review. Not a reflection — a reconfiguration. 
+                  You'll walk through your direction, habits, priorities, and identity. Update what's evolved. Remove what's stale. Realign what's drifted.
+                </p>
+                <p className="text-sm text-sa-cream-soft leading-relaxed">
+                  This takes 20-30 minutes. Don't rush it.
+                </p>
+              </div>
 
-          {/* Right: system doc previews */}
-          <div className="space-y-5">
-            <div className="sa-card-elevated">
-              <p className="sa-section-subtitle text-sa-gold mb-3">Your System Documents</p>
-              <p className="text-xs text-sa-cream-faint mb-4">Review these while recalibrating:</p>
-              <div className="space-y-3">
-                {(() => {
-                  try {
-                    const docs = JSON.parse(localStorage.getItem('sa_system_documents') || '{}');
-                    const docTypes = [
-                      { key: 'direction', label: 'Direction Statement' },
-                      { key: 'identity', label: 'Identity Statement' },
-                      { key: 'priorities', label: 'Priority Stack' },
-                      { key: 'decisions', label: 'Decision Framework' },
-                      { key: 'failure', label: 'Failure Protocol' },
-                      { key: 'manual', label: 'Operating Manual' },
-                    ];
-                    return docTypes.map(({ key, label }) => (
-                      <div key={key} className="flex items-center gap-2">
-                        <div className={`w-1.5 h-1.5 rounded-full ${docs[key]?.trim() ? 'bg-sa-green' : 'bg-sa-cream-faint'}`} />
-                        <span className="text-xs text-sa-cream-muted">{label}</span>
-                      </div>
-                    ));
-                  } catch { return null; }
-                })()}
+              {lastRecalibration && (
+                <div className="sa-card">
+                  <p className="text-xs text-sa-cream-faint">Last recalibration</p>
+                  <p className="text-sm text-sa-cream-muted mt-1">
+                    {new Date(lastRecalibration).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+              )}
+
+              <button onClick={() => setRecalStep(1)} className="sa-btn-primary w-full">
+                Begin Recalibration
+              </button>
+            </div>
+          )}
+
+          {/* Step 1 — Direction Check */}
+          {recalStep === 1 && (
+            <div className="space-y-6">
+              <div>
+                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 1 of 4</p>
+                <h3 className="font-serif text-xl text-sa-cream mb-2">Direction Check</h3>
+                <p className="text-sm text-sa-cream-muted leading-relaxed">
+                  Is your operating direction still accurate? Three months of execution changes what you know, what you want, and what's possible. Update it if it's evolved.
+                </p>
+              </div>
+
+              <div>
+                <label className="sa-label">Your Direction Statement</label>
+                <textarea
+                  value={recalData.direction}
+                  onChange={(e) => setRecalData(prev => ({ ...prev, direction: e.target.value }))}
+                  placeholder="What you are building and why. Your north star."
+                  rows={5}
+                  className="sa-textarea"
+                />
+                {recalData.direction && (
+                  <p className="text-xs text-sa-cream-faint mt-2 italic">Edit above if your direction has shifted. Leave as-is if it's still valid.</p>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setRecalStep(0)} className="sa-btn-ghost flex items-center gap-1">
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back
+                </button>
+                <button onClick={() => setRecalStep(2)} className="sa-btn-primary flex-1 flex items-center justify-center gap-2">
+                  Next: Habit Audit <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Step 2 — Habit Audit */}
+          {recalStep === 2 && (
+            <div className="space-y-6">
+              <div>
+                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 2 of 4</p>
+                <h3 className="font-serif text-xl text-sa-cream mb-2">Habit Audit</h3>
+                <p className="text-sm text-sa-cream-muted leading-relaxed">
+                  Review each habit. Some are now automatic — keep them. Some have gone stale or no longer serve your direction — mark them for rotation. Then add any new habits you need.
+                </p>
+              </div>
+
+              {habits.length > 0 ? (
+                <div className="space-y-3">
+                  {habits.map(habit => {
+                    const action = recalData.habitActions[habit.id] || 'keep';
+                    return (
+                      <div key={habit.id} className="sa-card flex items-center gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-sa-cream">{habit.name}</p>
+                          <p className="text-xs text-sa-cream-faint">{habit.description || 'No description'}</p>
+                        </div>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => setRecalData(prev => ({
+                              ...prev,
+                              habitActions: { ...prev.habitActions, [habit.id]: 'keep' },
+                            }))}
+                            className={`px-3 py-1.5 text-xs rounded-sa-sm transition-colors ${
+                              action === 'keep' ? 'bg-sa-green-soft text-sa-green border border-sa-green-border' : 'text-sa-cream-faint hover:text-sa-cream-muted'
+                            }`}
+                          >
+                            Keep
+                          </button>
+                          <button
+                            onClick={() => setRecalData(prev => ({
+                              ...prev,
+                              habitActions: { ...prev.habitActions, [habit.id]: 'rotate' },
+                            }))}
+                            className={`px-3 py-1.5 text-xs rounded-sa-sm transition-colors ${
+                              action === 'rotate' ? 'bg-sa-rose-soft text-sa-rose border border-sa-rose-border' : 'text-sa-cream-faint hover:text-sa-cream-muted'
+                            }`}
+                          >
+                            Rotate
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="sa-card text-center">
+                  <p className="text-sm text-sa-cream-faint">No habits configured yet.</p>
+                </div>
+              )}
+
+              <div>
+                <label className="sa-label">New habits to add</label>
+                <textarea
+                  value={recalData.newHabits}
+                  onChange={(e) => setRecalData(prev => ({ ...prev, newHabits: e.target.value }))}
+                  placeholder="List any new habits you want to install this quarter..."
+                  rows={3}
+                  className="sa-textarea"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setRecalStep(1)} className="sa-btn-ghost flex items-center gap-1">
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back
+                </button>
+                <button onClick={() => setRecalStep(3)} className="sa-btn-primary flex-1 flex items-center justify-center gap-2">
+                  Next: Priorities <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3 — Priority Realignment */}
+          {recalStep === 3 && (
+            <div className="space-y-6">
+              <div>
+                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 3 of 4</p>
+                <h3 className="font-serif text-xl text-sa-cream mb-2">Priority Realignment</h3>
+                <p className="text-sm text-sa-cream-muted leading-relaxed">
+                  Your priorities determine what gets your best energy and what gets cut when time runs short. Review and update your stack to match where you are now, not where you were 3 months ago.
+                </p>
+              </div>
+
+              <div>
+                <label className="sa-label">Your Priority Stack</label>
+                <textarea
+                  value={recalData.priorities}
+                  onChange={(e) => setRecalData(prev => ({ ...prev, priorities: e.target.value }))}
+                  placeholder="Your ranked priorities. What gets protected first."
+                  rows={6}
+                  className="sa-textarea"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setRecalStep(2)} className="sa-btn-ghost flex items-center gap-1">
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back
+                </button>
+                <button onClick={() => setRecalStep(4)} className="sa-btn-primary flex-1 flex items-center justify-center gap-2">
+                  Next: Identity <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4 — Identity Update */}
+          {recalStep === 4 && (
+            <div className="space-y-6">
+              <div>
+                <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 4 of 4</p>
+                <h3 className="font-serif text-xl text-sa-cream mb-2">Identity Update</h3>
+                <p className="text-sm text-sa-cream-muted leading-relaxed">
+                  Your identity statement defines who you are becoming through this system. Three months of execution may have shifted how you see yourself. Update it to match who you've become — not who you were when you wrote it.
+                </p>
+              </div>
+
+              <div>
+                <label className="sa-label">Your Identity Statement</label>
+                <textarea
+                  value={recalData.identity}
+                  onChange={(e) => setRecalData(prev => ({ ...prev, identity: e.target.value }))}
+                  placeholder='"I am the kind of person who…"'
+                  rows={4}
+                  className="sa-textarea"
+                />
+              </div>
+
+              <div>
+                <label className="sa-label">Focus for next quarter</label>
+                <textarea
+                  value={recalData.focusNextQuarter}
+                  onChange={(e) => setRecalData(prev => ({ ...prev, focusNextQuarter: e.target.value }))}
+                  placeholder="The single highest-leverage focus for the next 3 months..."
+                  rows={3}
+                  className="sa-textarea"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setRecalStep(3)} className="sa-btn-ghost flex items-center gap-1">
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back
+                </button>
+                <button
+                  onClick={() => {
+                    // Save updated documents to localStorage
+                    try {
+                      const docs = JSON.parse(localStorage.getItem('sa_system_documents') || '{}');
+                      if (recalData.direction) docs.direction = recalData.direction;
+                      if (recalData.identity) docs.identity = recalData.identity;
+                      if (recalData.priorities) docs.priorities = recalData.priorities;
+                      localStorage.setItem('sa_system_documents', JSON.stringify(docs));
+                    } catch { /* ignore */ }
+
+                    // Save as a quarterly review
+                    const review: SavedReview = {
+                      id: uid(),
+                      type: 'quarterly',
+                      date: new Date().toISOString(),
+                      answers: {
+                        direction: recalData.direction,
+                        identity: recalData.identity,
+                        priorities: recalData.priorities,
+                        habitActions: JSON.stringify(recalData.habitActions),
+                        newHabits: recalData.newHabits,
+                        focusNextQuarter: recalData.focusNextQuarter,
+                      },
+                    };
+                    const updated = [review, ...savedReviews];
+                    setSavedReviews(updated);
+                    localStorage.setItem('sa_reviews', JSON.stringify(updated));
+
+                    setRecalStep(5);
+                  }}
+                  className="sa-btn-primary flex-1"
+                >
+                  Complete Recalibration
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 5 — Complete */}
+          {recalStep === 5 && (
+            <div className="text-center py-10 space-y-4">
+              <div className="w-14 h-14 rounded-full bg-sa-green-soft border border-sa-green-border flex items-center justify-center mx-auto">
+                <Check className="w-6 h-6 text-sa-green" />
+              </div>
+              <h3 className="font-serif text-xl text-sa-cream">System Recalibrated</h3>
+              <p className="text-sm text-sa-cream-muted max-w-sm mx-auto leading-relaxed">
+                Your direction, priorities, and identity have been updated. Your system documents reflect who you are now. The next quarter starts today.
+              </p>
+              {Object.values(recalData.habitActions).filter(a => a === 'rotate').length > 0 && (
+                <p className="text-xs text-sa-cream-faint">
+                  You marked {Object.values(recalData.habitActions).filter(a => a === 'rotate').length} habit{Object.values(recalData.habitActions).filter(a => a === 'rotate').length > 1 ? 's' : ''} for rotation. Head to the System tab to update your habit stack.
+                </p>
+              )}
+              <button
+                onClick={() => { setRecalStep(0); setActiveTab('snapshot'); }}
+                className="sa-btn-secondary mt-4"
+              >
+                Back to Snapshot
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -442,8 +682,8 @@ export function ReviewsView({
               {savedReviews.slice(0, 10).map((review) => (
                 <div key={review.id} className="sa-card">
                   <div className="flex items-center justify-between mb-2">
-                    <span className={`sa-badge ${review.type === 'weekly' ? 'sa-badge-gold' : 'sa-badge-muted'}`}>
-                      {review.type === 'weekly' ? 'Weekly' : 'Monthly'}
+                    <span className={`sa-badge ${review.type === 'weekly' ? 'sa-badge-gold' : review.type === 'quarterly' ? 'sa-badge-green' : 'sa-badge-muted'}`}>
+                      {review.type === 'weekly' ? 'Weekly' : review.type === 'quarterly' ? 'Quarterly' : 'Monthly'}
                     </span>
                     <span className="text-xs text-sa-cream-faint">
                       {new Date(review.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
