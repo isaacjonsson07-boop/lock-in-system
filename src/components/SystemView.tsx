@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, Pencil, FileText, Shield, Compass, Brain } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, Pencil, FileText, Target, Shield, Compass, Brain } from 'lucide-react';
 import { NonNegotiable, Habit, SystemDocument } from '../types';
 import { uid } from '../utils/dateUtils';
 import { supabase } from '../lib/supabase';
