@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart3, ChevronDown, ChevronUp, Check, ArrowRight, ArrowLeft, RotateCcw } from 'lucide-react';
+import { BarChart3, ChevronDown, ChevronUp, Check, ArrowRight, ArrowLeft, RotateCcw, Plus, Trash2 } from 'lucide-react';
 import { NonNegotiable, NonNegotiableCompletion, Habit, HabitCompletion, DailyTask, Goal, SavedReview } from '../types';
 import { fmtDateISO, uid } from '../utils/dateUtils';
 import { supabase } from '../lib/supabase';
@@ -27,12 +27,22 @@ interface RecalibrationData {
   direction: string;
   identity: string;
   priorities: string;
-  nnActions: Record<string, 'keep' | 'remove'>;
-  newNNs: string;
+  nnActions: Record<string, 'keep' | 'rotate'>;
+  newNNs: string[];
   habitActions: Record<string, 'keep' | 'rotate'>;
-  newHabits: string;
+  newHabits: Array<{ name: string; time: string; days: number[] }>;
   focusNextQuarter: string;
 }
+
+const DAY_LABELS = [
+  { value: 1, label: 'Mon' },
+  { value: 2, label: 'Tue' },
+  { value: 3, label: 'Wed' },
+  { value: 4, label: 'Thu' },
+  { value: 5, label: 'Fri' },
+  { value: 6, label: 'Sat' },
+  { value: 0, label: 'Sun' },
+];
 
 const WEEKLY_QUESTIONS = [
   'What worked well this week? Where did you stay consistent?',
@@ -77,11 +87,18 @@ export function ReviewsView({
     identity: systemDocuments.identity || '',
     priorities: systemDocuments.priorities || '',
     nnActions: {},
-    newNNs: '',
+    newNNs: [],
     habitActions: {},
-    newHabits: '',
+    newHabits: [],
     focusNextQuarter: '',
   });
+
+  // Recal inline-add form state (mirrors System tab)
+  const [recalShowAddNN, setRecalShowAddNN] = useState(false);
+  const [recalNewNNTitle, setRecalNewNNTitle] = useState('');
+  const [recalShowAddHabit, setRecalShowAddHabit] = useState(false);
+  const [recalNewHabit, setRecalNewHabit] = useState({ name: '', time: '09:00', days: [1, 2, 3, 4, 5] as number[] });
+
   const lastRecalibration = useMemo(() => {
     const quarterly = savedReviews.filter(r => r.type === 'quarterly');
     return quarterly.length > 0 ? quarterly[0].date : null;
@@ -470,10 +487,11 @@ export function ReviewsView({
                 <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-gold mb-2">Step 2 of 5</p>
                 <h3 className="font-serif text-xl text-sa-cream mb-2">Non-Negotiables Audit</h3>
                 <p className="text-sm text-sa-cream-muted leading-relaxed">
-                  Non-negotiables are the daily commitments you never skip. Review each one — are they still the right foundation? Remove what no longer serves your direction. Add what's missing.
+                  Review each non-negotiable. Keep what still serves your direction. Rotate what's gone stale — it won't be deleted, just deactivated so you can bring it back later.
                 </p>
               </div>
 
+              {/* Existing NNs */}
               {nonNegotiables.filter(nn => nn.active).length > 0 ? (
                 <div className="space-y-3">
                   {nonNegotiables.filter(nn => nn.active).map(nn => {
@@ -499,13 +517,13 @@ export function ReviewsView({
                           <button
                             onClick={() => setRecalData(prev => ({
                               ...prev,
-                              nnActions: { ...prev.nnActions, [nn.id]: 'remove' },
+                              nnActions: { ...prev.nnActions, [nn.id]: 'rotate' },
                             }))}
                             className={`px-3 py-1.5 text-xs rounded-sa-sm transition-colors ${
-                              action === 'remove' ? 'bg-sa-rose-soft text-sa-rose border border-sa-rose-border' : 'text-sa-cream-faint hover:text-sa-cream-muted'
+                              action === 'rotate' ? 'bg-sa-rose-soft text-sa-rose border border-sa-rose-border' : 'text-sa-cream-faint hover:text-sa-cream-muted'
                             }`}
                           >
-                            Remove
+                            Rotate
                           </button>
                         </div>
                       </div>
@@ -518,17 +536,71 @@ export function ReviewsView({
                 </div>
               )}
 
-              <div>
-                <label className="sa-label">New non-negotiables to add</label>
-                <textarea
-                  value={recalData.newNNs}
-                  onChange={(e) => setRecalData(prev => ({ ...prev, newNNs: e.target.value }))}
-                  placeholder="List any new non-negotiables for next quarter (one per line)..."
-                  rows={3}
-                  className="sa-textarea"
-                />
-                <p className="text-xs text-sa-cream-faint mt-1.5">One per line. These will be added to your system automatically on completion.</p>
-              </div>
+              {/* Queued new NNs */}
+              {recalData.newNNs.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs text-sa-green uppercase tracking-widest">New — added this recalibration</p>
+                  {recalData.newNNs.map((title, i) => (
+                    <div key={i} className="group flex items-center gap-3 px-4 py-3 bg-sa-bg-warm border border-sa-green-border/30 rounded-sa">
+                      <div className="w-2 h-2 rounded-full bg-sa-green flex-shrink-0" />
+                      <span className="flex-1 text-sm text-sa-cream">{title}</span>
+                      <button
+                        onClick={() => setRecalData(prev => ({
+                          ...prev,
+                          newNNs: prev.newNNs.filter((_, idx) => idx !== i),
+                        }))}
+                        className="p-1 text-sa-cream-faint opacity-0 group-hover:opacity-100 hover:text-sa-rose transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Inline add form */}
+              {recalShowAddNN ? (
+                <div className="sa-card space-y-3">
+                  <input
+                    type="text"
+                    value={recalNewNNTitle}
+                    onChange={(e) => setRecalNewNNTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && recalNewNNTitle.trim()) {
+                        setRecalData(prev => ({ ...prev, newNNs: [...prev.newNNs, recalNewNNTitle.trim()] }));
+                        setRecalNewNNTitle('');
+                      }
+                    }}
+                    placeholder="e.g., Morning sequence completed"
+                    autoFocus
+                    className="sa-input"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => { setRecalShowAddNN(false); setRecalNewNNTitle(''); }} className="sa-btn-ghost text-xs">
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!recalNewNNTitle.trim()) return;
+                        setRecalData(prev => ({ ...prev, newNNs: [...prev.newNNs, recalNewNNTitle.trim()] }));
+                        setRecalNewNNTitle('');
+                      }}
+                      disabled={!recalNewNNTitle.trim()}
+                      className="sa-btn-primary text-xs disabled:opacity-30"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setRecalShowAddNN(true)}
+                  className="flex items-center gap-1.5 text-xs text-sa-cream-faint hover:text-sa-gold transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add non-negotiable
+                </button>
+              )}
 
               <div className="flex gap-3">
                 <button onClick={() => setRecalStep(1)} className="sa-btn-ghost flex items-center gap-1">
@@ -552,6 +624,7 @@ export function ReviewsView({
                 </p>
               </div>
 
+              {/* Existing habits */}
               {habits.length > 0 ? (
                 <div className="space-y-3">
                   {habits.map(habit => {
@@ -596,17 +669,111 @@ export function ReviewsView({
                 </div>
               )}
 
-              <div>
-                <label className="sa-label">New habits to install</label>
-                <textarea
-                  value={recalData.newHabits}
-                  onChange={(e) => setRecalData(prev => ({ ...prev, newHabits: e.target.value }))}
-                  placeholder="List any new habits for next quarter (one per line)..."
-                  rows={3}
-                  className="sa-textarea"
-                />
-                <p className="text-xs text-sa-cream-faint mt-1.5">One per line. New habits default to weekdays at 9:00 AM — adjust in the System tab after.</p>
-              </div>
+              {/* Queued new habits */}
+              {recalData.newHabits.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs text-sa-green uppercase tracking-widest">New — added this recalibration</p>
+                  {recalData.newHabits.map((h, i) => (
+                    <div key={i} className="group flex items-center gap-3 px-4 py-3 bg-sa-bg-warm border border-sa-green-border/30 rounded-sa">
+                      <div className="w-2 h-2 rounded-full bg-sa-green flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm text-sa-cream">{h.name}</span>
+                        <div className="flex gap-1 mt-1">
+                          {DAY_LABELS.map((d) => (
+                            <span
+                              key={d.value}
+                              className={`text-[0.55rem] px-1 rounded ${
+                                h.days.includes(d.value) ? 'text-sa-blue bg-sa-blue-soft' : 'text-sa-cream-faint'
+                              }`}
+                            >
+                              {d.label}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      {h.time && <span className="text-xs text-sa-cream-faint">{h.time}</span>}
+                      <button
+                        onClick={() => setRecalData(prev => ({
+                          ...prev,
+                          newHabits: prev.newHabits.filter((_, idx) => idx !== i),
+                        }))}
+                        className="p-1 text-sa-cream-faint opacity-0 group-hover:opacity-100 hover:text-sa-rose transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Inline add form */}
+              {recalShowAddHabit ? (
+                <div className="sa-card space-y-3">
+                  <input
+                    type="text"
+                    value={recalNewHabit.name}
+                    onChange={(e) => setRecalNewHabit({ ...recalNewHabit, name: e.target.value })}
+                    placeholder="Habit name"
+                    autoFocus
+                    className="sa-input"
+                  />
+                  <div className="flex gap-3 items-center">
+                    <input
+                      type="time"
+                      value={recalNewHabit.time}
+                      onChange={(e) => setRecalNewHabit({ ...recalNewHabit, time: e.target.value })}
+                      className="sa-input w-28"
+                    />
+                    <div className="flex gap-1">
+                      {DAY_LABELS.map((d) => (
+                        <button
+                          key={d.value}
+                          onClick={() => {
+                            const days = recalNewHabit.days.includes(d.value)
+                              ? recalNewHabit.days.filter((v) => v !== d.value)
+                              : [...recalNewHabit.days, d.value];
+                            setRecalNewHabit({ ...recalNewHabit, days });
+                          }}
+                          className={`w-7 h-7 rounded-sa-sm text-[0.65rem] font-medium transition-colors ${
+                            recalNewHabit.days.includes(d.value)
+                              ? 'bg-sa-blue-soft text-sa-blue'
+                              : 'text-sa-cream-faint hover:text-sa-cream'
+                          }`}
+                        >
+                          {d.label[0]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => { setRecalShowAddHabit(false); setRecalNewHabit({ name: '', time: '09:00', days: [1, 2, 3, 4, 5] }); }} className="sa-btn-ghost text-xs">
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!recalNewHabit.name.trim()) return;
+                        setRecalData(prev => ({
+                          ...prev,
+                          newHabits: [...prev.newHabits, { name: recalNewHabit.name.trim(), time: recalNewHabit.time, days: [...recalNewHabit.days] }],
+                        }));
+                        setRecalNewHabit({ name: '', time: '09:00', days: [1, 2, 3, 4, 5] });
+                      }}
+                      disabled={!recalNewHabit.name.trim()}
+                      className="sa-btn-primary text-xs disabled:opacity-30"
+                    >
+                      Add Habit
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setRecalShowAddHabit(true)}
+                  className="flex items-center gap-1.5 text-xs text-sa-cream-faint hover:text-sa-blue transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add keystone habit
+                </button>
+              )}
 
               <div className="flex gap-3">
                 <button onClick={() => setRecalStep(2)} className="sa-btn-ghost flex items-center gap-1">
@@ -704,12 +871,14 @@ export function ReviewsView({
                         if (recalData.focusNextQuarter) onUpdateSystemDocument('quarterly_focus', recalData.focusNextQuarter);
                       }
 
-                      // 2. Execute NN removals directly
-                      const nnToRemove = Object.entries(recalData.nnActions)
-                        .filter(([, a]) => a === 'remove')
+                      // 2. Deactivate NNs marked for rotation (set active: false, not delete)
+                      const nnToRotate = Object.entries(recalData.nnActions)
+                        .filter(([, a]) => a === 'rotate')
                         .map(([id]) => id);
-                      for (const id of nnToRemove) {
-                        await onDeleteNonNegotiable(id);
+                      for (const id of nnToRotate) {
+                        if (user) {
+                          await supabase.from('non_negotiables').update({ active: false, updated_at: new Date().toISOString() }).eq('id', id);
+                        }
                       }
 
                       // 3. Execute habit rotations (deletions) directly
@@ -723,17 +892,13 @@ export function ReviewsView({
                         }
                       }
 
-                      // 4. Create new NNs
-                      const newNNLines = recalData.newNNs
-                        .split('\n')
-                        .map(l => l.trim())
-                        .filter(l => l.length > 0);
-                      const existingNNCount = nonNegotiables.filter(nn => nn.active).length - nnToRemove.length;
-                      for (let i = 0; i < newNNLines.length; i++) {
+                      // 4. Create new NNs from array
+                      const existingNNCount = nonNegotiables.filter(nn => nn.active).length - nnToRotate.length;
+                      for (let i = 0; i < recalData.newNNs.length; i++) {
                         await onAddNonNegotiable({
                           id: uid(),
                           user_id: user?.id || '',
-                          title: newNNLines[i],
+                          title: recalData.newNNs[i],
                           description: '',
                           order: existingNNCount + i,
                           active: true,
@@ -742,37 +907,40 @@ export function ReviewsView({
                         });
                       }
 
-                      // 5. Create new habits
-                      const newHabitLines = recalData.newHabits
-                        .split('\n')
-                        .map(l => l.trim())
-                        .filter(l => l.length > 0);
-                      if (user && newHabitLines.length > 0) {
-                        for (const name of newHabitLines) {
+                      // 5. Create new habits from array (with full config)
+                      if (user && recalData.newHabits.length > 0) {
+                        for (const h of recalData.newHabits) {
                           await supabase.from('habits').insert({
                             user_id: user.id,
-                            name,
+                            name: h.name,
                             target_number: 1,
-                            days_of_week: [1, 2, 3, 4, 5],
-                            time: '09:00',
+                            days_of_week: h.days,
+                            time: h.time,
                           });
                         }
                       }
 
-                      // 6. Refresh habits list after mutations
-                      if (habitsToRotate.length > 0 || newHabitLines.length > 0) {
+                      // 6. Refresh habits and NNs after mutations
+                      if (habitsToRotate.length > 0 || recalData.newHabits.length > 0) {
                         onHabitsChange();
                       }
+                      // Reload NNs to reflect deactivations
+                      if (nnToRotate.length > 0) {
+                        // Force NN state update by deactivating locally
+                        for (const id of nnToRotate) {
+                          await onDeleteNonNegotiable(id);
+                        }
+                      }
 
-                      // 7. Clear recalPending (no longer needed for action items)
+                      // 7. Clear recalPending
                       onUpdateRecalPending(null);
 
                       // 8. Store results for completion summary
                       setRecalResults({
-                        nnRemoved: nnToRemove.length,
-                        nnAdded: newNNLines.length,
+                        nnRemoved: nnToRotate.length,
+                        nnAdded: recalData.newNNs.length,
                         habitsRotated: habitsToRotate.length,
-                        habitsAdded: newHabitLines.length,
+                        habitsAdded: recalData.newHabits.length,
                       });
 
                       // 9. Save as a quarterly review record
@@ -786,12 +954,12 @@ export function ReviewsView({
                           identity: recalData.identity,
                           priorities: recalData.priorities,
                           quarterlyFocus: recalData.focusNextQuarter,
-                          nnKept: nnNames.filter(nn => recalData.nnActions[nn.id] !== 'remove').map(nn => nn.title).join(', '),
-                          nnRemoved: nnNames.filter(nn => recalData.nnActions[nn.id] === 'remove').map(nn => nn.title).join(', '),
-                          newNNs: recalData.newNNs,
+                          nnKept: nnNames.filter(nn => recalData.nnActions[nn.id] !== 'rotate').map(nn => nn.title).join(', '),
+                          nnRotated: nnNames.filter(nn => recalData.nnActions[nn.id] === 'rotate').map(nn => nn.title).join(', '),
+                          newNNs: recalData.newNNs.join(', '),
                           habitsKept: habits.filter(h => recalData.habitActions[h.id] !== 'rotate').map(h => h.name).join(', '),
                           habitsRotated: habits.filter(h => recalData.habitActions[h.id] === 'rotate').map(h => h.name).join(', '),
-                          newHabits: recalData.newHabits,
+                          newHabits: recalData.newHabits.map(h => h.name).join(', '),
                         },
                       };
                       onSaveReview(review);
@@ -835,7 +1003,7 @@ export function ReviewsView({
                       {r!.nnRemoved > 0 && (
                         <div className="flex items-start gap-2">
                           <span className="text-sa-rose text-xs mt-0.5">●</span>
-                          <p className="text-xs text-sa-cream-soft">Removed {r!.nnRemoved} non-negotiable{r!.nnRemoved > 1 ? 's' : ''}</p>
+                          <p className="text-xs text-sa-cream-soft">Rotated {r!.nnRemoved} non-negotiable{r!.nnRemoved > 1 ? 's' : ''} (deactivated)</p>
                         </div>
                       )}
                       {r!.nnAdded > 0 && (
@@ -893,6 +1061,7 @@ export function ReviewsView({
                   quarterlyFocus: 'Quarterly Focus',
                   nnKept: 'NNs Kept',
                   nnRemoved: 'NNs Removed',
+                  nnRotated: 'NNs Rotated',
                   newNNs: 'New NNs',
                   habitsKept: 'Habits Kept',
                   habitsRotated: 'Habits Rotated',
