@@ -82,17 +82,7 @@ export function Navigation({
           <div className="border-t border-sa-border pt-4" style={{ borderImage: 'linear-gradient(90deg, var(--gold-border), transparent 80%) 1' }} />
 
           {user && (
-            <div className="px-1">
-              <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                plan === 'paid'
-                  ? 'bg-sa-green-soft text-sa-green border border-sa-green-border'
-                  : isTrialActive
-                    ? 'bg-sa-gold-soft text-sa-gold border border-sa-gold-border'
-                    : 'bg-sa-bg-lift text-sa-cream-faint border border-sa-border-light'
-              }`}>
-                {plan === 'paid' ? 'Active' : isTrialActive ? 'Trial' : 'Free'}
-              </span>
-            </div>
+            <div className="px-1" />
           )}
 
           {user ? (
@@ -133,12 +123,6 @@ export function Navigation({
           </span>
 
           <div className="flex items-center gap-2.5">
-            {user && plan === 'paid' && (
-              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-sa-green-soft text-sa-green border border-sa-green-border">
-                Active
-              </span>
-            )}
-
             {user ? (
               <span className="text-xs text-sa-cream-muted truncate max-w-[120px]">
                 {user.email}
