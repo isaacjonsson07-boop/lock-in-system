@@ -59,6 +59,11 @@ function App() {
     }
   }, [user, authLoading]);
 
+  // Close auth modal when user becomes authenticated with paid plan
+  useEffect(() => {
+    if (user && plan === 'paid') setShowAuthModal(false);
+  }, [user, plan]);
+
   const loadHabits = async () => {
     try {
       const { data, error } = await supabase
