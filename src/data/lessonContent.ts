@@ -811,7 +811,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Open the Tracker",
       "description": "Set up your <strong>Goals</strong>, add your non-negotiables as <strong>Tasks</strong>, and log your first day.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -936,7 +936,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Log in the Tracker",
       "description": "Complete your <strong>Tasks</strong> and write a <strong>Journal</strong> entry about your environment audit.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -1079,7 +1079,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Review Your Dashboard",
       "description": "Open the <strong>Dashboard</strong> to see your first week of data. Check your Task completion rates and streaks.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -1239,7 +1239,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Update Your Goals",
       "description": "Add your <strong>identity statement</strong> as a new Goal alongside your direction statement.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -1395,7 +1395,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Update Your Goals",
       "description": "Add your <strong>top 3 priority outcomes</strong> to the Goals section of the tracker.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -1551,7 +1551,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Set Up Your Habits",
       "description": "Open the <strong>Habits</strong> feature and add your keystone habits with their cue-routine-reward formulas.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -1703,7 +1703,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Check Your Dashboard",
       "description": "Review your <strong>streaks</strong> and completion patterns to identify energy-related trends.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -1847,7 +1847,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Clean Up the Tracker",
       "description": "Remove or simplify <strong>Tasks</strong> and <strong>Habits</strong> that didn't earn their place.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -1993,7 +1993,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Log Your Decision Rules",
       "description": "Write your decision rules and if-then protocols in the <strong>Journal</strong> for easy reference.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -2147,7 +2147,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Full Dashboard Review",
       "description": "Open the <strong>Dashboard</strong> for your midpoint assessment. 10 days of tracked data tells the real story.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -2268,7 +2268,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Track Your Streaks",
       "description": "Your <strong>streaks</strong> are your accountability made visible. Check them daily — they're harder to break than to maintain.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -2402,7 +2402,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Log Your Protocols",
       "description": "Add your minimum viable day and restart protocol to the <strong>Journal</strong> for emergency access.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -2560,7 +2560,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Journal Your Scripts",
       "description": "Write your sabotage scripts and replacements in the <strong>Journal</strong> — seeing them side by side is the antidote.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -2694,7 +2694,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Set Up Your Review",
       "description": "Add your weekly review as a recurring <strong>Task</strong> so it shows up every week automatically.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -2830,7 +2830,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Set Up Recalibration",
       "description": "Add your monthly recalibration as a recurring <strong>Task</strong> in the tracker.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -2982,7 +2982,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Review Your Full System",
       "description": "The <strong>Dashboard</strong> is part of your operating manual. All your Goals, Habits, Tasks, and Journal entries — consolidated.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
@@ -3135,7 +3135,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Final Dashboard Review",
       "description": "Open the <strong>Dashboard</strong> one last time as installation. Your streaks, data, and Journal tell the story of 21 days.",
-      "url": "https://daily-achievement-tracker.netlify.app/"
+      "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
       {
