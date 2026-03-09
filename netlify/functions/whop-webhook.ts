@@ -100,7 +100,6 @@ export const handler: Handler = async (event) => {
   // Whop uses different field names depending on API version
   const eventType = payload.action || payload.type || payload.event_type || payload.event || "";
   console.log("[Whop Webhook] Event type:", eventType);
-  console.log("[Whop Webhook] Full payload:", JSON.stringify(payload));
 
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -172,7 +171,28 @@ export const handler: Handler = async (event) => {
     : null;
 
   if (!matchedUser) {
-    console.log("[Whop Webhook] No Supabase user found for email:", email);
+    // No app account yet — store in pending_plans so it applies on signup
+    console.log("[Whop Webhook] No Supabase user found, saving to pending_plans:", email);
+
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/pending_plans`,
+      {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates",
+        },
+        body: JSON.stringify({
+          email: email.toLowerCase(),
+          plan: plan,
+          created_at: new Date().toISOString(),
+        }),
+      }
+    );
+
+    console.log("[Whop Webhook] Pending plan saved for", email);
     return { statusCode: 200, body: "ok" };
   }
 
