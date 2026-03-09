@@ -96,8 +96,11 @@ export const handler: Handler = async (event) => {
   console.log("[Whop Webhook] Signature verified");
 
   const payload = JSON.parse(rawBody);
-  const eventType = payload.type || payload.event_type;
+
+  // Whop uses different field names depending on API version
+  const eventType = payload.action || payload.type || payload.event_type || payload.event || "";
   console.log("[Whop Webhook] Event type:", eventType);
+  console.log("[Whop Webhook] Full payload:", JSON.stringify(payload));
 
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -107,54 +110,45 @@ export const handler: Handler = async (event) => {
     return { statusCode: 200, body: "ok" };
   }
 
-  // 9. Extract email from Whop payload
+  // 9. Extract email from Whop payload — check every possible location
   const email =
     payload?.data?.user?.email ||
     payload?.data?.customer?.email ||
     payload?.user?.email ||
     payload?.customer?.email ||
     payload?.data?.email ||
+    payload?.email ||
     null;
 
   if (!email) {
-    console.log("[Whop Webhook] No email in payload, skipping plan update");
-    console.log("[Whop Webhook] Payload keys:", JSON.stringify(payload));
+    console.log("[Whop Webhook] No email found in payload");
     return { statusCode: 200, body: "ok" };
   }
 
-  // 10. Determine plan from event type
+  // 10. Determine plan from event type (handle both dot and underscore formats)
+  const normalized = eventType.replace(/\./g, "_").toLowerCase();
+
   let plan: "free" | "paid" = "free";
   if (
-    eventType === "membership.went_valid" ||
-    eventType === "membership.activated" ||
-    eventType === "invoice.paid"
+    normalized === "membership_activated" ||
+    normalized === "membership_went_valid" ||
+    normalized === "payment_succeeded" ||
+    normalized === "invoice_paid"
   ) {
     plan = "paid";
   }
   if (
-    eventType === "membership.went_invalid" ||
-    eventType === "membership.deactivated" ||
-    eventType === "membership.canceled" ||
-    eventType === "membership.expired"
+    normalized === "membership_deactivated" ||
+    normalized === "membership_went_invalid" ||
+    normalized === "membership_canceled" ||
+    normalized === "membership_expired"
   ) {
     plan = "free";
   }
 
-  console.log("[Whop Webhook] Updating plan", { email: email.toLowerCase(), plan, eventType });
+  console.log("[Whop Webhook] Plan decision:", { email: email.toLowerCase(), plan, eventType, normalized });
 
-  // 11. Find Supabase auth user by email using admin API
-  const listUsersRes = await fetch(
-    `${SUPABASE_URL}/auth/v1/admin/users?page=1&per_page=1`,
-    {
-      method: "GET",
-      headers: {
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      },
-    }
-  );
-
-  // Use the admin API to find user by email
+  // 11. Find Supabase auth user by email
   const findUserRes = await fetch(
     `${SUPABASE_URL}/auth/v1/admin/users`,
     {
@@ -179,9 +173,6 @@ export const handler: Handler = async (event) => {
 
   if (!matchedUser) {
     console.log("[Whop Webhook] No Supabase user found for email:", email);
-    // User hasn't created an app account yet — that's OK.
-    // When they sign up with this email later, they'll be 'free' by default.
-    // They can re-trigger by signing in (the app calls sync-whop-tier on login).
     return { statusCode: 200, body: "ok" };
   }
 
@@ -209,7 +200,7 @@ export const handler: Handler = async (event) => {
   const updateData = await updateRes.json();
   console.log("[Whop Webhook] Update result:", JSON.stringify(updateData));
 
-  // If no row was updated (user exists in auth but not in user_profiles), insert one
+  // If no row was updated, insert one
   if (Array.isArray(updateData) && updateData.length === 0) {
     console.log("[Whop Webhook] No profile row found, creating one");
     await fetch(
