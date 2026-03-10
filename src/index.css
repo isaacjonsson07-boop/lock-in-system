@@ -55,6 +55,7 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -62,6 +63,7 @@ html {
 body {
   background: var(--bg-deep);
   color: var(--cream);
+  overflow-x: hidden;
   font-family: var(--sans);
   line-height: 1.6;
   min-height: 100vh;
