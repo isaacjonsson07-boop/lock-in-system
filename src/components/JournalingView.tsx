@@ -827,7 +827,7 @@ export function JournalingView({
       {journalAccessDays > 0 && (
         <>
           {/* Hero branding */}
-          <div className="text-center pt-6 pb-4 animate-rise">
+          <div className="text-center pt-6 pb-4">
             <div className="sa-brand-line flex items-center justify-center gap-4 mb-10"
               style={{ fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'var(--gold, #C5A55A)' }}>
               Structured Achievement
@@ -870,7 +870,7 @@ export function JournalingView({
             const colorVar = phaseColor === 'gold' ? 'var(--gold, #C5A55A)' : phaseColor === 'blue' ? 'var(--blue, #6DB5F5)' : 'var(--green, #6ECB8B)';
 
             return (
-              <section key={phase.label} className="animate-rise" style={{ paddingTop: 72 }}>
+              <section key={phase.label} style={{ paddingTop: 72 }}>
                 {/* Phase header */}
                 <div className="flex items-center gap-4 mb-3">
                   <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: colorVar }} />
@@ -937,7 +937,7 @@ export function JournalingView({
           })}
 
           {/* Bottom section */}
-          <div className="text-center animate-rise" style={{ paddingTop: 80, paddingBottom: 40 }}>
+          <div className="text-center" style={{ paddingTop: 80, paddingBottom: 40 }}>
             {/* Diamond divider */}
             <div className="sa-diamond-divider flex items-center justify-center gap-5 mb-12">
               <div style={{ width: 7, height: 7, border: '1px solid var(--cream-faint, #6B665D)', transform: 'rotate(45deg)' }} />
@@ -969,7 +969,7 @@ export function JournalingView({
 
           {/* Completion state */}
           {completedDays === 21 && (
-            <div className="mt-4 py-6 px-8 bg-sa-green-soft border border-sa-green-border rounded-sa text-center animate-rise">
+            <div className="mt-4 py-6 px-8 bg-sa-green-soft border border-sa-green-border rounded-sa text-center">
               <p className="text-sa-green font-serif text-lg">System installed.</p>
               <p className="text-sa-cream-muted text-sm mt-1">All 21 days completed. Operational mode is active.</p>
             </div>
@@ -977,7 +977,7 @@ export function JournalingView({
 
           {/* ── SYSTEM PATCHES SECTION ── */}
           {PATCH_DATA.length > 0 && (
-            <section className="animate-rise" style={{ paddingTop: 72 }}>
+            <section style={{ paddingTop: 72 }}>
               {/* Section header */}
               <div style={{ marginBottom: 32 }}>
                 <p style={{ fontSize: '0.7rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cream-faint, #6B665D)', marginBottom: 8 }}>
