@@ -175,12 +175,7 @@ function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-sa-bg flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="font-serif text-3xl sm:text-4xl text-sa-cream mb-2">Structured<br/>Achievement</h1>
-          <p className="text-[0.7rem] text-sa-cream-faint uppercase tracking-[0.14em]">Operating System</p>
-        </div>
-      </div>
+      <div className="min-h-screen bg-sa-bg" />
     );
   }
 
