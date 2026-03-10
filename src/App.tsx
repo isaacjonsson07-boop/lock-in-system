@@ -177,8 +177,8 @@ function App() {
     return (
       <div className="min-h-screen bg-sa-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="w-6 h-6 border-2 border-sa-gold border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sa-cream-faint text-xs">Loading...</p>
+          <h1 className="font-serif text-3xl sm:text-4xl text-sa-cream mb-2">Structured<br/>Achievement</h1>
+          <p className="text-[0.7rem] text-sa-cream-faint uppercase tracking-[0.14em]">Operating System</p>
         </div>
       </div>
     );
