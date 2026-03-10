@@ -1,40 +1,48 @@
-// Simple service worker for offline functionality
-const CACHE_NAME = 'achievement-tracker-v1';
-const urlsToCache = [
+// Structured Achievement — Service Worker
+const CACHE_NAME = 'sa-v2';
+
+// Only cache the shell — Vite asset names are hashed and change on every build
+const SHELL_URLS = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
-      }
-    )
+      .then((cache) => cache.addAll(SHELL_URLS))
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then((names) =>
+      Promise.all(
+        names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n))
+      )
+    ).then(() => self.clients.claim())
+  );
+});
+
+// Network-first: try network, fall back to cache
+self.addEventListener('fetch', (event) => {
+  // Skip non-GET and cross-origin requests
+  if (event.request.method !== 'GET') return;
+  if (!event.request.url.startsWith(self.location.origin)) return;
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        // Cache successful responses for offline fallback
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
