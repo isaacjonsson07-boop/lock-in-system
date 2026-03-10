@@ -8,98 +8,77 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
   const line1Ref = useRef<HTMLDivElement>(null);
   const line2Ref = useRef<HTMLDivElement>(null);
   const animRef = useRef<number>(0);
+  const dimsRef = useRef({ w: 0, h: 0 });
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const speed = 80; // pixels per second
+    const speed = 80;
+
+    // Cache dimensions — only re-measure on resize
+    function measure() {
+      if (!container) return;
+      const r = container.getBoundingClientRect();
+      dimsRef.current = { w: r.width, h: r.height };
+    }
+    measure();
+    window.addEventListener('resize', measure);
 
     function animate() {
-      if (!container) return;
-      const { width, height } = container.getBoundingClientRect();
-      const perimeter = 2 * width + 2 * height;
+      const { w, h } = dimsRef.current;
+      if (!w || !h) { animRef.current = requestAnimationFrame(animate); return; }
+
+      const perimeter = 2 * w + 2 * h;
       const now = performance.now() / 1000;
 
       [line1Ref, line2Ref].forEach((ref, i) => {
         const el = ref.current;
         if (!el) return;
 
-        // Offset second line by exactly half the perimeter
         const dist = ((now * speed) + (i * perimeter / 2)) % perimeter;
+        let tx = 0, ty = 0, sw = 92, sh = 2;
 
-        if (dist < width) {
-          // Top edge: left → right
-          el.style.top = `${-1}px`;
-          el.style.left = `${dist - 48}px`;
-          el.style.bottom = 'auto';
-          el.style.right = 'auto';
-          el.style.width = '92px';
-          el.style.height = '2px';
-          el.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)';
-        } else if (dist < width + height) {
-          // Right edge: top → bottom
-          const d = dist - width;
-          el.style.top = `${d - 48}px`;
-          el.style.left = `${width - 1}px`;
-          el.style.right = 'auto';
-          el.style.bottom = 'auto';
-          el.style.width = '2px';
-          el.style.height = '92px';
-          el.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)';
-        } else if (dist < 2 * width + height) {
-          // Bottom edge: right → left
-          const d = dist - width - height;
-          el.style.top = `${height - 1}px`;
-          el.style.left = `${width - d - 48}px`;
-          el.style.bottom = 'auto';
-          el.style.right = 'auto';
-          el.style.width = '92px';
-          el.style.height = '2px';
-          el.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)';
+        if (dist < w) {
+          tx = dist - 46; ty = -1; sw = 92; sh = 2;
+        } else if (dist < w + h) {
+          const d = dist - w;
+          tx = w - 1; ty = d - 46; sw = 2; sh = 92;
+        } else if (dist < 2 * w + h) {
+          const d = dist - w - h;
+          tx = w - d - 46; ty = h - 1; sw = 92; sh = 2;
         } else {
-          // Left edge: bottom → top
-          const d = dist - 2 * width - height;
-          el.style.top = `${height - d - 48}px`;
-          el.style.left = `${-1}px`;
-          el.style.right = 'auto';
-          el.style.bottom = 'auto';
-          el.style.width = '2px';
-          el.style.height = '92px';
-          el.style.background = 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)';
+          const d = dist - 2 * w - h;
+          tx = -1; ty = h - d - 46; sw = 2; sh = 92;
         }
+
+        el.style.transform = `translate(${tx}px, ${ty}px)`;
+        el.style.width = `${sw}px`;
+        el.style.height = `${sh}px`;
       });
 
       animRef.current = requestAnimationFrame(animate);
     }
 
     animRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animRef.current);
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      window.removeEventListener('resize', measure);
+    };
   }, []);
 
   return (
-    <div ref={containerRef} className="relative mb-14 text-center animate-rise py-10 px-8">
+    <div ref={containerRef} className="relative mb-14 text-center animate-rise py-10 px-8 overflow-hidden">
       {/* Corner accents */}
       <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-sa-gold/25 z-10" />
       <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-sa-gold/25 z-10" />
       <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-sa-gold/25 z-10" />
       <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-sa-gold/25 z-10" />
 
-      {/* Travelling glows — clip-path cuts out corner areas */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        clipPath: `polygon(
-          33.3px -2px, calc(100% - 33.3px) -2px,
-          calc(100% - 33.3px) -2px, calc(100% + 2px) 33.3px,
-          calc(100% + 2px) 33.3px, calc(100% + 2px) calc(100% - 33.3px),
-          calc(100% + 2px) calc(100% - 33.3px), calc(100% - 33.3px) calc(100% + 2px),
-          calc(100% - 33.3px) calc(100% + 2px), 33.3px calc(100% + 2px),
-          33.3px calc(100% + 2px), -2px calc(100% - 33.3px),
-          -2px calc(100% - 33.3px), -2px 33.3px,
-          -2px 33.3px, 33.3px -2px
-        )`
-      }}>
-        <div ref={line1Ref} className="absolute" />
-        <div ref={line2Ref} className="absolute" />
+      {/* Travelling glows */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div ref={line1Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)' }} />
+        <div ref={line2Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)' }} />
       </div>
 
       {direction && (
