@@ -142,7 +142,7 @@ export function Navigation({
 
       {/* ===== MOBILE BOTTOM TAB BAR ===== */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-sa-bg-warm/95 backdrop-blur-md border-t border-sa-border">
-        <div className="flex items-center justify-around px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <div className="flex items-center px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = currentTab === tab.id;
@@ -150,20 +150,20 @@ export function Navigation({
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`relative flex flex-col items-center justify-center gap-1 py-1.5 px-3 min-w-[4rem] rounded-sa-sm transition-colors duration-150 ${
+                className={`relative flex-1 flex flex-col items-center justify-center gap-1 py-1.5 rounded-sa-sm transition-colors duration-150 ${
                   isActive
                     ? 'text-sa-gold'
                     : 'text-sa-cream-faint active:text-sa-cream-muted'
                 }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.2]' : 'stroke-[1.6]'}`} />
-                <span className={`text-[0.65rem] leading-none ${
+                <span className={`text-[0.6rem] leading-none ${
                   isActive ? 'font-medium' : 'font-normal'
                 }`}>
                   {tab.mobileLabel}
                 </span>
                 {tab.id === 'installation' && installationDay != null && installationDay <= 21 && (
-                  <span className="absolute top-0.5 right-1.5 w-2 h-2 rounded-full bg-sa-gold" />
+                  <span className="absolute top-0.5 right-1 w-2 h-2 rounded-full bg-sa-gold" />
                 )}
               </button>
             );
