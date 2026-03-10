@@ -240,7 +240,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-sa-bg overflow-x-hidden">
+    <div className="min-h-screen bg-sa-bg">
       <Navigation
         currentTab={currentTab}
         onTabChange={setCurrentTab}
