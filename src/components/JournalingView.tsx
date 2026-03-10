@@ -682,7 +682,7 @@ export function JournalingView({
 
   // ── EDITORIAL LANDING / GRID VIEW ──
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto overflow-x-hidden">
       {/* Custom styles for hover effects */}
       <style>{`
         .sa-lesson-card {
@@ -842,24 +842,24 @@ export function JournalingView({
             </p>
 
             {/* Stats bar */}
-            <div className="flex justify-center gap-12 py-8 mb-0" style={{ borderTop: '1px solid rgba(240,237,230,0.07)', borderBottom: '1px solid rgba(240,237,230,0.07)' }}>
-              <div className="text-center">
+            <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 sm:gap-12 py-8 mb-0" style={{ borderTop: '1px solid rgba(240,237,230,0.07)', borderBottom: '1px solid rgba(240,237,230,0.07)' }}>
+              <div className="text-center min-w-[60px]">
                 <div className="font-serif text-sa-cream" style={{ fontSize: '2.2rem', lineHeight: 1 }}>{completedDays > 0 ? completedDays : 21}</div>
-                <div style={{ fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 8 }}>
-                  {completedDays > 0 ? 'Completed' : 'Lessons'}
+                <div style={{ fontSize: '0.75rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 8 }}>
+                  {completedDays > 0 ? 'Done' : 'Lessons'}
                 </div>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-[60px]">
                 <div className="font-serif text-sa-cream" style={{ fontSize: '2.2rem', lineHeight: 1 }}>3</div>
-                <div style={{ fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 8 }}>Phases</div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 8 }}>Phases</div>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-[60px]">
                 <div className="font-serif text-sa-cream" style={{ fontSize: '2.2rem', lineHeight: 1 }}>12</div>
-                <div style={{ fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 8 }}>Principles</div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 8 }}>Principles</div>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-[60px]">
                 <div className="font-serif text-sa-cream" style={{ fontSize: '2.2rem', lineHeight: 1 }}>∞</div>
-                <div style={{ fontSize: '0.8rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 8 }}>Compound effect</div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--cream-muted, #A69F93)', marginTop: 8 }}>Compound</div>
               </div>
             </div>
           </div>
