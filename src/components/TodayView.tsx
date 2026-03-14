@@ -127,7 +127,7 @@ function SidebarCommandCenter({
   percentage, completedItems, totalItems, currentStreak, weekConsistency, systemAge,
   statusMsg, statusColor, nextReviewDay,
   nnDone, nnTotal, habitsDone, habitsTotal, tasksDone, tasksTotal,
-  weekDayData, milestoneInfo, onNavigate, dateLabel, isReviewDay,
+  weekDayData, milestoneInfo, onNavigate, dateLabel, isReviewDay, quarterlyInfo,
 }: {
   percentage: number; completedItems: number; totalItems: number;
   currentStreak: number; weekConsistency: number; systemAge: number;
@@ -138,6 +138,7 @@ function SidebarCommandCenter({
   onNavigate?: (tab: string, subTab?: string) => void;
   dateLabel: string;
   isReviewDay: boolean;
+  quarterlyInfo: { isQuarterlyDay: boolean; daysLeft: number; label: string };
 }) {
   const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#C5A55A' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
   const ringSize = 100;
@@ -247,6 +248,20 @@ function SidebarCommandCenter({
       ) : (
         <p className="text-[0.68rem] text-sa-cream-faint text-center">
           Weekly review in <span className="text-sa-cream-muted">{nextReviewDay.daysLeft} day{nextReviewDay.daysLeft !== 1 ? 's' : ''}</span>
+        </p>
+      )}
+
+      {/* Quarterly recalibration */}
+      {quarterlyInfo.isQuarterlyDay ? (
+        <button onClick={() => onNavigate?.('reviews', 'quarterly')}
+          className="relative w-full py-3 border border-sa-green-border rounded-xl text-center overflow-hidden transition-all duration-300 hover:border-sa-green hover:-translate-y-[1px] group">
+          <div className="absolute inset-0 bg-gradient-to-br from-[rgba(110,203,139,0.08)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <p className="relative font-serif text-[0.9rem] text-sa-green">Quarterly Recalibration →</p>
+          <p className="relative text-[0.65rem] text-sa-cream-faint mt-1">Recalibrate your system for the next quarter.</p>
+        </button>
+      ) : (
+        <p className="text-[0.68rem] text-sa-cream-faint text-center">
+          Quarterly recalibration in <span className="text-sa-cream-muted">{quarterlyInfo.daysLeft} day{quarterlyInfo.daysLeft !== 1 ? 's' : ''}</span>
         </p>
       )}
     </div>
@@ -468,6 +483,15 @@ export function TodayView({
   }, []);
 
   const isReviewDay = new Date().getDay() === 0; // Sunday
+
+  // ── Quarterly review countdown (every 90 days from first activity) ──
+  const quarterlyInfo = useMemo(() => {
+    if (systemAge === 0) return { isQuarterlyDay: false, daysLeft: 90, label: '90 days' };
+    const daysInCycle = systemAge % 90;
+    const isQuarterlyDay = daysInCycle === 0 && systemAge > 0;
+    const daysLeft = isQuarterlyDay ? 0 : 90 - daysInCycle;
+    return { isQuarterlyDay, daysLeft, label: `Day ${systemAge + daysLeft}` };
+  }, [systemAge]);
 
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) return;
@@ -772,6 +796,18 @@ export function TodayView({
             </div>
           )}
 
+          {/* ════ QUARTERLY RECALIBRATION (mobile — shows all day on quarterly day) ════ */}
+          {isToday && quarterlyInfo.isQuarterlyDay && (
+            <div className="mb-11 xl:hidden">
+              <button onClick={() => onNavigate?.('reviews', 'quarterly')}
+                className="relative w-full py-6 border border-sa-green-border rounded-xl text-center overflow-hidden transition-all duration-300 hover:border-sa-green hover:-translate-y-[1px] group">
+                <div className="absolute inset-0 bg-gradient-to-br from-[rgba(110,203,139,0.08)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <p className="relative font-serif text-[1.05rem] text-sa-green">Quarterly Recalibration →</p>
+                <p className="relative text-[0.78rem] text-sa-cream-faint mt-1.5">Recalibrate your system for the next quarter.</p>
+              </button>
+            </div>
+          )}
+
           {/* ════ PLAN TOMORROW (mobile only — desktop version is in sidebar) ════ */}
           {isToday && isEvening && (
             <div className="mb-11 xl:hidden">
@@ -830,6 +866,7 @@ export function TodayView({
                   onNavigate={onNavigate}
                   dateLabel={dateLabel}
                   isReviewDay={isReviewDay}
+                  quarterlyInfo={quarterlyInfo}
                 />
               </div>
 
