@@ -93,14 +93,48 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
 // SIDEBAR COMMAND CENTER (desktop only)
 // ═══════════════════════════════════════
 
+function CategoryMiniBar({ label, done, total, color }: { label: string; done: number; total: number; color: string }) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const allDone = done === total && total > 0;
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-[0.7rem] text-sa-cream-muted w-16 flex-shrink-0">{label}</span>
+      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: allDone ? '#6ECB8B' : color }} />
+      </div>
+      <span className="text-[0.65rem] tabular-nums text-sa-cream-faint w-8 text-right">{done}/{total}</span>
+    </div>
+  );
+}
+
+function WeekHeatmap({ dayData }: { dayData: { label: string; pct: number }[] }) {
+  return (
+    <div className="flex gap-1.5 justify-between">
+      {dayData.map((d, i) => {
+        const color = d.pct >= 80 ? '#6ECB8B' : d.pct >= 50 ? '#C5A55A' : d.pct > 0 ? '#E07070' : 'rgba(255,255,255,0.06)';
+        return (
+          <div key={i} className="flex-1 text-center">
+            <div className="w-full aspect-square rounded-sm mb-1" style={{ backgroundColor: color, maxWidth: 28, margin: '0 auto' }} />
+            <span className="text-[0.5rem] text-sa-cream-faint">{d.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function SidebarCommandCenter({
   percentage, completedItems, totalItems, currentStreak, weekConsistency, systemAge,
-  direction, identity, statusMsg, statusColor, nextReviewDay,
+  statusMsg, statusColor, nextReviewDay,
+  nnDone, nnTotal, habitsDone, habitsTotal, tasksDone, tasksTotal,
+  weekDayData, milestoneInfo,
 }: {
   percentage: number; completedItems: number; totalItems: number;
   currentStreak: number; weekConsistency: number; systemAge: number;
-  direction: string; identity: string; statusMsg: string; statusColor: string;
-  nextReviewDay: string;
+  statusMsg: string; statusColor: string; nextReviewDay: string;
+  nnDone: number; nnTotal: number; habitsDone: number; habitsTotal: number; tasksDone: number; tasksTotal: number;
+  weekDayData: { label: string; pct: number }[];
+  milestoneInfo: { title: string; current: number; target: number } | null;
 }) {
   const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#C5A55A' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
   const ringSize = 100;
@@ -110,7 +144,7 @@ function SidebarCommandCenter({
   const off = circ - (percentage / 100) * circ;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
       {/* Score ring — hero element */}
       <div className="text-center">
@@ -126,54 +160,72 @@ function SidebarCommandCenter({
             <span className="text-[0.6rem] text-sa-cream-faint mt-0.5">% complete</span>
           </div>
         </div>
-        <p className="text-[0.75rem] text-sa-cream-muted mt-2">{completedItems} of {totalItems} items</p>
-        {statusMsg && <p className="text-[0.72rem] mt-2" style={{ color: statusColor }}>{statusMsg}</p>}
+        {statusMsg && <p className="text-[0.72rem] mt-3" style={{ color: statusColor }}>{statusMsg}</p>}
+      </div>
+
+      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
+
+      {/* Category breakdown */}
+      <div>
+        <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint mb-3">Categories</p>
+        <div className="space-y-2.5">
+          <CategoryMiniBar label="NNs" done={nnDone} total={nnTotal} color="#C5A55A" />
+          <CategoryMiniBar label="Habits" done={habitsDone} total={habitsTotal} color="#C5A55A" />
+          <CategoryMiniBar label="Tasks" done={tasksDone} total={tasksTotal} color="#C5A55A" />
+        </div>
       </div>
 
       <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
 
       {/* Stats grid */}
       <div className="grid grid-cols-3 gap-2">
-        {/* Streak */}
-        <div className="text-center py-3 rounded-sa" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div className="flex items-center justify-center gap-1 mb-1">
+        <div className="text-center py-2.5 rounded-sa" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="flex items-center justify-center gap-1 mb-0.5">
             <Flame className="w-3.5 h-3.5" style={{ color: currentStreak >= 7 ? '#6ECB8B' : currentStreak >= 3 ? '#C5A55A' : 'var(--cream-faint)' }} />
           </div>
-          <span className="font-serif text-xl text-sa-cream block">{currentStreak}</span>
-          <span className="text-[0.55rem] uppercase tracking-wider text-sa-cream-faint">Streak</span>
+          <span className="font-serif text-lg text-sa-cream block">{currentStreak}</span>
+          <span className="text-[0.5rem] uppercase tracking-wider text-sa-cream-faint">Streak</span>
         </div>
-
-        {/* Week */}
-        <div className="text-center py-3 rounded-sa" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div className="flex items-center justify-center gap-1 mb-1">
+        <div className="text-center py-2.5 rounded-sa" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="flex items-center justify-center gap-1 mb-0.5">
             <TrendingUp className="w-3.5 h-3.5" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#C5A55A' : 'var(--cream-faint)' }} />
           </div>
-          <span className="font-serif text-xl block" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#C5A55A' : 'var(--cream)' }}>{weekConsistency}%</span>
-          <span className="text-[0.55rem] uppercase tracking-wider text-sa-cream-faint">Week</span>
+          <span className="font-serif text-lg block" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#C5A55A' : 'var(--cream)' }}>{weekConsistency}%</span>
+          <span className="text-[0.5rem] uppercase tracking-wider text-sa-cream-faint">Week</span>
         </div>
-
-        {/* Day */}
-        <div className="text-center py-3 rounded-sa" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <div className="flex items-center justify-center gap-1 mb-1">
+        <div className="text-center py-2.5 rounded-sa" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div className="flex items-center justify-center gap-1 mb-0.5">
             <Calendar className="w-3.5 h-3.5 text-sa-cream-faint" />
           </div>
-          <span className="font-serif text-xl text-sa-cream block">{systemAge || '—'}</span>
-          <span className="text-[0.55rem] uppercase tracking-wider text-sa-cream-faint">Day</span>
+          <span className="font-serif text-lg text-sa-cream block">{systemAge || '—'}</span>
+          <span className="text-[0.5rem] uppercase tracking-wider text-sa-cream-faint">Day</span>
         </div>
       </div>
 
-      {/* Direction & Identity */}
-      {(direction || identity) && (
+      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
+
+      {/* 7-day heatmap */}
+      <div>
+        <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint mb-3">Last 7 Days</p>
+        <WeekHeatmap dayData={weekDayData} />
+      </div>
+
+      {/* Current milestone */}
+      {milestoneInfo && (
         <>
           <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
           <div>
-            <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint mb-3">Operating Direction</p>
-            {direction && (
-              <p className="font-serif text-[0.95rem] text-sa-cream leading-relaxed mb-3">{direction}</p>
-            )}
-            {identity && (
-              <p className="font-serif text-[0.85rem] italic text-sa-gold leading-relaxed">"{identity}"</p>
-            )}
+            <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint mb-2">Next Milestone</p>
+            <p className="text-[0.8rem] text-sa-cream mb-2">{milestoneInfo.title}</p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
+                <div className="h-full rounded-full transition-all duration-500" style={{
+                  width: `${milestoneInfo.target > 0 ? Math.round((milestoneInfo.current / milestoneInfo.target) * 100) : 0}%`,
+                  backgroundColor: '#C5A55A',
+                }} />
+              </div>
+              <span className="text-[0.65rem] tabular-nums text-sa-gold">{milestoneInfo.current}/{milestoneInfo.target}</span>
+            </div>
           </div>
         </>
       )}
@@ -422,16 +474,79 @@ export function TodayView({
   }, [percentage, totalItems, completedItems, nnForDate, habitsWithStatus, tasksForDate]);
 
   // Whether to show the command center
+  // ── 7-day heatmap data ──
+  const weekDayData = useMemo(() => {
+    const days: { label: string; pct: number }[] = [];
+    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const ds = fmtDateISO(d);
+      const di = d.getDay();
+      const dayStart = new Date(d); dayStart.setHours(0, 0, 0, 0);
+      const nns = activeNNs.filter(nn => new Date(nn.created_at) <= dayStart);
+      const nnD = nns.filter(nn => nnCompletions.some(c => c.non_negotiable_id === nn.id && c.completion_date === ds)).length;
+      const hDay = habits.filter(h => h.days_of_week.includes(di) && new Date(h.created_at) <= dayStart);
+      const hD = hDay.filter(h => habitCompletions.some(c => c.habit_id === h.id && c.completion_date === ds)).length;
+      const tDay = dailyTasks.filter(t => t.task_date === ds);
+      const tD = tDay.filter(t => t.completed).length;
+      const total = nns.length + hDay.length + tDay.length;
+      const done = nnD + hD + tD;
+      days.push({ label: dayLabels[di], pct: total > 0 ? Math.round((done / total) * 100) : 0 });
+    }
+    return days;
+  }, [nonNegotiables, nnCompletions, habits, habitCompletions, dailyTasks]);
+
+  // ── Current milestone info (simplified — matches AchievementsView milestones) ──
+  const milestoneInfo = useMemo(() => {
+    const totalTasksCompleted = dailyTasks.filter(t => t.completed).length;
+    const allDates = new Set<string>();
+    nnCompletions.forEach(c => allDates.add(c.completion_date));
+    habitCompletions.forEach(c => allDates.add(c.completion_date));
+    dailyTasks.filter(t => t.completed).forEach(t => allDates.add(t.task_date));
+    const totalActiveDays = allDates.size;
+
+    // Simplified milestone sequence (matches AchievementsView order)
+    const milestones: { title: string; check: () => boolean; progressFn?: () => { current: number; target: number } }[] = [
+      { title: 'System Online', check: () => activeNNs.length >= 1 && habits.length >= 1,
+        progressFn: () => ({ current: Math.min(activeNNs.length, 1) + Math.min(habits.length, 1), target: 2 }) },
+      { title: 'First Execution', check: () => {
+          // Check if any day in weekDayData hit 100%
+          return weekDayData.some(d => d.pct === 100);
+        } },
+      { title: 'Week One', check: () => totalActiveDays >= 7,
+        progressFn: () => ({ current: Math.min(totalActiveDays, 7), target: 7 }) },
+      { title: 'Grounded', check: () => totalActiveDays >= 14,
+        progressFn: () => ({ current: Math.min(totalActiveDays, 14), target: 14 }) },
+      { title: 'Executor', check: () => totalTasksCompleted >= 25,
+        progressFn: () => ({ current: Math.min(totalTasksCompleted, 25), target: 25 }) },
+      { title: '7-Day Streak', check: () => currentStreak >= 7,
+        progressFn: () => ({ current: Math.min(currentStreak, 7), target: 7 }) },
+      { title: 'Half Century', check: () => totalTasksCompleted >= 50,
+        progressFn: () => ({ current: Math.min(totalTasksCompleted, 50), target: 50 }) },
+      { title: 'Century', check: () => totalTasksCompleted >= 100,
+        progressFn: () => ({ current: Math.min(totalTasksCompleted, 100), target: 100 }) },
+    ];
+
+    for (const m of milestones) {
+      if (!m.check()) {
+        if (m.progressFn) {
+          const p = m.progressFn();
+          return { title: m.title, current: p.current, target: p.target };
+        }
+        return { title: m.title, current: 0, target: 1 };
+      }
+    }
+    return null; // all done
+  }, [activeNNs, habits, dailyTasks, nnCompletions, habitCompletions, currentStreak, weekDayData]);
+
   const showCommandCenter = isToday && totalItems > 0;
 
   return (
     <div className="max-w-5xl mx-auto">
 
-      {/* ════ DIRECTION & IDENTITY — mobile only (sidebar shows it on desktop) ════ */}
+      {/* ════ DIRECTION & IDENTITY ════ */}
       {(direction || identity) && (
-        <div className={showCommandCenter ? 'xl:hidden' : ''}>
-          <DirectionFrame direction={direction} identity={identity} />
-        </div>
+        <DirectionFrame direction={direction} identity={identity} />
       )}
 
       {/* ════ TWO-COLUMN LAYOUT on desktop when command center is active ════ */}
@@ -672,9 +787,13 @@ export function TodayView({
                 <SidebarCommandCenter
                   percentage={percentage} completedItems={completedItems} totalItems={totalItems}
                   currentStreak={currentStreak} weekConsistency={weekConsistency} systemAge={systemAge}
-                  direction={direction} identity={identity}
                   statusMsg={statusMsg} statusColor={statusColor}
                   nextReviewDay={nextReviewDay}
+                  nnDone={nnForDate.filter(n => n.completed).length} nnTotal={nnForDate.length}
+                  habitsDone={habitsWithStatus.filter(h => h.completed).length} habitsTotal={habitsWithStatus.length}
+                  tasksDone={tasksForDate.filter(t => t.completed).length} tasksTotal={tasksForDate.length}
+                  weekDayData={weekDayData}
+                  milestoneInfo={milestoneInfo}
                 />
               </div>
             </div>
