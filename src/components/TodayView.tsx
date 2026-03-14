@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Check, ChevronLeft, ChevronRight, Plus, Trash2, Power } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Plus, Trash2, Power, Flame, Activity } from 'lucide-react';
 import { Habit, HabitCompletion, DailyTask, NonNegotiable, NonNegotiableCompletion } from '../types';
 import { fmtDateISO, uid } from '../utils/dateUtils';
 
@@ -220,6 +220,31 @@ export function TodayView({
     return totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
   }, [nonNegotiables, nnCompletions, habits, habitCompletions]);
 
+  // ── Current streak (consecutive days at 80%+) ──
+  const currentStreak = useMemo(() => {
+    let streak = 0;
+    const today = new Date();
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(); d.setDate(today.getDate() - i);
+      const ds = fmtDateISO(d);
+      const di = d.getDay();
+      const dayStart = new Date(d); dayStart.setHours(0, 0, 0, 0);
+      const nns = activeNNs.filter(nn => new Date(nn.created_at) <= dayStart);
+      const nnD = nns.filter(nn => nnCompletions.some(c => c.non_negotiable_id === nn.id && c.completion_date === ds)).length;
+      const hDay = habits.filter(h => h.days_of_week.includes(di) && new Date(h.created_at) <= dayStart);
+      const hD = hDay.filter(h => habitCompletions.some(c => c.habit_id === h.id && c.completion_date === ds)).length;
+      const tDay = dailyTasks.filter(t => t.task_date === ds);
+      const tD = tDay.filter(t => t.completed).length;
+      const total = nns.length + hDay.length + tDay.length;
+      const done = nnD + hD + tD;
+      if (total === 0) { if (i === 0) continue; else break; }
+      const pct = Math.round((done / total) * 100);
+      if (pct >= 80) streak++;
+      else { if (i > 0) break; }
+    }
+    return streak;
+  }, [nonNegotiables, nnCompletions, habits, habitCompletions, dailyTasks]);
+
   const nextReviewDay = useMemo(() => {
     const dow = new Date().getDay();
     const d = dow === 0 ? 0 : 7 - dow;
@@ -256,54 +281,107 @@ export function TodayView({
         </button>
       </div>
 
-      {/* ════ DAILY STATUS — the Today view talks ════ */}
-      {isToday && (() => {
-        const hasNNs = activeNNs.length > 0;
-        const hasHabits = habitsForDay.length > 0;
-        const hasTasks = tasksForDate.length > 0;
-        const hasSetup = hasNNs || hasHabits;
-        const allNNsDone = nnForDate.length > 0 && nnForDate.every(n => n.completed);
+      {/* ════ COMMAND CENTER ════ */}
+      {isToday && totalItems > 0 && (() => {
         const nnRemaining = nnForDate.filter(n => !n.completed).length;
+        const allNNsDone = nnForDate.length > 0 && nnForDate.every(n => n.completed);
         const habitsRemaining = habitsWithStatus.filter(h => !h.completed).length;
         const tasksRemaining = tasksForDate.filter(t => !t.completed).length;
 
-        let icon = '◆';
-        let color = '#C5A55A';
-        let message = '';
-
-        if (!hasSetup && !hasTasks) {
-          icon = '⚠'; color = '#E07070';
-          message = 'No system configured. Go to Installation → Day 1 to start building your operating system.';
-        } else if (!hasNNs) {
-          message = 'No non-negotiables set. Add your daily commitments in the System tab.';
-        } else if (!hasHabits) {
-          message = 'No habits installed for today. Add keystone habits in the System tab.';
-        } else if (percentage === 100) {
-          icon = '●'; color = '#6ECB8B';
-          message = 'All items executed. System complete for today.';
+        // Status message
+        let statusColor = '#C5A55A';
+        let statusMsg = '';
+        if (percentage === 100) {
+          statusColor = '#6ECB8B'; statusMsg = 'System complete for today.';
         } else if (percentage >= 80) {
-          icon = '●'; color = '#6ECB8B';
-          message = `Almost there — ${totalItems - completedItems} item${totalItems - completedItems !== 1 ? 's' : ''} remaining. Close it out.`;
+          statusColor = '#6ECB8B'; statusMsg = `${totalItems - completedItems} item${totalItems - completedItems !== 1 ? 's' : ''} remaining. Close it out.`;
         } else if (allNNsDone && (habitsRemaining > 0 || tasksRemaining > 0)) {
-          message = `Non-negotiables done. ${habitsRemaining + tasksRemaining} more to go — finish your habits and tasks.`;
+          statusMsg = `NNs done. ${habitsRemaining + tasksRemaining} more to go.`;
         } else if (nnRemaining > 0 && percentage > 0) {
-          icon = '⚠'; color = '#E07070';
-          message = `${nnRemaining} non-negotiable${nnRemaining !== 1 ? 's' : ''} incomplete. These are non-negotiable — handle them first.`;
-        } else if (percentage > 0 && percentage < 50) {
-          message = `${percentage}% complete. ${completedItems} down, ${totalItems - completedItems} to go. Keep pushing.`;
-        } else if (percentage === 0 && totalItems > 0) {
-          message = `${totalItems} items waiting. Start with your non-negotiables — everything else follows.`;
+          statusColor = '#E07070'; statusMsg = `${nnRemaining} non-negotiable${nnRemaining !== 1 ? 's' : ''} incomplete.`;
+        } else if (percentage > 0) {
+          statusMsg = `${completedItems}/${totalItems} complete. Keep pushing.`;
         } else {
-          return null;
+          statusMsg = `${totalItems} items waiting.`;
         }
 
+        // Score ring color
+        const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#C5A55A' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
+        const ringSize = 52;
+        const sw = 3;
+        const r = (ringSize - sw * 2) / 2;
+        const circ = 2 * Math.PI * r;
+        const off = circ - (percentage / 100) * circ;
+
+        return (
+          <div className="mb-10">
+            {/* Metrics row */}
+            <div className="flex items-center justify-between gap-3 mb-4 px-2">
+              {/* Daily score ring */}
+              <div className="flex items-center gap-3">
+                <div className="relative" style={{ width: ringSize, height: ringSize }}>
+                  <svg width={ringSize} height={ringSize} className="transform -rotate-90">
+                    <circle cx={ringSize/2} cy={ringSize/2} r={r} stroke="rgba(255,255,255,0.06)" strokeWidth={sw} fill="none" />
+                    <circle cx={ringSize/2} cy={ringSize/2} r={r} stroke={ringColor} strokeWidth={sw} fill="none"
+                      strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={off}
+                      style={{ transition: 'stroke-dashoffset 0.6s ease-out' }} />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="font-serif text-lg" style={{ color: ringColor }}>{percentage}</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint">Today</p>
+                  <p className="text-sm text-sa-cream">{completedItems}/{totalItems}</p>
+                </div>
+              </div>
+
+              {/* Streak */}
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1 mb-0.5">
+                  <Flame className="w-3.5 h-3.5" style={{ color: currentStreak >= 7 ? '#6ECB8B' : currentStreak >= 3 ? '#C5A55A' : 'var(--cream-faint)' }} />
+                  <span className="font-serif text-lg text-sa-cream">{currentStreak}</span>
+                </div>
+                <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint">Streak</p>
+              </div>
+
+              {/* Week */}
+              <div className="text-center">
+                <span className="font-serif text-lg block" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#C5A55A' : 'var(--cream-faint)' }}>
+                  {weekConsistency}%
+                </span>
+                <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint">Week</p>
+              </div>
+
+              {/* System age */}
+              {systemAge > 0 && (
+                <div className="text-center">
+                  <span className="font-serif text-lg text-sa-cream block">{systemAge}</span>
+                  <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint">Day</p>
+                </div>
+              )}
+            </div>
+
+            {/* Status message */}
+            <p className="text-[0.78rem] text-center" style={{ color: statusColor }}>{statusMsg}</p>
+          </div>
+        );
+      })()}
+
+      {/* ════ EMPTY/NO-SYSTEM STATUS ════ */}
+      {isToday && totalItems === 0 && (activeNNs.length > 0 || habitsForDay.length > 0) && (() => {
+        const hasNNs = activeNNs.length > 0;
+        const hasHabits = habitsForDay.length > 0;
+        let msg = '';
+        if (!hasNNs) msg = 'No non-negotiables set. Add your daily commitments in the System tab.';
+        else if (!hasHabits) msg = 'No habits installed for today. Add keystone habits in the System tab.';
+        if (!msg) return null;
         return (
           <div className="mb-10 px-5 py-3.5 rounded-sa border flex items-start gap-3" style={{
-            borderColor: color === '#6ECB8B' ? 'rgba(110,203,139,0.25)' : color === '#E07070' ? 'rgba(224,112,112,0.25)' : 'rgba(197,165,90,0.25)',
-            backgroundColor: color === '#6ECB8B' ? 'rgba(110,203,139,0.06)' : color === '#E07070' ? 'rgba(224,112,112,0.06)' : 'rgba(197,165,90,0.06)',
+            borderColor: 'rgba(197,165,90,0.25)', backgroundColor: 'rgba(197,165,90,0.06)',
           }}>
-            <span className="text-sm flex-shrink-0 mt-px" style={{ color }}>{icon}</span>
-            <p className="text-[0.82rem] leading-relaxed" style={{ color }}>{message}</p>
+            <span className="text-sm flex-shrink-0 mt-px" style={{ color: '#C5A55A' }}>◆</span>
+            <p className="text-[0.82rem] leading-relaxed" style={{ color: '#C5A55A' }}>{msg}</p>
           </div>
         );
       })()}
@@ -469,25 +547,6 @@ export function TodayView({
         <div className="mb-11 py-7 border border-sa-green-border rounded-xl bg-sa-green-soft text-center">
           <p className="font-serif text-xl text-sa-green">System executed.</p>
           <p className="text-[0.8rem] text-sa-cream-muted mt-1.5">All items completed for {dateLabel.toLowerCase()}.</p>
-        </div>
-      )}
-
-      {/* ════ SYSTEM PULSE ════ */}
-      {isToday && (systemAge > 0 || totalItems > 0) && percentage < 100 && (
-        <div className="mt-6 pt-7" style={{
-          borderTop: '1px solid rgba(197, 165, 90, 0.06)',
-        }}>
-          <p className="text-[0.72rem] text-sa-cream-faint text-center tracking-wide">
-            {systemAge > 0 && <span>System active — Day {systemAge}</span>}
-            {systemAge > 0 && weekConsistency > 0 && <span className="mx-2.5 text-sa-cream-faint/40">·</span>}
-            {weekConsistency > 0 && (
-              <span style={{ color: weekConsistency >= 80 ? 'var(--green)' : weekConsistency >= 50 ? 'var(--gold)' : 'var(--rose)' }}>
-                {weekConsistency}% this week
-              </span>
-            )}
-            {(systemAge > 0 || weekConsistency > 0) && <span className="mx-2.5 text-sa-cream-faint/40">·</span>}
-            <span>Weekly review {nextReviewDay.toLowerCase()}</span>
-          </p>
         </div>
       )}
 
