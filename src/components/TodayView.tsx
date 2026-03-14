@@ -127,7 +127,7 @@ function SidebarCommandCenter({
   percentage, completedItems, totalItems, currentStreak, weekConsistency, systemAge,
   statusMsg, statusColor, nextReviewDay,
   nnDone, nnTotal, habitsDone, habitsTotal, tasksDone, tasksTotal,
-  weekDayData, milestoneInfo, onNavigate,
+  weekDayData, milestoneInfo, onNavigate, dateLabel,
 }: {
   percentage: number; completedItems: number; totalItems: number;
   currentStreak: number; weekConsistency: number; systemAge: number;
@@ -136,6 +136,7 @@ function SidebarCommandCenter({
   weekDayData: { label: string; pct: number }[];
   milestoneInfo: { title: string; current: number; target: number } | null;
   onNavigate?: (tab: string) => void;
+  dateLabel: string;
 }) {
   const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#C5A55A' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
   const ringSize = 100;
@@ -149,6 +150,7 @@ function SidebarCommandCenter({
 
       {/* Score ring — hero element */}
       <div className="text-center">
+        <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint mb-3">{dateLabel}</p>
         <div className="relative mx-auto" style={{ width: ringSize, height: ringSize }}>
           <svg width={ringSize} height={ringSize} className="transform -rotate-90">
             <circle cx={ringSize/2} cy={ringSize/2} r={r} stroke="rgba(255,255,255,0.05)" strokeWidth={sw} fill="none" />
@@ -247,11 +249,11 @@ function SidebarCommandCenter({
 
 function MobileCommandCenter({
   percentage, completedItems, totalItems, currentStreak, weekConsistency, systemAge,
-  statusMsg, statusColor,
+  statusMsg, statusColor, dateLabel,
 }: {
   percentage: number; completedItems: number; totalItems: number;
   currentStreak: number; weekConsistency: number; systemAge: number;
-  statusMsg: string; statusColor: string;
+  statusMsg: string; statusColor: string; dateLabel: string;
 }) {
   const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#C5A55A' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
   const ringSize = 52;
@@ -276,7 +278,7 @@ function MobileCommandCenter({
             </div>
           </div>
           <div>
-            <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint">Today</p>
+            <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint">{dateLabel}</p>
             <p className="text-sm text-sa-cream">{completedItems}/{totalItems}</p>
           </div>
         </div>
@@ -468,14 +470,17 @@ export function TodayView({
     const allNNsDone = nnForDate.length > 0 && nnForDate.every(n => n.completed);
     const habitsRemaining = habitsWithStatus.filter(h => !h.completed).length;
     const tasksRemaining = tasksForDate.filter(t => !t.completed).length;
+    const dayName = isToday ? 'today' : dateLabel.toLowerCase();
 
-    if (percentage === 100) return { statusMsg: 'System complete for today.', statusColor: '#6ECB8B' };
+    if (percentage === 100) return { statusMsg: `System complete for ${dayName}.`, statusColor: '#6ECB8B' };
+    if (!isToday && percentage > 0) return { statusMsg: `${completedItems}/${totalItems} completed ${dayName}.`, statusColor: percentage >= 80 ? '#6ECB8B' : '#C5A55A' };
+    if (!isToday && percentage === 0) return { statusMsg: `No items completed ${dayName}.`, statusColor: 'var(--cream-faint)' };
     if (percentage >= 80) return { statusMsg: `${totalItems - completedItems} item${totalItems - completedItems !== 1 ? 's' : ''} remaining. Close it out.`, statusColor: '#6ECB8B' };
     if (allNNsDone && (habitsRemaining > 0 || tasksRemaining > 0)) return { statusMsg: `NNs done. ${habitsRemaining + tasksRemaining} more to go.`, statusColor: '#C5A55A' };
     if (nnRemaining > 0 && percentage > 0) return { statusMsg: `${nnRemaining} non-negotiable${nnRemaining !== 1 ? 's' : ''} incomplete.`, statusColor: '#E07070' };
     if (percentage > 0) return { statusMsg: `${completedItems}/${totalItems} complete. Keep pushing.`, statusColor: '#C5A55A' };
     return { statusMsg: `${totalItems} items waiting.`, statusColor: '#C5A55A' };
-  }, [percentage, totalItems, completedItems, nnForDate, habitsWithStatus, tasksForDate]);
+  }, [percentage, totalItems, completedItems, nnForDate, habitsWithStatus, tasksForDate, isToday, dateLabel]);
 
   // Whether to show the command center
   // ── 7-day heatmap data ──
@@ -543,7 +548,7 @@ export function TodayView({
     return null; // all done
   }, [activeNNs, habits, dailyTasks, nnCompletions, habitCompletions, currentStreak, weekDayData]);
 
-  const showCommandCenter = isToday && totalItems > 0;
+  const showCommandCenter = activeNNs.length > 0 || habits.length > 0;
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -581,7 +586,7 @@ export function TodayView({
               <MobileCommandCenter
                 percentage={percentage} completedItems={completedItems} totalItems={totalItems}
                 currentStreak={currentStreak} weekConsistency={weekConsistency} systemAge={systemAge}
-                statusMsg={statusMsg} statusColor={statusColor}
+                statusMsg={statusMsg} statusColor={statusColor} dateLabel={dateLabel}
               />
             </div>
           )}
@@ -799,6 +804,7 @@ export function TodayView({
                   weekDayData={weekDayData}
                   milestoneInfo={milestoneInfo}
                   onNavigate={onNavigate}
+                  dateLabel={dateLabel}
                 />
               </div>
             </div>
