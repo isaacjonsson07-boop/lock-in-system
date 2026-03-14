@@ -748,9 +748,9 @@ export function TodayView({
             </div>
           </section>
 
-          {/* ════ PLAN TOMORROW ════ */}
+          {/* ════ PLAN TOMORROW (mobile only — desktop version is in sidebar) ════ */}
           {isToday && isEvening && (
-            <div className="mb-11">
+            <div className="mb-11 xl:hidden">
               <button onClick={() => setDayOffset(1)}
                 className="relative w-full py-6 border border-sa-gold-border rounded-xl text-center overflow-hidden transition-all duration-300 hover:border-sa-gold hover:-translate-y-[1px] group">
                 <div className="absolute inset-0 bg-gradient-to-br from-sa-gold-glow to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -807,6 +807,18 @@ export function TodayView({
                   dateLabel={dateLabel}
                 />
               </div>
+
+              {/* Plan Tomorrow — desktop only */}
+              {isToday && isEvening && (
+                <div className="mt-4">
+                  <button onClick={() => setDayOffset(1)}
+                    className="relative w-full py-4 border border-sa-gold-border rounded-xl text-center overflow-hidden transition-all duration-300 hover:border-sa-gold hover:-translate-y-[1px] group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-sa-gold-glow to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <p className="relative font-serif text-[0.95rem] text-sa-gold">Plan Tomorrow →</p>
+                    <p className="relative text-[0.7rem] text-sa-cream-faint mt-1">Set up before you close out.</p>
+                  </button>
+                </div>
+              )}
             </div>
           </aside>
         )}
