@@ -259,10 +259,10 @@ function ExpandedReport({ report, onClose }: { report: SystemReport; onClose: ()
   const isDiamond = report.tier === 'diamond';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
       onClick={onClose}
-      style={{ backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-      <div className="relative w-full max-w-lg rounded-sa-lg"
+      style={{ backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}>
+      <div className="relative w-full max-w-lg max-h-[85vh] rounded-sa-lg"
         onClick={(e) => e.stopPropagation()}
         style={{
           border: `1px solid ${config.border}`,
@@ -275,22 +275,22 @@ function ExpandedReport({ report, onClose }: { report: SystemReport; onClose: ()
         {/* Ornate tier frame */}
         <TierFrame tier={report.tier} />
 
-        {/* Scrollable content */}
-        <div className="max-h-[90vh] overflow-y-auto rounded-sa-lg">
-          <div className="relative z-20 p-8 sm:p-10">
+        {/* Content — compact, no scroll needed */}
+        <div className="rounded-sa-lg">
+          <div className="relative z-20 p-5 sm:p-8">
             <button onClick={onClose}
               className="absolute top-4 right-4 p-1.5 text-sa-cream-faint hover:text-sa-cream transition-colors rounded-sa-sm hover:bg-sa-bg-lift z-30">
               <X className="w-4 h-4" />
             </button>
 
-            <div className="text-center mb-8">
-              <p className="text-[0.65rem] uppercase tracking-[0.2em] text-sa-cream-faint mb-3">System Report</p>
+            <div className="text-center mb-5">
+              <p className="text-[0.65rem] uppercase tracking-[0.2em] text-sa-cream-faint mb-2">System Report</p>
               <h2 className="font-serif text-2xl text-sa-cream mb-1">{getMonthLabel(report.month)}</h2>
               {report.isInstallationReport && (
                 <p className="text-xs mt-1" style={{ color: config.color }}>Installation Complete — Day 21</p>
               )}
-              <div className="flex justify-center mt-6 mb-3">
-                <ScoreRing score={report.score} tier={report.tier} size={100} />
+              <div className="flex justify-center mt-4 mb-2">
+                <ScoreRing score={report.score} tier={report.tier} size={80} />
               </div>
               <div className="flex items-center justify-center gap-3">
                 <span className="text-sm font-medium uppercase tracking-wider" style={{ color: config.color }}>
@@ -306,9 +306,9 @@ function ExpandedReport({ report, onClose }: { report: SystemReport; onClose: ()
               )}
             </div>
 
-            <div className="h-px mb-6" style={{ background: `linear-gradient(90deg, transparent, ${config.border}, transparent)` }} />
+            <div className="h-px mb-4" style={{ background: `linear-gradient(90deg, transparent, ${config.border}, transparent)` }} />
 
-            <div className="space-y-4 mb-8">
+            <div className="space-y-3 mb-5">
               <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-cream-faint">Performance Breakdown</p>
               <CategoryBar label={`Habits (${report.habitsCount} tracked)`} score={report.habitsScore} color={config.color} />
               <CategoryBar label={`Tasks (avg ${report.tasksAvgPerDay}/day)`} score={report.tasksScore} color={config.color} />
@@ -316,7 +316,7 @@ function ExpandedReport({ report, onClose }: { report: SystemReport; onClose: ()
             </div>
 
             {!report.meetsMinimums && (
-              <div className="mb-6 p-3 rounded-sa text-xs text-sa-cream-faint"
+              <div className="mb-4 p-2.5 rounded-sa text-xs text-sa-cream-faint"
                 style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <p className="font-medium text-sa-cream-muted mb-1">Below system minimums</p>
                 <p>
@@ -329,7 +329,7 @@ function ExpandedReport({ report, onClose }: { report: SystemReport; onClose: ()
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3 mb-8">
+            <div className="grid grid-cols-2 gap-2 mb-5">
               {[
                 { icon: CheckCircle, label: 'Tasks Done', value: String(report.totalTasksCompleted), suffix: '' },
                 { icon: Flame, label: 'Streak', value: String(report.longestStreak), suffix: 'days' },
@@ -338,24 +338,24 @@ function ExpandedReport({ report, onClose }: { report: SystemReport; onClose: ()
               ].map(stat => {
                 const Icon = stat.icon;
                 return (
-                  <div key={stat.label} className="p-3 rounded-sa"
+                  <div key={stat.label} className="p-2.5 rounded-sa"
                     style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Icon className="w-3.5 h-3.5" style={{ color: config.color }} />
-                      <span className="text-[0.65rem] uppercase tracking-wider text-sa-cream-faint">{stat.label}</span>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <Icon className="w-3 h-3" style={{ color: config.color }} />
+                      <span className="text-[0.6rem] uppercase tracking-wider text-sa-cream-faint">{stat.label}</span>
                     </div>
-                    <span className="font-serif text-xl" style={{ color: stat.useColor ? config.color : 'var(--cream)' }}>
+                    <span className="font-serif text-lg" style={{ color: stat.useColor ? config.color : 'var(--cream)' }}>
                       {stat.value}
-                      {stat.suffix && <span className="text-sm text-sa-cream-faint ml-1">{stat.suffix}</span>}
+                      {stat.suffix && <span className="text-xs text-sa-cream-faint ml-1">{stat.suffix}</span>}
                     </span>
                   </div>
                 );
               })}
             </div>
 
-            <div className="mb-2 text-center">
-              <div className="h-px mb-5" style={{ background: `linear-gradient(90deg, transparent, ${config.border}, transparent)` }} />
-              <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-cream-faint mb-3">Personal Highlight</p>
+            <div className="mb-1 text-center">
+              <div className="h-px mb-3" style={{ background: `linear-gradient(90deg, transparent, ${config.border}, transparent)` }} />
+              <p className="text-[0.65rem] uppercase tracking-[0.15em] text-sa-cream-faint mb-2">Personal Highlight</p>
               <p className="text-sm text-sa-cream-soft italic leading-relaxed">"{report.personalHighlight}"</p>
             </div>
           </div>
