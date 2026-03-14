@@ -317,20 +317,6 @@ function ExpandedReport({ report, onClose }: { report: SystemReport; onClose: ()
               <CategoryBar label={`Non-Negotiables (${report.nnCount} active)`} score={report.nnScore} color={config.color} />
             </div>
 
-            {!report.meetsMinimums && !isMobile && (
-              <div className="mb-3 sm:mb-4 p-2 sm:p-3 rounded-sa text-[0.65rem] sm:text-xs text-sa-cream-faint"
-                style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <p className="font-medium text-sa-cream-muted mb-0.5 sm:mb-1">Below system minimums</p>
-                <p>
-                  Full scoring requires {report.habitsCount < 3 ? `3+ habits (you have ${report.habitsCount})` : ''}
-                  {report.habitsCount < 3 && report.tasksAvgPerDay < 3 ? ', ' : ''}
-                  {report.tasksAvgPerDay < 3 ? `3+ tasks/day avg (you avg ${report.tasksAvgPerDay})` : ''}
-                  {(report.habitsCount < 3 || report.tasksAvgPerDay < 3) && report.nnCount < 2 ? ', ' : ''}
-                  {report.nnCount < 2 ? `2+ non-negotiables (you have ${report.nnCount})` : ''}.
-                </p>
-              </div>
-            )}
-
             <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mb-3 sm:mb-5">
               {[
                 { icon: CheckCircle, label: 'Tasks Done', value: String(report.totalTasksCompleted), suffix: '' },
