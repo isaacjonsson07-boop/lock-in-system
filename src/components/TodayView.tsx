@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Check, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Plus, Trash2, Power } from 'lucide-react';
 import { Habit, HabitCompletion, DailyTask, NonNegotiable, NonNegotiableCompletion } from '../types';
 import { fmtDateISO, uid } from '../utils/dateUtils';
 
@@ -256,6 +256,58 @@ export function TodayView({
         </button>
       </div>
 
+      {/* ════ DAILY STATUS — the Today view talks ════ */}
+      {isToday && (() => {
+        const hasNNs = activeNNs.length > 0;
+        const hasHabits = habitsForDay.length > 0;
+        const hasTasks = tasksForDate.length > 0;
+        const hasSetup = hasNNs || hasHabits;
+        const allNNsDone = nnForDate.length > 0 && nnForDate.every(n => n.completed);
+        const nnRemaining = nnForDate.filter(n => !n.completed).length;
+        const habitsRemaining = habitsWithStatus.filter(h => !h.completed).length;
+        const tasksRemaining = tasksForDate.filter(t => !t.completed).length;
+
+        let icon = '◆';
+        let color = '#C5A55A';
+        let message = '';
+
+        if (!hasSetup && !hasTasks) {
+          icon = '⚠'; color = '#E07070';
+          message = 'No system configured. Go to Installation → Day 1 to start building your operating system.';
+        } else if (!hasNNs) {
+          message = 'No non-negotiables set. Add your daily commitments in the System tab.';
+        } else if (!hasHabits) {
+          message = 'No habits installed for today. Add keystone habits in the System tab.';
+        } else if (percentage === 100) {
+          icon = '●'; color = '#6ECB8B';
+          message = 'All items executed. System complete for today.';
+        } else if (percentage >= 80) {
+          icon = '●'; color = '#6ECB8B';
+          message = `Almost there — ${totalItems - completedItems} item${totalItems - completedItems !== 1 ? 's' : ''} remaining. Close it out.`;
+        } else if (allNNsDone && (habitsRemaining > 0 || tasksRemaining > 0)) {
+          message = `Non-negotiables done. ${habitsRemaining + tasksRemaining} more to go — finish your habits and tasks.`;
+        } else if (nnRemaining > 0 && percentage > 0) {
+          icon = '⚠'; color = '#E07070';
+          message = `${nnRemaining} non-negotiable${nnRemaining !== 1 ? 's' : ''} incomplete. These are non-negotiable — handle them first.`;
+        } else if (percentage > 0 && percentage < 50) {
+          message = `${percentage}% complete. ${completedItems} down, ${totalItems - completedItems} to go. Keep pushing.`;
+        } else if (percentage === 0 && totalItems > 0) {
+          message = `${totalItems} items waiting. Start with your non-negotiables — everything else follows.`;
+        } else {
+          return null;
+        }
+
+        return (
+          <div className="mb-10 px-5 py-3.5 rounded-sa border flex items-start gap-3" style={{
+            borderColor: color === '#6ECB8B' ? 'rgba(110,203,139,0.25)' : color === '#E07070' ? 'rgba(224,112,112,0.25)' : 'rgba(197,165,90,0.25)',
+            backgroundColor: color === '#6ECB8B' ? 'rgba(110,203,139,0.06)' : color === '#E07070' ? 'rgba(224,112,112,0.06)' : 'rgba(197,165,90,0.06)',
+          }}>
+            <span className="text-sm flex-shrink-0 mt-px" style={{ color }}>{icon}</span>
+            <p className="text-[0.82rem] leading-relaxed" style={{ color }}>{message}</p>
+          </div>
+        );
+      })()}
+
       {/* ════ NON-NEGOTIABLES — sacred tier ════ */}
       {nnForDate.length > 0 && (
         <section className="mb-11">
@@ -421,14 +473,18 @@ export function TodayView({
       )}
 
       {/* ════ SYSTEM PULSE ════ */}
-      {isToday && (systemAge > 0 || totalItems > 0) && (
+      {isToday && (systemAge > 0 || totalItems > 0) && percentage < 100 && (
         <div className="mt-6 pt-7" style={{
           borderTop: '1px solid rgba(197, 165, 90, 0.06)',
         }}>
           <p className="text-[0.72rem] text-sa-cream-faint text-center tracking-wide">
             {systemAge > 0 && <span>System active — Day {systemAge}</span>}
             {systemAge > 0 && weekConsistency > 0 && <span className="mx-2.5 text-sa-cream-faint/40">·</span>}
-            {weekConsistency > 0 && <span>{weekConsistency}% this week</span>}
+            {weekConsistency > 0 && (
+              <span style={{ color: weekConsistency >= 80 ? 'var(--green)' : weekConsistency >= 50 ? 'var(--gold)' : 'var(--rose)' }}>
+                {weekConsistency}% this week
+              </span>
+            )}
             {(systemAge > 0 || weekConsistency > 0) && <span className="mx-2.5 text-sa-cream-faint/40">·</span>}
             <span>Weekly review {nextReviewDay.toLowerCase()}</span>
           </p>
@@ -437,11 +493,16 @@ export function TodayView({
 
       {/* ════ EMPTY STATE ════ */}
       {totalItems === 0 && !showAddTask && !direction && (
-        <div className="text-center py-20">
-          <p className="font-serif text-2xl text-sa-cream mb-3">Your system is empty.</p>
-          <p className="text-sm text-sa-cream-muted max-w-md mx-auto leading-relaxed">
-            Start the Installation to build your operating system — define your direction,
-            set your non-negotiables, and install the habits that run your life.
+        <div className="text-center py-16">
+          <div className="w-14 h-14 rounded-full border border-dashed border-sa-gold-border flex items-center justify-center mx-auto mb-5">
+            <Power className="w-6 h-6 text-sa-gold opacity-60" />
+          </div>
+          <p className="font-serif text-2xl text-sa-cream mb-3">System offline.</p>
+          <p className="text-sm text-sa-cream-muted max-w-md mx-auto leading-relaxed mb-6">
+            No direction, no non-negotiables, no habits installed. Your operating system has nothing to run.
+          </p>
+          <p className="text-[0.8rem] text-sa-gold">
+            Go to Installation → Day 1 to begin.
           </p>
         </div>
       )}
