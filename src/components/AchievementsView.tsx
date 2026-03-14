@@ -258,12 +258,13 @@ function SystemCard({ report, onClick }: { report: SystemReport; onClick: () => 
 function ExpandedReport({ report, onClose }: { report: SystemReport; onClose: () => void }) {
   const config = TIER_CONFIG[report.tier];
   const isDiamond = report.tier === 'diamond';
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       onClick={onClose}
       style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)' }}>
-      <div className="relative w-full max-w-lg max-h-[85vh] rounded-sa-lg overflow-hidden"
+      <div className="relative w-full max-w-lg rounded-sa-lg"
         onClick={(e) => e.stopPropagation()}
         style={{
           border: `1px solid ${config.border}`,
@@ -291,7 +292,7 @@ function ExpandedReport({ report, onClose }: { report: SystemReport; onClose: ()
                 <p className="text-xs mt-1" style={{ color: config.color }}>Installation Complete — Day 21</p>
               )}
               <div className="flex justify-center mt-3 sm:mt-6 mb-1.5 sm:mb-3">
-                <ScoreRing score={report.score} tier={report.tier} size={70} />
+                <ScoreRing score={report.score} tier={report.tier} size={isMobile ? 60 : 100} />
               </div>
               <div className="flex items-center justify-center gap-3">
                 <span className="text-xs sm:text-sm font-medium uppercase tracking-wider" style={{ color: config.color }}>
@@ -316,7 +317,7 @@ function ExpandedReport({ report, onClose }: { report: SystemReport; onClose: ()
               <CategoryBar label={`Non-Negotiables (${report.nnCount} active)`} score={report.nnScore} color={config.color} />
             </div>
 
-            {!report.meetsMinimums && (
+            {!report.meetsMinimums && !isMobile && (
               <div className="mb-3 sm:mb-6 p-2 sm:p-3 rounded-sa text-[0.65rem] sm:text-xs text-sa-cream-faint"
                 style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <p className="font-medium text-sa-cream-muted mb-0.5 sm:mb-1">Below system minimums</p>
