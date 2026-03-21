@@ -35,8 +35,8 @@ const TAB_UNLOCK_REQUIREMENTS: Record<TabType, number | null> = {
   settings: null,      // Always open
   system: 1,           // After Day 1 (direction statement)
   today: 2,            // After Day 2 (daily structure)
+  achievements: 5,     // After Day 5 (tracking system installed, milestones start)
   reviews: 7,          // After Day 7 (first review)
-  achievements: 21,    // After Day 21 (installation complete)
 };
 
 export interface TabLockInfo {
@@ -64,7 +64,7 @@ export function getTabLockInfo(tab: TabType, highestCompletedDay: number): TabLo
     today: `Complete Day 2 to activate your daily execution view.`,
     system: `Complete Day 1 to start building your system.`,
     reviews: `Complete Day 7 to unlock your review tools.`,
-    achievements: `Complete all 21 days to view your achievements.`,
+    achievements: `Complete Day 5 to start tracking your milestones.`,
   };
 
   return {
