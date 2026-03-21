@@ -31,12 +31,12 @@ export function getHighestCompletedDay(journalEntries: JournalEntry[]): number {
  * null = always accessible.
  */
 const TAB_UNLOCK_REQUIREMENTS: Record<TabType, number | null> = {
-  installation: null,  // Always open
-  settings: null,      // Always open
-  system: 1,           // After Day 1 (direction statement)
-  today: 2,            // After Day 2 (daily structure)
-  achievements: 5,     // After Day 5 (tracking system installed, milestones start)
-  reviews: 7,          // After Day 7 (first review)
+  installation: null,
+  settings: null,
+  system: null,
+  today: null,
+  achievements: null,
+  reviews: null,
 };
 
 export interface TabLockInfo {
@@ -86,6 +86,5 @@ export function isTabLocked(tab: TabType, highestCompletedDay: number): boolean 
  * New users (day 0) go to Installation. Everyone else goes to Today (if unlocked) or Installation.
  */
 export function getDefaultTab(highestCompletedDay: number): TabType {
-  if (highestCompletedDay >= 2) return 'today';
-  return 'installation';
+  return 'today';
 }

@@ -26,7 +26,7 @@ function App() {
   } = useAuth();
 
   // === STATE ===
-  const [currentTab, setCurrentTab] = useState<TabType>('installation');
+  const [currentTab, setCurrentTab] = useState<TabType>('today');
   const [reviewsInitialTab, setReviewsInitialTab] = useState<'snapshot' | 'weekly' | 'quarterly'>('snapshot');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [lockedTabInfo, setLockedTabInfo] = useState<{ tab: TabType; message: string; requiredDay: number } | null>(null);
