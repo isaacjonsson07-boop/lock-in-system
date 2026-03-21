@@ -20,10 +20,25 @@ export interface LessonSection {
   content: LessonContentBlock[];
 }
 
+export type TaskAction =
+  | 'system-direction'
+  | 'system-identity'
+  | 'system-priorities'
+  | 'system-nns'
+  | 'system-habits'
+  | 'system-decisions'
+  | 'system-failure'
+  | 'system-manual'
+  | 'today'
+  | 'reviews-weekly'
+  | 'reviews-quarterly'
+  | 'journal';
+
 export interface LessonTask {
   name: string;
   description: string;
   hint?: string;
+  action?: TaskAction;
 }
 
 export interface LessonData {
@@ -137,7 +152,8 @@ export const LESSON_DATA: LessonData[] =
       },
       {
         "name": "Add it to the app",
-        "description": "Go to the <strong>System</strong> tab and paste your direction statement into the Direction Statement field. This is where it lives from now on — you'll see it at the top of your Today view every day."
+        "description": "Go to the <strong>System</strong> tab and paste your direction statement into the Direction Statement field. This is where it lives from now on — you'll see it at the top of your Today view every day.",
+        "action": "system-direction"
       }
     ],
     "tasksSubtitle": "Complete both tasks before moving to Day 2.",
@@ -393,7 +409,8 @@ export const LESSON_DATA: LessonData[] =
       },
       {
         "name": "Add them to the app",
-        "description": "Go to the <strong>System</strong> tab and add each non-negotiable. These will appear in your <strong>Today</strong> view every day as checkboxes. Starting tomorrow, you check them off daily."
+        "description": "Go to the <strong>System</strong> tab and add each non-negotiable. These will appear in your <strong>Today</strong> view every day as checkboxes. Starting tomorrow, you check them off daily.",
+        "action": "system-nns"
       }
     ],
     "tasksSubtitle": "Complete both tasks before moving to Day 5.",
@@ -469,7 +486,8 @@ export const LESSON_DATA: LessonData[] =
     "tasks": [
       {
         "name": "Complete today's non-negotiables",
-        "description": "Go to the <strong>Today</strong> tab and check off each non-negotiable as you complete it. This is your first tracked day. During your evening close-out, verify everything is logged."
+        "description": "Go to the <strong>Today</strong> tab and check off each non-negotiable as you complete it. This is your first tracked day. During your evening close-out, verify everything is logged.",
+        "action": "today"
       },
       {
         "name": "Set a daily logging reminder",
@@ -553,7 +571,8 @@ export const LESSON_DATA: LessonData[] =
       },
       {
         "name": "Complete today's journal",
-        "description": "Go to the <strong>Installation</strong> tab, open Day 6, and switch to the Journal tab. Answer the prompts about your environment audit."
+        "description": "Go to the <strong>Installation</strong> tab, open Day 6, and switch to the Journal tab. Answer the prompts about your environment audit.",
+        "action": "journal"
       }
     ],
     "tasksSubtitle": "Complete both tasks before moving to Day 7.",
@@ -734,7 +753,8 @@ export const LESSON_DATA: LessonData[] =
       },
       {
         "name": "Add it to the app",
-        "description": "Go to the <strong>System</strong> tab and paste your identity statement into the Identity Statement field. It will appear alongside your direction at the top of your Today view."
+        "description": "Go to the <strong>System</strong> tab and paste your identity statement into the Identity Statement field. It will appear alongside your direction at the top of your Today view.",
+        "action": "system-identity"
       }
     ],
     "tasksSubtitle": "Complete both tasks before moving to Day 9.",
@@ -828,7 +848,8 @@ export const LESSON_DATA: LessonData[] =
       },
       {
         "name": "Add them to the app",
-        "description": "Go to the <strong>System</strong> tab and enter your priority stack. This becomes your decision filter for the rest of the installation."
+        "description": "Go to the <strong>System</strong> tab and enter your priority stack. This becomes your decision filter for the rest of the installation.",
+        "action": "system-priorities"
       }
     ],
     "tasksSubtitle": "Complete both tasks before moving to Day 10.",
@@ -926,7 +947,8 @@ export const LESSON_DATA: LessonData[] =
       },
       {
         "name": "Add them to the app",
-        "description": "Go to the <strong>System</strong> tab and add each keystone habit with its scheduled days and time. They'll appear in your <strong>Today</strong> view on the right days."
+        "description": "Go to the <strong>System</strong> tab and add each keystone habit with its scheduled days and time. They'll appear in your <strong>Today</strong> view on the right days.",
+        "action": "system-habits"
       }
     ],
     "tasksSubtitle": "Complete all three tasks before moving to Day 11.",
@@ -1096,7 +1118,8 @@ export const LESSON_DATA: LessonData[] =
         "tasks": [
       {
         "name": "Audit your full system in the app",
-        "description": "Open the <strong>System</strong> tab. Review every component: direction, identity, NNs, habits, structure. Is anything outdated, too complex, or not being used? Edit or remove what's not working."
+        "description": "Open the <strong>System</strong> tab. Review every component: direction, identity, NNs, habits, structure. Is anything outdated, too complex, or not being used? Edit or remove what's not working.",
+        "action": "system-direction"
       },
       {
         "name": "Simplify until it's tight",
@@ -1180,7 +1203,8 @@ export const LESSON_DATA: LessonData[] =
       },
       {
         "name": "Add your decision framework to the app",
-        "description": "Go to the <strong>System</strong> tab and enter your rules in the Decision Framework field. Reference these whenever you're stuck."
+        "description": "Go to the <strong>System</strong> tab and enter your rules in the Decision Framework field. Reference these whenever you're stuck.",
+        "action": "system-decisions"
       }
     ],
     "tasksSubtitle": "Complete both tasks before moving to Day 14.",
@@ -1256,11 +1280,13 @@ export const LESSON_DATA: LessonData[] =
         "tasks": [
       {
         "name": "Run your Phase II review",
-        "description": "Review your full tracker data in the <strong>Reviews</strong> tab. Check your completion rates, streaks, and consistency. What patterns do you see across the last 7 days?"
+        "description": "Review your full tracker data in the <strong>Reviews</strong> tab. Check your completion rates, streaks, and consistency. What patterns do you see across the last 7 days?",
+        "action": "reviews-weekly"
       },
       {
         "name": "Define 2-3 targeted adjustments",
-        "description": "Based on the data, what specific changes will you make for Phase III? Update your direction, identity, or priorities in the <strong>System</strong> tab if they've evolved."
+        "description": "Based on the data, what specific changes will you make for Phase III? Update your direction, identity, or priorities in the <strong>System</strong> tab if they've evolved.",
+        "action": "system-direction"
       }
     ],
     "tasksSubtitle": "Complete both tasks before moving to Day 15.",
@@ -1340,7 +1366,8 @@ export const LESSON_DATA: LessonData[] =
       },
       {
         "name": "Write your failure protocol",
-        "description": "What do you do when you miss a day? Write a clear protocol and add it to the <strong>System</strong> tab under Failure Protocol. This removes the decision of 'what now' when things go wrong."
+        "description": "What do you do when you miss a day? Write a clear protocol and add it to the <strong>System</strong> tab under Failure Protocol. This removes the decision of 'what now' when things go wrong.",
+        "action": "system-failure"
       }
     ],
     "tasksSubtitle": "Complete both tasks before moving to Day 16.",
@@ -1586,11 +1613,13 @@ export const LESSON_DATA: LessonData[] =
         "tasks": [
       {
         "name": "Set up your weekly review",
-        "description": "Choose a day and time (we recommend Sunday). Go to the <strong>Reviews</strong> tab and run your first weekly review using the built-in template. Set a recurring calendar reminder."
+        "description": "Choose a day and time (we recommend Sunday). Go to the <strong>Reviews</strong> tab and run your first weekly review using the built-in template. Set a recurring calendar reminder.",
+        "action": "reviews-weekly"
       },
       {
         "name": "Complete the review now",
-        "description": "Don't just set it up — run through the full review right now as practice. Answer every question honestly. This 10-minute habit is what keeps the system alive."
+        "description": "Don't just set it up — run through the full review right now as practice. Answer every question honestly. This 10-minute habit is what keeps the system alive.",
+        "action": "reviews-weekly"
       }
     ],
     "tasksSubtitle": "Complete both tasks before moving to Day 19.",
@@ -1666,7 +1695,8 @@ export const LESSON_DATA: LessonData[] =
         "tasks": [
       {
         "name": "Set up your quarterly recalibration",
-        "description": "Go to the <strong>Reviews</strong> tab and run a practice quarterly recalibration. Choose a monthly date for future recalibrations and set a calendar reminder."
+        "description": "Go to the <strong>Reviews</strong> tab and run a practice quarterly recalibration. Choose a monthly date for future recalibrations and set a calendar reminder.",
+        "action": "reviews-quarterly"
       },
       {
         "name": "Document your evolution since Day 1",
@@ -1746,7 +1776,8 @@ export const LESSON_DATA: LessonData[] =
         "tasks": [
       {
         "name": "Assemble your operating manual",
-        "description": "Go to the <strong>System</strong> tab. Enter your operating manual — the consolidation of everything: direction, identity, priorities, decision rules, failure protocol, daily structure, NNs, habits, review rhythm."
+        "description": "Go to the <strong>System</strong> tab. Enter your operating manual — the consolidation of everything: direction, identity, priorities, decision rules, failure protocol, daily structure, NNs, habits, review rhythm.",
+        "action": "system-manual"
       },
       {
         "name": "Review the complete system",
@@ -1826,7 +1857,8 @@ export const LESSON_DATA: LessonData[] =
         "tasks": [
       {
         "name": "Run your final installation review",
-        "description": "Go to the <strong>Reviews</strong> tab. Review your complete data from 21 days. Check your scores, streaks, and completion rates across all categories."
+        "description": "Go to the <strong>Reviews</strong> tab. Review your complete data from 21 days. Check your scores, streaks, and completion rates across all categories.",
+        "action": "reviews-weekly"
       },
       {
         "name": "Compare Day 1 to Day 21",
@@ -1834,7 +1866,8 @@ export const LESSON_DATA: LessonData[] =
       },
       {
         "name": "Commit to operational mode",
-        "description": "The installation is complete. Your system is live. From tomorrow: daily execution in the <strong>Today</strong> tab, weekly reviews on your chosen day, monthly recalibrations on your chosen date. The system runs. You maintain it."
+        "description": "The installation is complete. Your system is live. From tomorrow: daily execution in the <strong>Today</strong> tab, weekly reviews on your chosen day, monthly recalibrations on your chosen date. The system runs. You maintain it.",
+        "action": "today"
       }
     ],
     "tasksSubtitle": "Installation complete. System activated.",

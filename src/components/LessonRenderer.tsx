@@ -1,13 +1,31 @@
 import React from 'react';
-import { LessonData, LessonSection, LessonContentBlock } from '../data/lessonContent';
+import { LessonData, LessonSection, LessonContentBlock, TaskAction } from '../data/lessonContent';
+import { ArrowRight } from 'lucide-react';
 
 // ============================================
 // STRUCTURED ACHIEVEMENT — Lesson Renderer
 // Renders lesson content inside the Installation tab
 // ============================================
 
+// Action button config: maps task actions to labels and navigation targets
+const ACTION_CONFIG: Record<TaskAction, { label: string; tab: string; subTab?: string }> = {
+  'system-direction': { label: 'Open Direction Statement', tab: 'system' },
+  'system-identity': { label: 'Open Identity Statement', tab: 'system' },
+  'system-priorities': { label: 'Open Priority Stack', tab: 'system' },
+  'system-nns': { label: 'Open Non-Negotiables', tab: 'system' },
+  'system-habits': { label: 'Open Keystone Habits', tab: 'system' },
+  'system-decisions': { label: 'Open Decision Framework', tab: 'system' },
+  'system-failure': { label: 'Open Failure Protocol', tab: 'system' },
+  'system-manual': { label: 'Open Operating Manual', tab: 'system' },
+  'today': { label: 'Go to Today', tab: 'today' },
+  'reviews-weekly': { label: 'Open Reviews', tab: 'reviews', subTab: 'weekly' },
+  'reviews-quarterly': { label: 'Open Recalibration', tab: 'reviews', subTab: 'quarterly' },
+  'journal': { label: 'Open Journal', tab: '_journal' },
+};
+
 interface LessonRendererProps {
   lesson: LessonData;
+  onNavigate?: (tab: string, subTab?: string) => void;
 }
 
 function PhaseAccentColor(phase: 1 | 2 | 3): string {
@@ -141,7 +159,7 @@ function SectionRenderer({ section, phase }: { section: LessonSection; phase: 1 
 
 // === Main Lesson Renderer ===
 
-export function LessonRenderer({ lesson }: LessonRendererProps) {
+export function LessonRenderer({ lesson, onNavigate }: LessonRendererProps) {
   const accentColor = PhaseAccentColor(lesson.phase);
 
   return (
@@ -222,7 +240,9 @@ export function LessonRenderer({ lesson }: LessonRendererProps) {
           <p className="text-xs text-sa-cream-faint mb-5">{lesson.tasksSubtitle}</p>
         )}
         <div className="space-y-3">
-          {lesson.tasks.map((task, i) => (
+          {lesson.tasks.map((task, i) => {
+            const actionCfg = task.action ? ACTION_CONFIG[task.action] : null;
+            return (
             <div
               key={i}
               className="p-4 rounded-sa border border-sa-border bg-sa-bg-warm"
@@ -235,8 +255,23 @@ export function LessonRenderer({ lesson }: LessonRendererProps) {
               {task.hint && (
                 <div className="mt-2 text-xs text-sa-cream-faint italic">{task.hint}</div>
               )}
+              {actionCfg && onNavigate && (
+                <button
+                  onClick={() => onNavigate(actionCfg.tab, actionCfg.subTab)}
+                  className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sa text-xs font-medium transition-colors duration-150"
+                  style={{
+                    backgroundColor: 'rgba(197,165,90,0.1)',
+                    border: '1px solid rgba(197,165,90,0.25)',
+                    color: '#C5A55A',
+                  }}
+                >
+                  {actionCfg.label}
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              )}
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

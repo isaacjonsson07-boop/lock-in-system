@@ -324,6 +324,10 @@ function App() {
             onUpdateReadPatches={updateReadPatches}
             installationCompleteDate={installationCompleteDate}
             onUpdateInstallationDate={updateInstallationDate}
+            onNavigate={(tab, subTab) => {
+              if (subTab) setReviewsInitialTab(subTab as 'snapshot' | 'weekly' | 'quarterly');
+              setCurrentTab(tab as any);
+            }}
           />
         )}
 

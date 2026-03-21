@@ -227,6 +227,7 @@ interface JournalingViewProps {
   onUpdateReadPatches: (patches: string[]) => void;
   installationCompleteDate: string | null;
   onUpdateInstallationDate: (date: string) => void;
+  onNavigate?: (tab: string, subTab?: string) => void;
 }
 
 export function JournalingView({
@@ -240,6 +241,7 @@ export function JournalingView({
   onUpdateReadPatches,
   installationCompleteDate,
   onUpdateInstallationDate,
+  onNavigate,
 }: JournalingViewProps) {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedPatch, setSelectedPatch] = useState<SystemPatchData | null>(null);
@@ -489,7 +491,14 @@ export function JournalingView({
         {/* === LESSON TAB === */}
         {activeTab === 'lesson' && lesson && (
           <>
-            <LessonRenderer lesson={lesson} />
+            <LessonRenderer lesson={lesson} onNavigate={(tab, subTab) => {
+              if (tab === '_journal') {
+                setActiveTab('journal');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else if (onNavigate) {
+                onNavigate(tab, subTab);
+              }
+            }} />
 
             {/* Continue to journal CTA */}
             <div className="mt-10 mb-6 p-5 rounded-sa border border-sa-gold-border bg-sa-gold-soft text-center">
