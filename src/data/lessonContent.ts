@@ -480,7 +480,7 @@ export const LESSON_DATA: LessonData[] =
     ],
     "appCard": {
       "label": "Open the Tracker",
-      "description": "Set up your <strong>Goals</strong>, add your non-negotiables as <strong>Tasks</strong>, and log your first day.",
+      "description": "Your non-negotiables and habits are already configured. Go to <strong>Today</strong> to check them off as you complete them.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
     "tasks": [
@@ -561,7 +561,7 @@ export const LESSON_DATA: LessonData[] =
     ],
     "appCard": {
       "label": "Log in the Tracker",
-      "description": "Complete your <strong>Tasks</strong> and write a <strong>Journal</strong> entry about your environment audit.",
+      "description": "Complete your non-negotiables in <strong>Today</strong> and your journal in the <strong>Installation</strong> tab.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
         "tasks": [
@@ -641,8 +641,8 @@ export const LESSON_DATA: LessonData[] =
       }
     ],
     "appCard": {
-      "label": "Review Your Dashboard",
-      "description": "Open the <strong>Dashboard</strong> to see your first week of data. Check your Task completion rates and streaks.",
+      "label": "Open Reviews",
+      "description": "Open the <strong>Reviews</strong> tab to see your first week of data. Check your completion rates and streaks.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
         "tasks": [
@@ -742,8 +742,8 @@ export const LESSON_DATA: LessonData[] =
       }
     ],
     "appCard": {
-      "label": "Update Your Goals",
-      "description": "Add your <strong>identity statement</strong> as a new Goal alongside your direction statement.",
+      "label": "Open Your System",
+      "description": "Add your <strong>identity statement</strong> to the Identity Statement field in the <strong>System</strong> tab.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
         "tasks": [
@@ -837,8 +837,8 @@ export const LESSON_DATA: LessonData[] =
       }
     ],
     "appCard": {
-      "label": "Update Your Goals",
-      "description": "Add your <strong>top 3 priority outcomes</strong> to the Goals section of the tracker.",
+      "label": "Open Your System",
+      "description": "Add your <strong>top 3 priority outcomes</strong> to the Priority Stack in the <strong>System</strong> tab.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
         "tasks": [
@@ -1017,7 +1017,7 @@ export const LESSON_DATA: LessonData[] =
       }
     ],
     "appCard": {
-      "label": "Check Your Dashboard",
+      "label": "Check Your Progress",
       "description": "Review your <strong>streaks</strong> and completion patterns to identify energy-related trends.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
@@ -1112,7 +1112,7 @@ export const LESSON_DATA: LessonData[] =
     ],
     "appCard": {
       "label": "Clean Up the Tracker",
-      "description": "Remove or simplify <strong>Tasks</strong> and <strong>Habits</strong> that didn't earn their place.",
+      "description": "Open the <strong>System</strong> tab. Edit or remove non-negotiables and habits that didn't earn their place.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
         "tasks": [
@@ -1193,7 +1193,7 @@ export const LESSON_DATA: LessonData[] =
     ],
     "appCard": {
       "label": "Log Your Decision Rules",
-      "description": "Write your decision rules and if-then protocols in the <strong>Journal</strong> for easy reference.",
+      "description": "Add your decision rules to the <strong>Decision Framework</strong> in the <strong>System</strong> tab.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
         "tasks": [
@@ -1273,8 +1273,8 @@ export const LESSON_DATA: LessonData[] =
       }
     ],
     "appCard": {
-      "label": "Full Dashboard Review",
-      "description": "Open the <strong>Dashboard</strong> for your midpoint assessment. 10 days of tracked data tells the real story.",
+      "label": "Midpoint Review",
+      "description": "Open the <strong>Reviews</strong> tab for your midpoint assessment. 10 days of tracked data tells the real story.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
         "tasks": [
@@ -1447,7 +1447,7 @@ export const LESSON_DATA: LessonData[] =
     ],
     "appCard": {
       "label": "Log Your Protocols",
-      "description": "Add your minimum viable day and restart protocol to the <strong>Journal</strong> for emergency access.",
+      "description": "Add your minimum viable day to the <strong>Failure Protocol</strong> in the <strong>System</strong> tab.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
         "tasks": [
@@ -1527,7 +1527,7 @@ export const LESSON_DATA: LessonData[] =
     ],
     "appCard": {
       "label": "Journal Your Scripts",
-      "description": "Write your sabotage scripts and replacements in the <strong>Journal</strong> — seeing them side by side is the antidote.",
+      "description": "Write your sabotage scripts and replacements in today's journal in the <strong>Installation</strong> tab.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
         "tasks": [
@@ -1733,7 +1733,7 @@ export const LESSON_DATA: LessonData[] =
           },
           {
             "type": "prose",
-            "html": "That's substantial. And it's probably distributed across multiple locations — notebook pages, phone notes, tracker entries, mental memory. Some of it you remember clearly. Some of it has faded. Some of it was updated at various points and you may not be sure which version is current."
+            "html": "That's substantial. And it might feel scattered — some in your journal entries, some in your System tab, some just in your head. Some of it you remember clearly. Some has faded. Today you consolidate everything into one place."
           }
         ]
       },
@@ -1763,14 +1763,14 @@ export const LESSON_DATA: LessonData[] =
           },
           {
             "type": "prose",
-            "html": "Store it somewhere permanent and accessible. A dedicated note in your phone. A document in your files. A printed page in a notebook. Whatever format ensures you can access it within 30 seconds at any time. If it's buried in a folder you never open, it's useless. If it's one tap or one glance away, it becomes a daily reference."
+            "html": "Your operating manual lives in the <strong>System</strong> tab under Operating Manual. It's one tap away at all times. If you also want a physical copy, print it — but the app is your primary reference."
           }
         ]
       }
     ],
     "appCard": {
       "label": "Review Your Full System",
-      "description": "The <strong>Dashboard</strong> is part of your operating manual. All your Goals, Habits, Tasks, and Journal entries — consolidated.",
+      "description": "Your <strong>System</strong> tab is your operating manual. Direction, identity, priorities, NNs, habits, and protocols — all in one place.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
         "tasks": [
@@ -1850,8 +1850,8 @@ export const LESSON_DATA: LessonData[] =
       }
     ],
     "appCard": {
-      "label": "Final Dashboard Review",
-      "description": "Open the <strong>Dashboard</strong> one last time as installation. Your streaks, data, and Journal tell the story of 21 days.",
+      "label": "Final Review",
+      "description": "Open the <strong>Reviews</strong> tab one last time as installation. Your streaks, data, and completion rates tell the story of 21 days.",
       "url": "https://structured-achieve-operating-system.netlify.app/"
     },
         "tasks": [
