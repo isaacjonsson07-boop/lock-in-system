@@ -67,6 +67,18 @@ function buildUnlocksForDay(highestDay: number): UnlockState {
 
 function loadUnlocks(): UnlockState {
   try {
+    // Demo unlock: ?unlock=all in URL unlocks everything permanently
+    if (typeof window !== 'undefined' && window.location.search.includes('unlock=all')) {
+      const allUnlocked: UnlockState = { _version: MIGRATION_VERSION };
+      ALL_UNLOCK_IDS.forEach(id => { allUnlocked[id] = true; });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allUnlocked));
+      // Clean the URL param so it doesn't persist in the address bar
+      const url = new URL(window.location.href);
+      url.searchParams.delete('unlock');
+      window.history.replaceState({}, '', url.toString());
+      return allUnlocked;
+    }
+
     const raw = localStorage.getItem(STORAGE_KEY);
     const existing = raw ? JSON.parse(raw) : null;
 
