@@ -77,12 +77,28 @@ function App() {
   }, [user, plan]);
 
   // Set default tab based on unlock state (once data loads)
+  // Also auto-unlock everything for existing users on new devices
   useEffect(() => {
     if (!dataLoading && !defaultTabSet) {
-      setCurrentTab(getDefaultTab(unlocks));
+      // If user has data but empty unlocks, they're an existing user — unlock everything
+      const hasData = nonNegotiables.length > 0 || journalEntries.length > 0 || habits.length > 0;
+      const hasNoUnlocks = Object.keys(unlocks).length === 0;
+      if (hasData && hasNoUnlocks) {
+        const allIds = [
+          'system-direction', 'system-nns', 'today', 'reviews-weekly',
+          'system-identity', 'system-priorities', 'system-habits',
+          'system-decisions', 'system-failure', 'reviews-quarterly',
+          'system-manual', 'journal',
+        ];
+        allIds.forEach(id => triggerUnlock(id));
+        // Set to Today since they're an existing user (unlocks state hasn't updated yet)
+        setCurrentTab('today');
+      } else {
+        setCurrentTab(getDefaultTab(unlocks));
+      }
       setDefaultTabSet(true);
     }
-  }, [dataLoading, defaultTabSet, unlocks]);
+  }, [dataLoading, defaultTabSet, unlocks, nonNegotiables, journalEntries, habits]);
 
   const handleLockedTabClick = (tab: TabType) => {
     const info = getTabLockInfo(tab, unlocks);
