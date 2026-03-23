@@ -237,8 +237,8 @@ function App() {
           onResetPassword={resetPassword}
         />
         <div className="text-center max-w-md">
-          <h1 className="font-serif text-3xl sm:text-4xl text-sa-cream mb-2">Structured<br/>Achievement</h1>
-          <p className="text-[0.7rem] text-sa-cream-faint uppercase tracking-[0.14em] mb-10">Operating System</p>
+          <h1 className="font-serif text-3xl sm:text-4xl text-sa-cream mb-2">Lock-In<br/>System</h1>
+          <p className="text-[0.7rem] text-sa-cream-faint uppercase tracking-[0.14em] mb-10">Be the 1%.</p>
 
           {!user ? (
             <>

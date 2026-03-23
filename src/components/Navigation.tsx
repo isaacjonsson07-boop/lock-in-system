@@ -57,9 +57,9 @@ export function Navigation({
         {/* Brand */}
         <div className="px-7 pt-9 pb-7">
           <h1 className="font-serif text-[1.5rem] text-sa-cream font-normal tracking-[-0.01em] leading-tight">
-            Structured<br/>Achievement
+            Lock-In<br/>System
           </h1>
-          <p className="text-[0.7rem] text-sa-cream-faint mt-1.5 uppercase tracking-[0.12em]">Operating System</p>
+          <p className="text-[0.7rem] text-sa-cream-faint mt-1.5 uppercase tracking-[0.12em]">Be the 1%.</p>
         </div>
 
         {/* Gold gradient divider */}
