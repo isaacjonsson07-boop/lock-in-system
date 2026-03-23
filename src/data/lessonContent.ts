@@ -648,7 +648,8 @@ export const LESSON_DATA: LessonData[] =
         "tasks": [
       {
         "name": "Run your Week 1 review",
-        "description": "Review Days 1-6. What worked? What didn't? Where did you stay consistent and where did you break? Be specific about moments, not judgments."
+        "description": "Go to the <strong>Reviews</strong> tab and run your first weekly review. What worked? What didn't? Where did you stay consistent and where did you break?",
+        "action": "reviews-weekly"
       },
       {
         "name": "Make one adjustment",
