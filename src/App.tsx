@@ -37,7 +37,7 @@ function App() {
   const [activeUnlockPopup, setActiveUnlockPopup] = useState<UnlockDef | null>(null);
 
   // Unlock state (localStorage)
-  const { unlocks, isUnlocked, triggerUnlock } = useUnlocks();
+  const { unlocks, isUnlocked, triggerUnlock, unlockAll } = useUnlocks();
 
   // Dual-mode data (localStorage + Supabase)
   const {
@@ -82,15 +82,9 @@ function App() {
     if (!dataLoading && !defaultTabSet) {
       // If user has data but empty unlocks, they're an existing user — unlock everything
       const hasData = nonNegotiables.length > 0 || journalEntries.length > 0 || habits.length > 0;
-      const hasNoUnlocks = Object.keys(unlocks).length === 0;
+      const hasNoUnlocks = Object.keys(unlocks).filter(k => k !== '_version').length === 0;
       if (hasData && hasNoUnlocks) {
-        const allIds = [
-          'system-direction', 'system-nns', 'today', 'reviews-weekly',
-          'system-identity', 'system-priorities', 'system-habits',
-          'system-decisions', 'system-failure', 'reviews-quarterly',
-          'system-manual', 'journal',
-        ];
-        allIds.forEach(id => triggerUnlock(id));
+        unlockAll();
         // Set to Today since they're an existing user (unlocks state hasn't updated yet)
         setCurrentTab('today');
       } else {

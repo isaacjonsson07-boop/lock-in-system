@@ -7,9 +7,11 @@ import { useState, useCallback } from 'react';
 // ============================================
 
 const STORAGE_KEY = 'sa_unlocks';
+const MIGRATION_VERSION = 2; // Bump this to re-run migration for existing users
 
 export interface UnlockState {
   [unlockId: string]: boolean;
+  _version?: any;
 }
 
 // All unlock IDs — used to auto-unlock for existing users
@@ -23,10 +25,14 @@ const ALL_UNLOCK_IDS = [
 function loadUnlocks(): UnlockState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    const existing = raw ? JSON.parse(raw) : null;
 
-    // Migration: if no unlock state exists but user has existing app data,
-    // they're an existing user — unlock everything so they're not locked out
+    // If we have a fully migrated state at current version, use it
+    if (existing && existing._version === MIGRATION_VERSION) {
+      return existing;
+    }
+
+    // Migration: if user has existing app data, unlock everything
     const hasExistingData =
       localStorage.getItem('sa_non_negotiables') ||
       localStorage.getItem('sa_journal_entries') ||
@@ -34,15 +40,23 @@ function loadUnlocks(): UnlockState {
       localStorage.getItem('dj_pro_v3');
     
     if (hasExistingData) {
-      const allUnlocked: UnlockState = {};
+      const allUnlocked: UnlockState = { _version: MIGRATION_VERSION };
       ALL_UNLOCK_IDS.forEach(id => { allUnlocked[id] = true; });
       localStorage.setItem(STORAGE_KEY, JSON.stringify(allUnlocked));
       return allUnlocked;
     }
 
-    return {};
+    // New user with no data — start fresh with version tag
+    if (existing) {
+      // Has partial unlocks from normal usage, just tag the version
+      existing._version = MIGRATION_VERSION;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+      return existing;
+    }
+
+    return { _version: MIGRATION_VERSION };
   } catch {
-    return {};
+    return { _version: MIGRATION_VERSION };
   }
 }
 
@@ -60,16 +74,25 @@ export function useUnlocks() {
   const triggerUnlock = useCallback((id: string): boolean => {
     // Returns true if this is a NEW unlock (first time), false if already unlocked
     if (unlocks[id]) return false;
-    const updated = { ...unlocks, [id]: true };
-    setUnlocks(updated);
-    saveUnlocks(updated);
+    setUnlocks(prev => {
+      const updated = { ...prev, [id]: true };
+      saveUnlocks(updated);
+      return updated;
+    });
     return true;
   }, [unlocks]);
+
+  const unlockAll = useCallback(() => {
+    const allUnlocked: UnlockState = { _version: MIGRATION_VERSION };
+    ALL_UNLOCK_IDS.forEach(id => { allUnlocked[id] = true; });
+    setUnlocks(allUnlocked);
+    saveUnlocks(allUnlocked);
+  }, []);
 
   const resetUnlocks = useCallback(() => {
     setUnlocks({});
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  return { unlocks, isUnlocked, triggerUnlock, resetUnlocks };
+  return { unlocks, isUnlocked, triggerUnlock, unlockAll, resetUnlocks };
 }
