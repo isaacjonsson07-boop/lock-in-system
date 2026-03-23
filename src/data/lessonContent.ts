@@ -481,7 +481,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Open the Tracker",
       "description": "Your non-negotiables and habits are already configured. Go to <strong>Today</strong> to check them off as you complete them.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
     "tasks": [
       {
@@ -562,7 +562,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Log in the Tracker",
       "description": "Complete your non-negotiables in <strong>Today</strong> and your journal in the <strong>Installation</strong> tab.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -643,7 +643,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Open Reviews",
       "description": "Open the <strong>Reviews</strong> tab to see your first week of data. Check your completion rates and streaks.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -745,7 +745,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Open Your System",
       "description": "Add your <strong>identity statement</strong> to the Identity Statement field in the <strong>System</strong> tab.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -840,7 +840,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Open Your System",
       "description": "Add your <strong>top 3 priority outcomes</strong> to the Priority Stack in the <strong>System</strong> tab.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -935,7 +935,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Set Up Your Habits",
       "description": "Open the <strong>Habits</strong> feature and add your keystone habits with their cue-routine-reward formulas.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -1020,7 +1020,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Check Your Progress",
       "description": "Review your <strong>streaks</strong> and completion patterns to identify energy-related trends.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -1114,7 +1114,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Clean Up the Tracker",
       "description": "Open the <strong>System</strong> tab. Edit or remove non-negotiables and habits that didn't earn their place.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -1195,7 +1195,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Log Your Decision Rules",
       "description": "Add your decision rules to the <strong>Decision Framework</strong> in the <strong>System</strong> tab.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -1276,7 +1276,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Midpoint Review",
       "description": "Open the <strong>Reviews</strong> tab for your midpoint assessment. 10 days of tracked data tells the real story.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -1358,7 +1358,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Track Your Streaks",
       "description": "Your <strong>streaks</strong> are your accountability made visible. Check them daily — they're harder to break than to maintain.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -1449,7 +1449,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Log Your Protocols",
       "description": "Add your minimum viable day to the <strong>Failure Protocol</strong> in the <strong>System</strong> tab.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -1529,7 +1529,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Journal Your Scripts",
       "description": "Write your sabotage scripts and replacements in today's journal in the <strong>Installation</strong> tab.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -1609,7 +1609,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Set Up Your Review",
       "description": "Add your weekly review as a recurring <strong>Task</strong> so it shows up every week automatically.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -1691,7 +1691,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Set Up Recalibration",
       "description": "Add your monthly recalibration as a recurring <strong>Task</strong> in the tracker.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -1772,7 +1772,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Review Your Full System",
       "description": "Your <strong>System</strong> tab is your operating manual. Direction, identity, priorities, NNs, habits, and protocols — all in one place.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
@@ -1853,7 +1853,7 @@ export const LESSON_DATA: LessonData[] =
     "appCard": {
       "label": "Final Review",
       "description": "Open the <strong>Reviews</strong> tab one last time as installation. Your streaks, data, and completion rates tell the story of 21 days.",
-      "url": "https://structured-achieve-operating-system.netlify.app/"
+      "url": "https://lock-in-system.netlify.app/"
     },
         "tasks": [
       {
