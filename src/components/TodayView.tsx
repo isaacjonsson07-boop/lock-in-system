@@ -111,7 +111,7 @@ function WeekHeatmap({ dayData }: { dayData: { label: string; pct: number }[] })
   return (
     <div className="flex gap-1.5 justify-between">
       {dayData.map((d, i) => {
-        const color = d.pct >= 80 ? '#6ECB8B' : d.pct >= 50 ? '#5A98FF' : d.pct > 0 ? '#E07070' : 'rgba(255,255,255,0.06)';
+        const color = d.pct >= 80 ? '#6ECB8B' : d.pct >= 50 ? '#D4A840' : d.pct > 0 ? '#E07070' : 'rgba(255,255,255,0.06)';
         return (
           <div key={i} className="flex-1 text-center">
             <div className="w-full aspect-square rounded-sm mb-1" style={{ backgroundColor: color, maxWidth: 28, margin: '0 auto' }} />
@@ -140,7 +140,7 @@ function SidebarCommandCenter({
   isReviewDay: boolean;
   quarterlyInfo: { isQuarterlyDay: boolean; daysLeft: number; label: string };
 }) {
-  const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#5A98FF' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
+  const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#D4A840' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
   const ringSize = 100;
   const sw = 3.5;
   const r = (ringSize - sw * 2) / 2;
@@ -186,16 +186,16 @@ function SidebarCommandCenter({
       <div className="grid grid-cols-3 gap-2">
         <div className="text-center py-2.5 rounded-sa" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
           <div className="flex items-center justify-center gap-1 mb-0.5">
-            <Flame className="w-3.5 h-3.5" style={{ color: currentStreak >= 7 ? '#6ECB8B' : currentStreak >= 3 ? '#5A98FF' : 'var(--cream-faint)' }} />
+            <Flame className="w-3.5 h-3.5" style={{ color: currentStreak >= 7 ? '#6ECB8B' : currentStreak >= 3 ? '#D4A840' : 'var(--cream-faint)' }} />
           </div>
           <span className="font-serif text-lg text-sa-cream block">{currentStreak}</span>
           <span className="text-[0.5rem] uppercase tracking-wider text-sa-cream-faint">Streak</span>
         </div>
         <div className="text-center py-2.5 rounded-sa" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
           <div className="flex items-center justify-center gap-1 mb-0.5">
-            <TrendingUp className="w-3.5 h-3.5" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#5A98FF' : 'var(--cream-faint)' }} />
+            <TrendingUp className="w-3.5 h-3.5" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#D4A840' : 'var(--cream-faint)' }} />
           </div>
-          <span className="font-serif text-lg block" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#5A98FF' : 'var(--cream)' }}>{weekConsistency}%</span>
+          <span className="font-serif text-lg block" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#D4A840' : 'var(--cream)' }}>{weekConsistency}%</span>
           <span className="text-[0.5rem] uppercase tracking-wider text-sa-cream-faint">Week</span>
         </div>
         <div className="text-center py-2.5 rounded-sa" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -280,7 +280,7 @@ function MobileCommandCenter({
   currentStreak: number; weekConsistency: number; systemAge: number;
   statusMsg: string; statusColor: string; dateLabel: string;
 }) {
-  const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#5A98FF' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
+  const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#D4A840' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
   const ringSize = 52;
   const sw = 3;
   const r = (ringSize - sw * 2) / 2;
@@ -309,13 +309,13 @@ function MobileCommandCenter({
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-0.5">
-            <Flame className="w-3.5 h-3.5" style={{ color: currentStreak >= 7 ? '#6ECB8B' : currentStreak >= 3 ? '#5A98FF' : 'var(--cream-faint)' }} />
+            <Flame className="w-3.5 h-3.5" style={{ color: currentStreak >= 7 ? '#6ECB8B' : currentStreak >= 3 ? '#D4A840' : 'var(--cream-faint)' }} />
             <span className="font-serif text-lg text-sa-cream">{currentStreak}</span>
           </div>
           <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint">Streak</p>
         </div>
         <div className="text-center">
-          <span className="font-serif text-lg block" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#5A98FF' : 'var(--cream-faint)' }}>
+          <span className="font-serif text-lg block" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#D4A840' : 'var(--cream-faint)' }}>
             {weekConsistency}%
           </span>
           <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint">Week</p>
@@ -511,7 +511,7 @@ export function TodayView({
     const dayName = isToday ? 'today' : dateLabel.toLowerCase();
 
     if (percentage === 100) return { statusMsg: `System complete for ${dayName}.`, statusColor: '#6ECB8B' };
-    if (!isToday && percentage > 0) return { statusMsg: `${completedItems}/${totalItems} completed ${dayName}.`, statusColor: percentage >= 80 ? '#6ECB8B' : '#5A98FF' };
+    if (!isToday && percentage > 0) return { statusMsg: `${completedItems}/${totalItems} completed ${dayName}.`, statusColor: percentage >= 80 ? '#6ECB8B' : '#D4A840' };
     if (!isToday && percentage === 0) return { statusMsg: `No items completed ${dayName}.`, statusColor: 'var(--cream-faint)' };
     if (percentage >= 80) return { statusMsg: `${totalItems - completedItems} item${totalItems - completedItems !== 1 ? 's' : ''} remaining. Close it out.`, statusColor: '#6ECB8B' };
     if (allNNsDone && (habitsRemaining > 0 || tasksRemaining > 0)) return { statusMsg: `NNs done. ${habitsRemaining + tasksRemaining} more to go.`, statusColor: '#5A98FF' };
