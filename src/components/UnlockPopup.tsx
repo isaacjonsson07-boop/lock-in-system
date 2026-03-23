@@ -16,7 +16,7 @@ interface UnlockPopupProps {
 function phaseColor(phase: 1 | 2 | 3): string {
   if (phase === 2) return '#6DB5F5';
   if (phase === 3) return '#6ECB8B';
-  return '#C5A55A';
+  return '#5A98FF';
 }
 
 function phaseLabel(phase: 1 | 2 | 3): string {

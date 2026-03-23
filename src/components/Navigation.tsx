@@ -148,7 +148,7 @@ export function Navigation({
       <header className="md:hidden border-b border-sa-border bg-sa-bg/90 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center justify-between h-14 px-5">
           <span className="font-serif text-base text-sa-cream">
-            Structured Achievement
+            Lock-In System
           </span>
 
           <div className="flex items-center gap-2.5">

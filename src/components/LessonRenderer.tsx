@@ -31,7 +31,7 @@ interface LessonRendererProps {
 function PhaseAccentColor(phase: 1 | 2 | 3): string {
   if (phase === 2) return 'var(--blue, #6DB5F5)';
   if (phase === 3) return 'var(--green, #6ECB8B)';
-  return 'var(--gold, #C5A55A)';
+  return 'var(--gold, #5A98FF)';
 }
 
 function phaseBorderClass(phase: 1 | 2 | 3): string {
@@ -260,9 +260,9 @@ export function LessonRenderer({ lesson, onNavigate }: LessonRendererProps) {
                   onClick={() => onNavigate(actionCfg.tab, actionCfg.subTab, task.action)}
                   className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sa text-xs font-medium transition-colors duration-150"
                   style={{
-                    backgroundColor: 'rgba(197,165,90,0.1)',
-                    border: '1px solid rgba(197,165,90,0.25)',
-                    color: '#C5A55A',
+                    backgroundColor: 'rgba(90,152,255,0.1)',
+                    border: '1px solid rgba(90,152,255,0.25)',
+                    color: '#5A98FF',
                   }}
                 >
                   {actionCfg.label}

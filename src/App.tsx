@@ -443,7 +443,7 @@ function App() {
           >
             {/* Lock icon */}
             <div className="w-16 h-16 mx-auto mb-6 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(197,165,90,0.08)', border: '1px solid rgba(197,165,90,0.15)' }}
+              style={{ backgroundColor: 'rgba(90,152,255,0.08)', border: '1px solid rgba(90,152,255,0.15)' }}
             >
               <Lock className="w-7 h-7 text-sa-gold/60" />
             </div>

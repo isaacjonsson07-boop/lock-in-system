@@ -27,9 +27,9 @@ export const TIER_CONFIG: Record<ReportTier, { label: string; color: string; bor
   },
   gold: {
     label: 'Gold',
-    color: '#C5A55A',
-    border: 'rgba(197, 165, 90, 0.35)',
-    bg: 'rgba(197, 165, 90, 0.05)',
+    color: '#5A98FF',
+    border: 'rgba(90, 152, 255, 0.35)',
+    bg: 'rgba(90, 152, 255, 0.05)',
   },
   silver: {
     label: 'Silver',

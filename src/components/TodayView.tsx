@@ -72,8 +72,8 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
           -2px 33.3px, 33.3px -2px
         )`
       }}>
-        <div ref={line1Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)' }} />
-        <div ref={line2Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)' }} />
+        <div ref={line1Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(90,152,255,0.4) 0%, transparent 70%)' }} />
+        <div ref={line2Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(90,152,255,0.4) 0%, transparent 70%)' }} />
       </div>
       {direction && (
         <p className="relative z-10 font-serif text-[1.85rem] font-light leading-[1.45] text-sa-cream tracking-[-0.01em]">
@@ -111,7 +111,7 @@ function WeekHeatmap({ dayData }: { dayData: { label: string; pct: number }[] })
   return (
     <div className="flex gap-1.5 justify-between">
       {dayData.map((d, i) => {
-        const color = d.pct >= 80 ? '#6ECB8B' : d.pct >= 50 ? '#C5A55A' : d.pct > 0 ? '#E07070' : 'rgba(255,255,255,0.06)';
+        const color = d.pct >= 80 ? '#6ECB8B' : d.pct >= 50 ? '#5A98FF' : d.pct > 0 ? '#E07070' : 'rgba(255,255,255,0.06)';
         return (
           <div key={i} className="flex-1 text-center">
             <div className="w-full aspect-square rounded-sm mb-1" style={{ backgroundColor: color, maxWidth: 28, margin: '0 auto' }} />
@@ -140,7 +140,7 @@ function SidebarCommandCenter({
   isReviewDay: boolean;
   quarterlyInfo: { isQuarterlyDay: boolean; daysLeft: number; label: string };
 }) {
-  const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#C5A55A' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
+  const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#5A98FF' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
   const ringSize = 100;
   const sw = 3.5;
   const r = (ringSize - sw * 2) / 2;
@@ -168,34 +168,34 @@ function SidebarCommandCenter({
         {statusMsg && <p className="text-[0.72rem] mt-3" style={{ color: statusColor }}>{statusMsg}</p>}
       </div>
 
-      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
+      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(90,152,255,0.15), transparent)' }} />
 
       {/* Category breakdown */}
       <div>
         <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint mb-3">Categories</p>
         <div className="space-y-2.5">
-          <CategoryMiniBar label="NNs" done={nnDone} total={nnTotal} color="#C5A55A" />
-          <CategoryMiniBar label="Habits" done={habitsDone} total={habitsTotal} color="#C5A55A" />
-          <CategoryMiniBar label="Tasks" done={tasksDone} total={tasksTotal} color="#C5A55A" />
+          <CategoryMiniBar label="NNs" done={nnDone} total={nnTotal} color="#5A98FF" />
+          <CategoryMiniBar label="Habits" done={habitsDone} total={habitsTotal} color="#5A98FF" />
+          <CategoryMiniBar label="Tasks" done={tasksDone} total={tasksTotal} color="#5A98FF" />
         </div>
       </div>
 
-      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
+      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(90,152,255,0.15), transparent)' }} />
 
       {/* Stats grid */}
       <div className="grid grid-cols-3 gap-2">
         <div className="text-center py-2.5 rounded-sa" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
           <div className="flex items-center justify-center gap-1 mb-0.5">
-            <Flame className="w-3.5 h-3.5" style={{ color: currentStreak >= 7 ? '#6ECB8B' : currentStreak >= 3 ? '#C5A55A' : 'var(--cream-faint)' }} />
+            <Flame className="w-3.5 h-3.5" style={{ color: currentStreak >= 7 ? '#6ECB8B' : currentStreak >= 3 ? '#5A98FF' : 'var(--cream-faint)' }} />
           </div>
           <span className="font-serif text-lg text-sa-cream block">{currentStreak}</span>
           <span className="text-[0.5rem] uppercase tracking-wider text-sa-cream-faint">Streak</span>
         </div>
         <div className="text-center py-2.5 rounded-sa" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
           <div className="flex items-center justify-center gap-1 mb-0.5">
-            <TrendingUp className="w-3.5 h-3.5" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#C5A55A' : 'var(--cream-faint)' }} />
+            <TrendingUp className="w-3.5 h-3.5" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#5A98FF' : 'var(--cream-faint)' }} />
           </div>
-          <span className="font-serif text-lg block" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#C5A55A' : 'var(--cream)' }}>{weekConsistency}%</span>
+          <span className="font-serif text-lg block" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#5A98FF' : 'var(--cream)' }}>{weekConsistency}%</span>
           <span className="text-[0.5rem] uppercase tracking-wider text-sa-cream-faint">Week</span>
         </div>
         <div className="text-center py-2.5 rounded-sa" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -207,7 +207,7 @@ function SidebarCommandCenter({
         </div>
       </div>
 
-      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
+      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(90,152,255,0.15), transparent)' }} />
 
       {/* 7-day heatmap */}
       <div>
@@ -218,7 +218,7 @@ function SidebarCommandCenter({
       {/* Current milestone */}
       {milestoneInfo && (
         <>
-          <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
+          <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(90,152,255,0.15), transparent)' }} />
           <button onClick={() => onNavigate?.('achievements')} className="w-full text-left group">
             <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint mb-2">Next Milestone</p>
             <p className="text-[0.8rem] text-sa-cream mb-2 group-hover:text-sa-gold transition-colors">{milestoneInfo.title}</p>
@@ -226,7 +226,7 @@ function SidebarCommandCenter({
               <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
                 <div className="h-full rounded-full transition-all duration-500" style={{
                   width: `${milestoneInfo.target > 0 ? Math.round((milestoneInfo.current / milestoneInfo.target) * 100) : 0}%`,
-                  backgroundColor: '#C5A55A',
+                  backgroundColor: '#5A98FF',
                 }} />
               </div>
               <span className="text-[0.65rem] tabular-nums text-sa-gold">{milestoneInfo.current}/{milestoneInfo.target}</span>
@@ -237,7 +237,7 @@ function SidebarCommandCenter({
       )}
 
       {/* Weekly review */}
-      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
+      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(90,152,255,0.15), transparent)' }} />
       {isReviewDay ? (
         <button onClick={() => onNavigate?.('reviews', 'weekly')}
           className="relative w-full py-3 border border-sa-gold-border rounded-xl text-center overflow-hidden transition-all duration-300 hover:border-sa-gold hover:-translate-y-[1px] group">
@@ -280,7 +280,7 @@ function MobileCommandCenter({
   currentStreak: number; weekConsistency: number; systemAge: number;
   statusMsg: string; statusColor: string; dateLabel: string;
 }) {
-  const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#C5A55A' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
+  const ringColor = percentage >= 80 ? '#6ECB8B' : percentage >= 50 ? '#5A98FF' : percentage > 0 ? '#E07070' : 'rgba(255,255,255,0.1)';
   const ringSize = 52;
   const sw = 3;
   const r = (ringSize - sw * 2) / 2;
@@ -309,13 +309,13 @@ function MobileCommandCenter({
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-0.5">
-            <Flame className="w-3.5 h-3.5" style={{ color: currentStreak >= 7 ? '#6ECB8B' : currentStreak >= 3 ? '#C5A55A' : 'var(--cream-faint)' }} />
+            <Flame className="w-3.5 h-3.5" style={{ color: currentStreak >= 7 ? '#6ECB8B' : currentStreak >= 3 ? '#5A98FF' : 'var(--cream-faint)' }} />
             <span className="font-serif text-lg text-sa-cream">{currentStreak}</span>
           </div>
           <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint">Streak</p>
         </div>
         <div className="text-center">
-          <span className="font-serif text-lg block" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#C5A55A' : 'var(--cream-faint)' }}>
+          <span className="font-serif text-lg block" style={{ color: weekConsistency >= 80 ? '#6ECB8B' : weekConsistency >= 50 ? '#5A98FF' : 'var(--cream-faint)' }}>
             {weekConsistency}%
           </span>
           <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint">Week</p>
@@ -503,7 +503,7 @@ export function TodayView({
 
   // ── Status message computation ──
   const { statusMsg, statusColor } = useMemo(() => {
-    if (totalItems === 0) return { statusMsg: '', statusColor: '#C5A55A' };
+    if (totalItems === 0) return { statusMsg: '', statusColor: '#5A98FF' };
     const nnRemaining = nnForDate.filter(n => !n.completed).length;
     const allNNsDone = nnForDate.length > 0 && nnForDate.every(n => n.completed);
     const habitsRemaining = habitsWithStatus.filter(h => !h.completed).length;
@@ -511,13 +511,13 @@ export function TodayView({
     const dayName = isToday ? 'today' : dateLabel.toLowerCase();
 
     if (percentage === 100) return { statusMsg: `System complete for ${dayName}.`, statusColor: '#6ECB8B' };
-    if (!isToday && percentage > 0) return { statusMsg: `${completedItems}/${totalItems} completed ${dayName}.`, statusColor: percentage >= 80 ? '#6ECB8B' : '#C5A55A' };
+    if (!isToday && percentage > 0) return { statusMsg: `${completedItems}/${totalItems} completed ${dayName}.`, statusColor: percentage >= 80 ? '#6ECB8B' : '#5A98FF' };
     if (!isToday && percentage === 0) return { statusMsg: `No items completed ${dayName}.`, statusColor: 'var(--cream-faint)' };
     if (percentage >= 80) return { statusMsg: `${totalItems - completedItems} item${totalItems - completedItems !== 1 ? 's' : ''} remaining. Close it out.`, statusColor: '#6ECB8B' };
-    if (allNNsDone && (habitsRemaining > 0 || tasksRemaining > 0)) return { statusMsg: `NNs done. ${habitsRemaining + tasksRemaining} more to go.`, statusColor: '#C5A55A' };
+    if (allNNsDone && (habitsRemaining > 0 || tasksRemaining > 0)) return { statusMsg: `NNs done. ${habitsRemaining + tasksRemaining} more to go.`, statusColor: '#5A98FF' };
     if (nnRemaining > 0 && percentage > 0) return { statusMsg: `${nnRemaining} non-negotiable${nnRemaining !== 1 ? 's' : ''} incomplete.`, statusColor: '#E07070' };
-    if (percentage > 0) return { statusMsg: `${completedItems}/${totalItems} complete. Keep pushing.`, statusColor: '#C5A55A' };
-    return { statusMsg: `${totalItems} items waiting.`, statusColor: '#C5A55A' };
+    if (percentage > 0) return { statusMsg: `${completedItems}/${totalItems} complete. Keep pushing.`, statusColor: '#5A98FF' };
+    return { statusMsg: `${totalItems} items waiting.`, statusColor: '#5A98FF' };
   }, [percentage, totalItems, completedItems, nnForDate, habitsWithStatus, tasksForDate, isToday, dateLabel]);
 
   // Whether to show the command center
@@ -640,10 +640,10 @@ export function TodayView({
             if (!msg) return null;
             return (
               <div className="mb-10 px-5 py-3.5 rounded-sa border flex items-start gap-3" style={{
-                borderColor: 'rgba(197,165,90,0.25)', backgroundColor: 'rgba(197,165,90,0.06)',
+                borderColor: 'rgba(90,152,255,0.25)', backgroundColor: 'rgba(90,152,255,0.06)',
               }}>
-                <span className="text-sm flex-shrink-0 mt-px" style={{ color: '#C5A55A' }}>◆</span>
-                <p className="text-[0.82rem] leading-relaxed" style={{ color: '#C5A55A' }}>{msg}</p>
+                <span className="text-sm flex-shrink-0 mt-px" style={{ color: '#5A98FF' }}>◆</span>
+                <p className="text-[0.82rem] leading-relaxed" style={{ color: '#5A98FF' }}>{msg}</p>
               </div>
             );
           })()}
@@ -662,7 +662,7 @@ export function TodayView({
                     className={`group relative flex items-center gap-5 px-6 py-5 rounded-xl border-l-[3px] overflow-hidden transition-all duration-200 cursor-pointer ${
                       nn.completed
                         ? 'bg-sa-green-soft border-l-sa-green border border-sa-green-border/50'
-                        : 'bg-sa-bg-warm border-l-sa-gold border border-sa-gold-border hover:border-sa-gold-light hover:-translate-y-[1px] hover:shadow-[0_4px_20px_rgba(197,165,90,0.06)]'
+                        : 'bg-sa-bg-warm border-l-sa-gold border border-sa-gold-border hover:border-sa-gold-light hover:-translate-y-[1px] hover:shadow-[0_4px_20px_rgba(90,152,255,0.06)]'
                     }`}
                     onClick={() => onToggleNN(nn, dateStr)}
                   >

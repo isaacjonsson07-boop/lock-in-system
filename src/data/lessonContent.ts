@@ -428,7 +428,7 @@ export const LESSON_DATA: LessonData[] =
     "phaseLabel": "Phase I — Stabilize",
     "phase": 1,
     "heroTitle": "Introduce\nthe Tracker",
-    "heroIntro": "You have a direction, a structure, awareness of your defaults, and a set of non-negotiable behaviors. Today, you connect all of it to a tool that makes your daily execution visible and measurable — the Structured Achievement tracker.",
+    "heroIntro": "You have a direction, a structure, awareness of your defaults, and a set of non-negotiable behaviors. Today, you connect all of it to a tool that makes your daily execution visible and measurable — the Lock-In System tracker.",
     "principleLabel": "The Law of Accumulation",
     "principleParagraphs": [
       "Every great achievement is an accumulation of hundreds — sometimes thousands — of small efforts that no one sees or appreciates. Each individual effort may seem insignificant on its own. But compounded over time, they produce extraordinary results."
@@ -831,7 +831,7 @@ export const LESSON_DATA: LessonData[] =
             "type": "example",
             "variant": "strong",
             "tag": "Focused stack",
-            "quote": "\"My top 3 for the next 14 days: (1) Career — complete the project milestone by Day 18. (2) Health — train 4x/week and meal prep Sundays. (3) Personal development — follow the Structured Achievement system with 100% consistency. Everything else is on maintenance.\"",
+            "quote": "\"My top 3 for the next 14 days: (1) Career — complete the project milestone by Day 18. (2) Health — train 4x/week and meal prep Sundays. (3) Personal development — follow the Lock-In System system with 100% consistency. Everything else is on maintenance.\"",
             "note": "Three priorities, each with a clear outcome. This person will make visible, measurable progress on all three because their energy is concentrated."
           }
         ]

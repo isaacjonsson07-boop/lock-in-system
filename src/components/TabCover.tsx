@@ -72,7 +72,7 @@ export function TabCover({ tab }: TabCoverProps) {
 
       {/* Gold warmth */}
       <div className="absolute inset-0" style={{
-        background: 'linear-gradient(135deg, rgba(197, 165, 90, 0.07), transparent 60%)',
+        background: 'linear-gradient(135deg, rgba(90, 152, 255, 0.07), transparent 60%)',
       }} />
 
       {/* Title overlay */}

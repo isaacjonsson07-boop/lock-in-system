@@ -1,4 +1,4 @@
-// Structured Achievement — Service Worker
+// Lock-In System — Service Worker
 const CACHE_NAME = 'sa-v2';
 
 // Only cache the shell — Vite asset names are hashed and change on every build

@@ -73,7 +73,7 @@ function GoldFrame() {
     opacity: 0.75,
     transform,
     pointerEvents: 'none',
-    filter: 'drop-shadow(0 0 4px rgba(197, 165, 90, 0.3))',
+    filter: 'drop-shadow(0 0 4px rgba(90, 152, 255, 0.3))',
   });
 
   return (
@@ -271,7 +271,7 @@ function ExpandedReport({ report, onClose }: { report: SystemReport; onClose: ()
           backgroundColor: '#151518',
           boxShadow: isDiamond
             ? '0 0 40px rgba(184, 212, 232, 0.10), 0 0 80px rgba(184, 212, 232, 0.04)'
-            : report.tier === 'gold' ? '0 0 30px rgba(197, 165, 90, 0.08)' : 'none',
+            : report.tier === 'gold' ? '0 0 30px rgba(90, 152, 255, 0.08)' : 'none',
         }}>
 
         {/* Ornate tier frame */}
@@ -405,7 +405,7 @@ interface MilestoneContext {
 }
 
 const CHAPTER_META: Record<MilestoneChapter, { label: string; subtitle: string; color: string; colorSoft: string; border: string; glow: string }> = {
-  foundation: { label: 'Foundation', subtitle: 'Configure your system', color: '#C5A55A', colorSoft: 'rgba(197,165,90,0.06)', border: 'rgba(197,165,90,0.25)', glow: 'rgba(197,165,90,0.35)' },
+  foundation: { label: 'Foundation', subtitle: 'Configure your system', color: '#5A98FF', colorSoft: 'rgba(90,152,255,0.06)', border: 'rgba(90,152,255,0.25)', glow: 'rgba(90,152,255,0.35)' },
   momentum:   { label: 'Momentum',   subtitle: 'Build consistent execution', color: '#6DB5F5', colorSoft: 'rgba(109,181,245,0.06)', border: 'rgba(109,181,245,0.25)', glow: 'rgba(109,181,245,0.35)' },
   mastery:    { label: 'Mastery',     subtitle: 'Prove operational excellence', color: '#6ECB8B', colorSoft: 'rgba(110,203,139,0.06)', border: 'rgba(110,203,139,0.25)', glow: 'rgba(110,203,139,0.35)' },
 };
@@ -501,7 +501,7 @@ function computeMilestoneCtx(nns: NonNegotiable[], nnC: NonNegotiableCompletion[
 
 function getMilestoneStatus(unlockedCount: number, nextIndex: number | null, ctx: MilestoneContext): { message: string; color: string } {
   if (unlockedCount === MILESTONES.length) return { message: 'All 15 milestones unlocked. Full Stack rank achieved.', color: '#6ECB8B' };
-  if (unlockedCount === 0) return { message: 'No milestones unlocked yet. Configure your first non-negotiable and habit.', color: '#C5A55A' };
+  if (unlockedCount === 0) return { message: 'No milestones unlocked yet. Configure your first non-negotiable and habit.', color: '#5A98FF' };
   if (nextIndex !== null) {
     const next = MILESTONES[nextIndex];
     const progress = next.progressFn ? next.progressFn(ctx) : null;
@@ -512,7 +512,7 @@ function getMilestoneStatus(unlockedCount: number, nextIndex: number | null, ctx
     }
     return { message: `${unlockedCount} milestones down. Next: "${next.title}."`, color: CHAPTER_META[next.chapter].color };
   }
-  return { message: `${unlockedCount} milestones unlocked.`, color: '#C5A55A' };
+  return { message: `${unlockedCount} milestones unlocked.`, color: '#5A98FF' };
 }
 
 function MilestoneCard({ milestone, index, unlocked, isNext, isLocked, ctx }: {
@@ -624,7 +624,7 @@ function ChapterHeader({ chapter }: { chapter: MilestoneChapter }) {
 
 function MilestoneRankHeader({ unlocked, total, rank }: { unlocked: number; total: number; rank: { title: string; next: string | null } }) {
   const pct = total > 0 ? (unlocked / total) * 100 : 0;
-  const color = pct >= 80 ? '#6ECB8B' : pct >= 40 ? '#6DB5F5' : '#C5A55A';
+  const color = pct >= 80 ? '#6ECB8B' : pct >= 40 ? '#6DB5F5' : '#5A98FF';
   const sz = 88, sw = 3, r = (sz - sw * 2) / 2, circ = 2 * Math.PI * r, off = circ - (pct / 100) * circ;
   return (
     <div className="sa-card-elevated mb-8">

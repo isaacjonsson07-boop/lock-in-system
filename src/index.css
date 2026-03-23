@@ -5,7 +5,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
 
 /* ========================================
-   STRUCTURED ACHIEVEMENT — DESIGN SYSTEM
+   LOCK-IN SYSTEM — DESIGN SYSTEM
    ======================================== */
 
 :root {
@@ -23,13 +23,13 @@
   --cream-muted: #A69F93;
   --cream-faint: #6B665D;
 
-  /* Gold */
-  --gold: #C5A55A;
-  --gold-light: #D4BA78;
-  --gold-deep: #A68B3C;
-  --gold-soft: rgba(197, 165, 90, 0.06);
-  --gold-glow: rgba(197, 165, 90, 0.08);
-  --gold-border: rgba(197, 165, 90, 0.20);
+  /* Primary Blue */
+  --gold: #5A98FF;
+  --gold-light: #7BB3FF;
+  --gold-deep: #4080E0;
+  --gold-soft: rgba(90, 152, 255, 0.06);
+  --gold-glow: rgba(90, 152, 255, 0.08);
+  --gold-border: rgba(90, 152, 255, 0.20);
 
   /* Semantic */
   --green: #6ECB8B;
@@ -43,9 +43,9 @@
   --blue-border: rgba(109, 181, 245, 0.30);
 
   /* Borders */
-  --border: rgba(197, 165, 90, 0.08);
-  --border-light: rgba(197, 165, 90, 0.12);
-  --border-active: rgba(197, 165, 90, 0.30);
+  --border: rgba(90, 152, 255, 0.08);
+  --border-light: rgba(90, 152, 255, 0.12);
+  --border-active: rgba(90, 152, 255, 0.30);
 
   /* Typography */
   --serif: 'Cormorant Garamond', Georgia, serif;
