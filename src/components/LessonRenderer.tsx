@@ -29,25 +29,25 @@ interface LessonRendererProps {
 }
 
 function PhaseAccentColor(phase: 1 | 2 | 3): string {
-  if (phase === 2) return 'var(--blue, #6DB5F5)';
+  if (phase === 2) return 'var(--purple, #9B7BF5)';
   if (phase === 3) return 'var(--green, #6ECB8B)';
   return 'var(--gold, #5A98FF)';
 }
 
 function phaseBorderClass(phase: 1 | 2 | 3): string {
-  if (phase === 2) return 'border-sa-blue-border';
+  if (phase === 2) return 'border-sa-purple-border';
   if (phase === 3) return 'border-sa-green-border';
   return 'border-sa-gold-border';
 }
 
 function phaseTextClass(phase: 1 | 2 | 3): string {
-  if (phase === 2) return 'text-sa-blue';
+  if (phase === 2) return 'text-sa-purple';
   if (phase === 3) return 'text-sa-green';
   return 'text-sa-gold';
 }
 
 function phaseBgClass(phase: 1 | 2 | 3): string {
-  if (phase === 2) return 'bg-sa-blue-soft';
+  if (phase === 2) return 'bg-sa-purple-soft';
   if (phase === 3) return 'bg-sa-green-soft';
   return 'bg-sa-gold-soft';
 }

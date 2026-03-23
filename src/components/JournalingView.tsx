@@ -660,7 +660,7 @@ export function JournalingView({
           transition: opacity 0.25s ease;
         }
         .sa-lesson-card.sa-gold-accent::before { background: var(--gold, #5A98FF); }
-        .sa-lesson-card.sa-blue-accent::before { background: var(--blue, #6DB5F5); }
+        .sa-lesson-card.sa-blue-accent::before { background: var(--purple, #9B7BF5); }
         .sa-lesson-card.sa-green-accent::before { background: var(--green, #6ECB8B); }
         .sa-lesson-card:hover:not(.sa-locked) {
           border-color: rgba(240,237,230,0.12);
@@ -679,7 +679,7 @@ export function JournalingView({
           transform: translateX(3px);
         }
         .sa-lesson-card.sa-gold-accent:hover .sa-card-arrow { color: var(--gold, #5A98FF); }
-        .sa-lesson-card.sa-blue-accent:hover .sa-card-arrow { color: var(--blue, #6DB5F5); }
+        .sa-lesson-card.sa-blue-accent:hover .sa-card-arrow { color: var(--purple, #9B7BF5); }
         .sa-lesson-card.sa-green-accent:hover .sa-card-arrow { color: var(--green, #6ECB8B); }
         .sa-lesson-card:hover:not(.sa-locked) .sa-card-principle { color: var(--cream-muted, #A69F93); }
         .sa-lesson-card.sa-review-day {
@@ -694,7 +694,7 @@ export function JournalingView({
           border-style: solid;
         }
         .sa-lesson-card.sa-completed.sa-gold-accent { border-color: rgba(90,152,255,0.25); background: rgba(90,152,255,0.06); }
-        .sa-lesson-card.sa-completed.sa-blue-accent { border-color: rgba(109,181,245,0.25); background: rgba(109,181,245,0.06); }
+        .sa-lesson-card.sa-completed.sa-blue-accent { border-color: rgba(155,123,245,0.25); background: rgba(155,123,245,0.06); }
         .sa-lesson-card.sa-completed.sa-green-accent { border-color: rgba(110,203,139,0.25); background: rgba(110,203,139,0.06); }
         .sa-lesson-card.sa-completed::before { opacity: 1; }
         .sa-brand-line::before, .sa-brand-line::after {
@@ -817,7 +817,7 @@ export function JournalingView({
           {/* Phase sections */}
           {PHASES.map((phase, phaseIndex) => {
             const phaseColor = phaseIndex === 0 ? 'gold' : phaseIndex === 1 ? 'blue' : 'green';
-            const colorVar = phaseColor === 'gold' ? 'var(--gold, #5A98FF)' : phaseColor === 'blue' ? 'var(--blue, #6DB5F5)' : 'var(--green, #6ECB8B)';
+            const colorVar = phaseColor === 'gold' ? 'var(--gold, #5A98FF)' : phaseColor === 'blue' ? 'var(--purple, #9B7BF5)' : 'var(--green, #6ECB8B)';
 
             return (
               <section key={phase.label} style={{ paddingTop: 72 }}>
@@ -907,7 +907,7 @@ export function JournalingView({
                 Stabilize
               </span>
               <span className="flex items-center gap-2" style={{ fontSize: '0.8rem', color: 'var(--cream-faint, #6B665D)' }}>
-                <span className="rounded-full" style={{ width: 6, height: 6, background: 'var(--blue, #6DB5F5)', display: 'inline-block' }} />
+                <span className="rounded-full" style={{ width: 6, height: 6, background: 'var(--purple, #9B7BF5)', display: 'inline-block' }} />
                 Reconstruct
               </span>
               <span className="flex items-center gap-2" style={{ fontSize: '0.8rem', color: 'var(--cream-faint, #6B665D)' }}>

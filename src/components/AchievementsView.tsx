@@ -406,7 +406,7 @@ interface MilestoneContext {
 
 const CHAPTER_META: Record<MilestoneChapter, { label: string; subtitle: string; color: string; colorSoft: string; border: string; glow: string }> = {
   foundation: { label: 'Foundation', subtitle: 'Configure your system', color: '#5A98FF', colorSoft: 'rgba(90,152,255,0.06)', border: 'rgba(90,152,255,0.25)', glow: 'rgba(90,152,255,0.35)' },
-  momentum:   { label: 'Momentum',   subtitle: 'Build consistent execution', color: '#6DB5F5', colorSoft: 'rgba(109,181,245,0.06)', border: 'rgba(109,181,245,0.25)', glow: 'rgba(109,181,245,0.35)' },
+  momentum:   { label: 'Momentum',   subtitle: 'Build consistent execution', color: '#9B7BF5', colorSoft: 'rgba(155,123,245,0.06)', border: 'rgba(155,123,245,0.25)', glow: 'rgba(155,123,245,0.35)' },
   mastery:    { label: 'Mastery',     subtitle: 'Prove operational excellence', color: '#6ECB8B', colorSoft: 'rgba(110,203,139,0.06)', border: 'rgba(110,203,139,0.25)', glow: 'rgba(110,203,139,0.35)' },
 };
 

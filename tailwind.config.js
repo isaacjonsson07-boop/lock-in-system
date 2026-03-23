@@ -43,6 +43,11 @@ export default {
           'blue-soft': 'rgba(109, 181, 245, 0.14)',
           'blue-border': 'rgba(109, 181, 245, 0.30)',
 
+          // Phase 2 — Purple
+          purple: '#9B7BF5',
+          'purple-soft': 'rgba(155, 123, 245, 0.10)',
+          'purple-border': 'rgba(155, 123, 245, 0.25)',
+
           // Borders and dividers
           border: 'rgba(90, 152, 255, 0.08)',
           'border-light': 'rgba(90, 152, 255, 0.12)',
