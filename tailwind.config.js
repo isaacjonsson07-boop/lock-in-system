@@ -20,13 +20,13 @@ export default {
           'cream-muted': '#A69F93',
           'cream-faint': '#6B665D',
 
-          // Accent — gold (primary brand)
-          gold: '#C5A55A',
-          'gold-light': '#D4BA78',
-          'gold-deep': '#A68B3C',
-          'gold-soft': 'rgba(197, 165, 90, 0.06)',
-          'gold-glow': 'rgba(197, 165, 90, 0.08)',
-          'gold-border': 'rgba(197, 165, 90, 0.20)',
+          // Accent — blue (primary brand)
+          gold: '#5A98FF',
+          'gold-light': '#7BB3FF',
+          'gold-deep': '#4080E0',
+          'gold-soft': 'rgba(90, 152, 255, 0.06)',
+          'gold-glow': 'rgba(90, 152, 255, 0.08)',
+          'gold-border': 'rgba(90, 152, 255, 0.20)',
 
           // Semantic — success
           green: '#6ECB8B',
@@ -44,9 +44,9 @@ export default {
           'blue-border': 'rgba(109, 181, 245, 0.30)',
 
           // Borders and dividers
-          border: 'rgba(197, 165, 90, 0.08)',
-          'border-light': 'rgba(197, 165, 90, 0.12)',
-          'border-active': 'rgba(197, 165, 90, 0.30)',
+          border: 'rgba(90, 152, 255, 0.08)',
+          'border-light': 'rgba(90, 152, 255, 0.12)',
+          'border-active': 'rgba(90, 152, 255, 0.30)',
         }
       },
       fontFamily: {
