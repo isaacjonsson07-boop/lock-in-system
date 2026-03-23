@@ -34,9 +34,9 @@ export default {
           'green-border': 'rgba(110, 203, 139, 0.25)',
 
           // Semantic — health mid-range
-          yellow: '#D4A840',
-          'yellow-soft': 'rgba(212, 168, 64, 0.10)',
-          'yellow-border': 'rgba(212, 168, 64, 0.25)',
+          yellow: '#C5A55A',
+          'yellow-soft': 'rgba(197, 165, 90, 0.10)',
+          'yellow-border': 'rgba(197, 165, 90, 0.25)',
 
           // Semantic — warning / attention
           rose: '#E07070',
