@@ -33,6 +33,11 @@ export default {
           'green-soft': 'rgba(110, 203, 139, 0.10)',
           'green-border': 'rgba(110, 203, 139, 0.25)',
 
+          // Semantic — health mid-range
+          yellow: '#D4A840',
+          'yellow-soft': 'rgba(212, 168, 64, 0.10)',
+          'yellow-border': 'rgba(212, 168, 64, 0.25)',
+
           // Semantic — warning / attention
           rose: '#E07070',
           'rose-soft': 'rgba(230, 100, 100, 0.12)',

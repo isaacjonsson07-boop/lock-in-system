@@ -260,10 +260,10 @@ export function ReviewsView({
 
   // ── Rate color helper ──
   const rateColor = (rate: number) =>
-    rate >= 80 ? 'text-sa-green' : rate >= 50 ? 'text-sa-gold' : 'text-sa-rose';
+    rate >= 80 ? 'text-sa-green' : rate >= 50 ? 'text-sa-yellow' : 'text-sa-rose';
 
   const rateBarColor = (rate: number) =>
-    rate >= 80 ? 'var(--green)' : rate >= 50 ? 'var(--gold)' : 'var(--rose)';
+    rate >= 80 ? 'var(--green)' : rate >= 50 ? 'var(--yellow)' : 'var(--rose)';
 
   // ── Tab button helper ──
   const TabBtn = ({ id, label }: { id: typeof activeTab; label: string }) => (
@@ -341,7 +341,7 @@ export function ReviewsView({
                     <div className="w-full bg-sa-bg rounded-sm relative" style={{ height: '60px' }}>
                       <div className="absolute bottom-0 w-full rounded-sm transition-all duration-500" style={{
                         height: `${day.percentage}%`,
-                        background: day.percentage === 100 ? 'var(--green)' : day.percentage >= 80 ? 'var(--gold)' : day.percentage > 0 ? 'rgba(201,169,110,0.4)' : 'transparent',
+                        background: day.percentage === 100 ? 'var(--green)' : day.percentage >= 80 ? 'var(--yellow)' : day.percentage > 0 ? 'rgba(212,168,64,0.4)' : 'transparent',
                       }} />
                     </div>
                     <span className="text-[0.55rem] text-sa-cream-faint">{day.dayLabel}</span>
