@@ -7,20 +7,63 @@ import { useState, useCallback } from 'react';
 // ============================================
 
 const STORAGE_KEY = 'sa_unlocks';
-const MIGRATION_VERSION = 2; // Bump this to re-run migration for existing users
+const MIGRATION_VERSION = 3; // Bump to re-run migration
 
 export interface UnlockState {
   [unlockId: string]: boolean;
   _version?: any;
 }
 
-// All unlock IDs — used to auto-unlock for existing users
+// All unlock IDs
 const ALL_UNLOCK_IDS = [
   'system-direction', 'system-nns', 'today', 'reviews-weekly',
   'system-identity', 'system-priorities', 'system-habits',
   'system-decisions', 'system-failure', 'reviews-quarterly',
   'system-manual', 'journal',
 ];
+
+// Map: which day's completion unlocks which feature
+const DAY_UNLOCK_MAP: { day: number; unlockId: string }[] = [
+  { day: 1, unlockId: 'system-direction' },
+  { day: 4, unlockId: 'system-nns' },
+  { day: 5, unlockId: 'today' },
+  { day: 6, unlockId: 'journal' },
+  { day: 7, unlockId: 'reviews-weekly' },
+  { day: 8, unlockId: 'system-identity' },
+  { day: 9, unlockId: 'system-priorities' },
+  { day: 10, unlockId: 'system-habits' },
+  { day: 13, unlockId: 'system-decisions' },
+  { day: 15, unlockId: 'system-failure' },
+  { day: 19, unlockId: 'reviews-quarterly' },
+  { day: 20, unlockId: 'system-manual' },
+];
+
+function getHighestJournalDay(): number {
+  try {
+    const raw = localStorage.getItem('sa_journal_entries');
+    if (!raw) return 0;
+    const entries = JSON.parse(raw);
+    let highest = 0;
+    for (const entry of entries) {
+      if (!entry.dayNumber || entry.dayNumber < 1 || entry.dayNumber > 21) continue;
+      const hasContent =
+        (entry.content && entry.content.trim() !== '') ||
+        (entry.answers && Object.values(entry.answers).some((a: any) => a && a.trim() !== ''));
+      if (hasContent && entry.dayNumber > highest) highest = entry.dayNumber;
+    }
+    return highest;
+  } catch {
+    return 0;
+  }
+}
+
+function buildUnlocksForDay(highestDay: number): UnlockState {
+  const state: UnlockState = { _version: MIGRATION_VERSION };
+  for (const { day, unlockId } of DAY_UNLOCK_MAP) {
+    if (highestDay >= day) state[unlockId] = true;
+  }
+  return state;
+}
 
 function loadUnlocks(): UnlockState {
   try {
@@ -32,28 +75,33 @@ function loadUnlocks(): UnlockState {
       return existing;
     }
 
-    // Migration: if user has existing app data, unlock everything
+    // Migration: check journal progress and unlock accordingly
+    const highestDay = getHighestJournalDay();
+    if (highestDay > 0) {
+      const state = buildUnlocksForDay(highestDay);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      return state;
+    }
+
+    // Check for any other existing data (NNs, system docs) without journal
     const hasExistingData =
       localStorage.getItem('sa_non_negotiables') ||
-      localStorage.getItem('sa_journal_entries') ||
       localStorage.getItem('sa_system_documents') ||
       localStorage.getItem('dj_pro_v3');
-    
+
     if (hasExistingData) {
-      const allUnlocked: UnlockState = { _version: MIGRATION_VERSION };
-      ALL_UNLOCK_IDS.forEach(id => { allUnlocked[id] = true; });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(allUnlocked));
-      return allUnlocked;
+      // Has data but no journal — conservatively unlock direction + NNs + today
+      const state: UnlockState = {
+        _version: MIGRATION_VERSION,
+        'system-direction': true,
+        'system-nns': true,
+        'today': true,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      return state;
     }
 
-    // New user with no data — start fresh with version tag
-    if (existing) {
-      // Has partial unlocks from normal usage, just tag the version
-      existing._version = MIGRATION_VERSION;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
-      return existing;
-    }
-
+    // Brand new user
     return { _version: MIGRATION_VERSION };
   } catch {
     return { _version: MIGRATION_VERSION };
@@ -89,10 +137,16 @@ export function useUnlocks() {
     saveUnlocks(allUnlocked);
   }, []);
 
+  const unlockUpToDay = useCallback((highestDay: number) => {
+    const state = buildUnlocksForDay(highestDay);
+    setUnlocks(state);
+    saveUnlocks(state);
+  }, []);
+
   const resetUnlocks = useCallback(() => {
     setUnlocks({});
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  return { unlocks, isUnlocked, triggerUnlock, unlockAll, resetUnlocks };
+  return { unlocks, isUnlocked, triggerUnlock, unlockAll, unlockUpToDay, resetUnlocks };
 }

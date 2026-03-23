@@ -37,7 +37,7 @@ function App() {
   const [activeUnlockPopup, setActiveUnlockPopup] = useState<UnlockDef | null>(null);
 
   // Unlock state (localStorage)
-  const { unlocks, isUnlocked, triggerUnlock, unlockAll } = useUnlocks();
+  const { unlocks, isUnlocked, triggerUnlock, unlockUpToDay } = useUnlocks();
 
   // Dual-mode data (localStorage + Supabase)
   const {
@@ -84,9 +84,18 @@ function App() {
       const hasData = nonNegotiables.length > 0 || journalEntries.length > 0 || habits.length > 0;
       const hasNoUnlocks = Object.keys(unlocks).filter(k => k !== '_version').length === 0;
       if (hasData && hasNoUnlocks) {
-        unlockAll();
-        // Set to Today since they're an existing user (unlocks state hasn't updated yet)
-        setCurrentTab('today');
+        // Existing user on new device — unlock based on journal progress
+        let highestDay = 0;
+        for (const entry of journalEntries) {
+          if (!entry.dayNumber || entry.dayNumber < 1 || entry.dayNumber > 21) continue;
+          const hasContent = (entry.content && entry.content.trim() !== '') ||
+            (entry.answers && Object.values(entry.answers).some(a => a && a.trim() !== ''));
+          if (hasContent && entry.dayNumber > highestDay) highestDay = entry.dayNumber;
+        }
+        if (highestDay > 0) {
+          unlockUpToDay(highestDay);
+        }
+        setCurrentTab(highestDay >= 5 ? 'today' : 'installation');
       } else {
         setCurrentTab(getDefaultTab(unlocks));
       }
