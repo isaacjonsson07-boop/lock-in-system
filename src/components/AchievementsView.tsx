@@ -271,7 +271,7 @@ function ExpandedReport({ report, onClose }: { report: SystemReport; onClose: ()
           backgroundColor: '#151518',
           boxShadow: isDiamond
             ? '0 0 40px rgba(184, 212, 232, 0.10), 0 0 80px rgba(184, 212, 232, 0.04)'
-            : report.tier === 'gold' ? '0 0 30px rgba(90, 152, 255, 0.08)' : 'none',
+            : report.tier === 'gold' ? '0 0 30px rgba(197, 165, 90, 0.08)' : 'none',
         }}>
 
         {/* Ornate tier frame */}
