@@ -431,7 +431,7 @@ export function SystemView({
           </div>
         ) : (
         <>
-        <SectionHeader id="habits" title="Keystone Habits" count={habits.length} color="var(--blue)" />
+        <SectionHeader id="habits" title="Keystone Habits" count={habits.length} color="var(--purple)" />
         {openSections.has('habits') && (
           <div className="py-4">
             <p className="text-xs text-sa-cream-faint mb-4">

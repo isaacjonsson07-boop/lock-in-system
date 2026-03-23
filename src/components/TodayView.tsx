@@ -175,7 +175,7 @@ function SidebarCommandCenter({
         <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint mb-3">Categories</p>
         <div className="space-y-2.5">
           <CategoryMiniBar label="NNs" done={nnDone} total={nnTotal} color="#5A98FF" />
-          <CategoryMiniBar label="Habits" done={habitsDone} total={habitsTotal} color="#5A98FF" />
+          <CategoryMiniBar label="Habits" done={habitsDone} total={habitsTotal} color="#9B7BF5" />
           <CategoryMiniBar label="Tasks" done={tasksDone} total={tasksTotal} color="#5A98FF" />
         </div>
       </div>
@@ -692,8 +692,8 @@ export function TodayView({
           {habitsWithStatus.length > 0 && (
             <section className="mb-11">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-5 h-px bg-sa-cream-faint/60" />
-                <span className="text-[0.68rem] font-medium uppercase tracking-[0.16em] text-sa-cream-muted">Keystone Habits</span>
+                <div className="w-5 h-px bg-sa-purple/60" />
+                <span className="text-[0.68rem] font-medium uppercase tracking-[0.16em] text-sa-purple">Keystone Habits</span>
                 <span className="text-[0.72rem] text-sa-cream-faint">{habitsWithStatus.filter(h => h.completed).length}/{habitsWithStatus.length}</span>
               </div>
               <div className="space-y-1.5">
@@ -707,7 +707,7 @@ export function TodayView({
                     onClick={() => onToggleHabit(habit, dateStr)}
                   >
                     <div className={`flex-shrink-0 w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center transition-all ${
-                      habit.completed ? 'bg-sa-green border-sa-green' : 'border-sa-cream-faint bg-transparent'
+                      habit.completed ? 'bg-sa-green border-sa-green' : 'border-sa-purple bg-transparent'
                     }`}>
                       {habit.completed && <Check className="w-3 h-3 text-sa-bg-deep" strokeWidth={3} />}
                     </div>
