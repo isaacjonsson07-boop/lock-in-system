@@ -468,7 +468,7 @@ export function SystemView({
                             }}
                             className={`w-7 h-7 rounded-sa-sm text-[0.65rem] font-medium transition-colors ${
                               editHabit.days.includes(d.value)
-                                ? 'bg-sa-blue-soft text-sa-blue'
+                                ? 'bg-sa-purple-soft text-sa-purple'
                                 : 'text-sa-cream-faint hover:text-sa-cream'
                             }`}
                           >
@@ -487,7 +487,7 @@ export function SystemView({
                     key={h.id}
                     className="group flex items-center gap-3 px-4 py-3 bg-sa-bg-warm border border-sa-border rounded-sa"
                   >
-                    <div className="w-2 h-2 rounded-full bg-sa-blue flex-shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-sa-purple flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <span className="text-sm text-sa-cream">{h.name}</span>
                       <div className="flex gap-1 mt-1">
@@ -496,7 +496,7 @@ export function SystemView({
                             key={d.value}
                             className={`text-[0.55rem] px-1 rounded ${
                               h.days_of_week.includes(d.value)
-                                ? 'text-sa-blue bg-sa-blue-soft'
+                                ? 'text-sa-purple bg-sa-purple-soft'
                                 : 'text-sa-cream-faint'
                             }`}
                           >
@@ -510,7 +510,7 @@ export function SystemView({
                     )}
                     <button
                       onClick={() => handleEditHabit(h)}
-                      className="p-1 text-sa-cream-faint opacity-0 group-hover:opacity-100 hover:text-sa-blue transition-all"
+                      className="p-1 text-sa-cream-faint opacity-0 group-hover:opacity-100 hover:text-sa-purple transition-all"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
@@ -554,7 +554,7 @@ export function SystemView({
                         }}
                         className={`w-7 h-7 rounded-sa-sm text-[0.65rem] font-medium transition-colors ${
                           newHabit.days.includes(d.value)
-                            ? 'bg-sa-blue-soft text-sa-blue'
+                            ? 'bg-sa-purple-soft text-sa-purple'
                             : 'text-sa-cream-faint hover:text-sa-cream'
                         }`}
                       >
@@ -579,7 +579,7 @@ export function SystemView({
             ) : (
               <button
                 onClick={() => setShowAddHabit(true)}
-                className="flex items-center gap-1.5 text-xs text-sa-cream-faint hover:text-sa-blue transition-colors"
+                className="flex items-center gap-1.5 text-xs text-sa-cream-faint hover:text-sa-purple transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add keystone habit
