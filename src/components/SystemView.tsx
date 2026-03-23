@@ -42,7 +42,7 @@ const DOC_TYPES: { key: SystemDocument['doc_type']; label: string; icon: React.E
   { key: 'identity', label: 'Identity Statement', icon: Brain, placeholder: '"I am the kind of person who…"', day: 'Day 8' },
   { key: 'priorities', label: 'Priority Stack', icon: Target, placeholder: 'Your ranked priorities. What gets protected first.', day: 'Day 9' },
   { key: 'decision_rules', label: 'Decision Framework', icon: Shield, placeholder: 'Your rules for making decisions under pressure.', day: 'Day 13' },
-  { key: 'failure_protocol', label: 'Failure Protocol', icon: Shield, placeholder: 'What you do when you miss a day or fall off track.', day: 'Day 16' },
+  { key: 'failure_protocol', label: 'Failure Protocol', icon: Shield, placeholder: 'What you do when you miss a day or fall off track.', day: 'Day 15' },
   { key: 'operating_manual', label: 'Operating Manual', icon: FileText, placeholder: 'Your complete personal operating system. The consolidation of everything above.', day: 'Day 20' },
 ];
 
