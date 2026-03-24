@@ -72,8 +72,8 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
           -2px 33.3px, 33.3px -2px
         )`
       }}>
-        <div ref={line1Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)' }} />
-        <div ref={line2Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)' }} />
+        <div ref={line1Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(90,152,255,0.4) 0%, transparent 70%)' }} />
+        <div ref={line2Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(90,152,255,0.4) 0%, transparent 70%)' }} />
       </div>
       {direction && (
         <p className="relative z-10 font-serif text-[1.85rem] font-light leading-[1.45] text-sa-cream tracking-[-0.01em]">
