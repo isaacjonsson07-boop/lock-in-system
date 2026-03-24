@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Plus, Trash2, ChevronDown, ChevronUp, Pencil, FileText, Target, Shield, Compass, Brain, Lock } from 'lucide-react';
 import { NonNegotiable, Habit, SystemDocument } from '../types';
 import { uid } from '../utils/dateUtils';
 import { supabase } from '../lib/supabase';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface SystemViewProps {
   nonNegotiables: NonNegotiable[];
@@ -73,6 +74,9 @@ export function SystemView({
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
   const [editHabit, setEditHabit] = useState({ name: '', time: '09:00', days: [] as number[] });
 
+  // Confirm-delete state
+  const [confirmDelete, setConfirmDelete] = useState<{ type: 'habit' | 'nn'; id: string; name: string } | null>(null);
+
   const handleSaveDoc = (key: string) => {
     onUpdateSystemDocument(key, editBuffer);
     setEditingDoc(null);
@@ -111,7 +115,8 @@ export function SystemView({
   };
 
   const handleDeleteNN = (id: string) => {
-    onDeleteNonNegotiable(id);
+    const nn = nonNegotiables.find(n => n.id === id);
+    setConfirmDelete({ type: 'nn', id, name: nn?.title || 'this non-negotiable' });
   };
 
   const handleEditNN = (nn: NonNegotiable) => {
@@ -151,14 +156,25 @@ export function SystemView({
   };
 
   const handleDeleteHabit = async (id: string) => {
-    if (!user) return;
-    try {
-      await supabase.from('habits').delete().eq('id', id);
-      onHabitsChange();
-    } catch (e) {
-      console.error('Error deleting habit:', e);
-    }
+    const h = habits.find(h => h.id === id);
+    setConfirmDelete({ type: 'habit', id, name: h?.name || 'this habit' });
   };
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!confirmDelete) return;
+    if (confirmDelete.type === 'nn') {
+      onDeleteNonNegotiable(confirmDelete.id);
+    } else {
+      if (!user) return;
+      try {
+        await supabase.from('habits').delete().eq('id', confirmDelete.id);
+        onHabitsChange();
+      } catch (e) {
+        console.error('Error deleting habit:', e);
+      }
+    }
+    setConfirmDelete(null);
+  }, [confirmDelete, onDeleteNonNegotiable, user, onHabitsChange]);
 
   const handleEditHabit = (h: Habit) => {
     setEditingHabitId(h.id);
@@ -209,6 +225,7 @@ export function SystemView({
   const docsWithContent = DOC_TYPES.filter(d => systemDocuments[d.key]?.trim()).length;
 
   return (
+    <>
     <div className="max-w-3xl mx-auto">
 
       {/* Header handled by TabCover */}
@@ -366,16 +383,16 @@ export function SystemView({
                       className="group flex items-center gap-3 px-4 py-3 bg-sa-bg-warm border border-sa-border rounded-sa"
                     >
                       <div className="w-2 h-2 rounded-full bg-sa-gold flex-shrink-0" />
-                      <span className="flex-1 text-sm text-sa-cream">{nn.title}</span>
+                      <span className="flex-1 text-sm text-sa-cream break-all">{nn.title}</span>
                       <button
                         onClick={() => handleEditNN(nn)}
-                        className="p-1 text-sa-cream-faint opacity-0 group-hover:opacity-100 hover:text-sa-gold transition-all"
+                        className="p-1 text-sa-cream-faint md:opacity-0 md:group-hover:opacity-100 hover:text-sa-gold transition-all flex-shrink-0"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteNN(nn.id)}
-                        className="p-1 text-sa-cream-faint opacity-0 group-hover:opacity-100 hover:text-sa-rose transition-all"
+                        className="p-1 text-sa-cream-faint md:opacity-0 md:group-hover:opacity-100 hover:text-sa-rose transition-all flex-shrink-0"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -431,7 +448,7 @@ export function SystemView({
           </div>
         ) : (
         <>
-        <SectionHeader id="habits" title="Keystone Habits" count={habits.length} color="var(--purple)" />
+        <SectionHeader id="habits" title="Keystone Habits" count={habits.length} color="var(--blue)" />
         {openSections.has('habits') && (
           <div className="py-4">
             <p className="text-xs text-sa-cream-faint mb-4">
@@ -449,14 +466,14 @@ export function SystemView({
                       autoFocus
                       className="sa-input"
                     />
-                    <div className="flex gap-3 items-center">
+                    <div className="flex flex-wrap gap-3 items-center">
                       <input
                         type="time"
                         value={editHabit.time}
                         onChange={(e) => setEditHabit({ ...editHabit, time: e.target.value })}
                         className="sa-input w-28"
                       />
-                      <div className="flex gap-1">
+                      <div className="flex flex-wrap gap-1">
                         {DAY_LABELS.map((d) => (
                           <button
                             key={d.value}
@@ -468,7 +485,7 @@ export function SystemView({
                             }}
                             className={`w-7 h-7 rounded-sa-sm text-[0.65rem] font-medium transition-colors ${
                               editHabit.days.includes(d.value)
-                                ? 'bg-sa-purple-soft text-sa-purple'
+                                ? 'bg-sa-blue-soft text-sa-blue'
                                 : 'text-sa-cream-faint hover:text-sa-cream'
                             }`}
                           >
@@ -487,16 +504,16 @@ export function SystemView({
                     key={h.id}
                     className="group flex items-center gap-3 px-4 py-3 bg-sa-bg-warm border border-sa-border rounded-sa"
                   >
-                    <div className="w-2 h-2 rounded-full bg-sa-purple flex-shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-sa-blue flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm text-sa-cream">{h.name}</span>
-                      <div className="flex gap-1 mt-1">
+                      <span className="text-sm text-sa-cream break-all">{h.name}</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
                         {DAY_LABELS.map((d) => (
                           <span
                             key={d.value}
                             className={`text-[0.55rem] px-1 rounded ${
                               h.days_of_week.includes(d.value)
-                                ? 'text-sa-purple bg-sa-purple-soft'
+                                ? 'text-sa-blue bg-sa-blue-soft'
                                 : 'text-sa-cream-faint'
                             }`}
                           >
@@ -506,17 +523,17 @@ export function SystemView({
                       </div>
                     </div>
                     {h.time && (
-                      <span className="text-xs text-sa-cream-faint">{h.time}</span>
+                      <span className="text-xs text-sa-cream-faint flex-shrink-0">{h.time}</span>
                     )}
                     <button
                       onClick={() => handleEditHabit(h)}
-                      className="p-1 text-sa-cream-faint opacity-0 group-hover:opacity-100 hover:text-sa-purple transition-all"
+                      className="p-1 text-sa-cream-faint md:opacity-0 md:group-hover:opacity-100 hover:text-sa-blue transition-all flex-shrink-0"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => handleDeleteHabit(h.id)}
-                      className="p-1 text-sa-cream-faint opacity-0 group-hover:opacity-100 hover:text-sa-rose transition-all"
+                      className="p-1 text-sa-cream-faint md:opacity-0 md:group-hover:opacity-100 hover:text-sa-rose transition-all flex-shrink-0"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -535,14 +552,14 @@ export function SystemView({
                   autoFocus
                   className="sa-input"
                 />
-                <div className="flex gap-3 items-center">
+                <div className="flex flex-wrap gap-3 items-center">
                   <input
                     type="time"
                     value={newHabit.time}
                     onChange={(e) => setNewHabit({ ...newHabit, time: e.target.value })}
                     className="sa-input w-28"
                   />
-                  <div className="flex gap-1">
+                  <div className="flex flex-wrap gap-1">
                     {DAY_LABELS.map((d) => (
                       <button
                         key={d.value}
@@ -554,7 +571,7 @@ export function SystemView({
                         }}
                         className={`w-7 h-7 rounded-sa-sm text-[0.65rem] font-medium transition-colors ${
                           newHabit.days.includes(d.value)
-                            ? 'bg-sa-purple-soft text-sa-purple'
+                            ? 'bg-sa-blue-soft text-sa-blue'
                             : 'text-sa-cream-faint hover:text-sa-cream'
                         }`}
                       >
@@ -579,7 +596,7 @@ export function SystemView({
             ) : (
               <button
                 onClick={() => setShowAddHabit(true)}
-                className="flex items-center gap-1.5 text-xs text-sa-cream-faint hover:text-sa-purple transition-colors"
+                className="flex items-center gap-1.5 text-xs text-sa-cream-faint hover:text-sa-blue transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add keystone habit
@@ -593,5 +610,14 @@ export function SystemView({
 
       </div>
     </div>
+
+    <ConfirmDialog
+      open={!!confirmDelete}
+      title={confirmDelete?.type === 'habit' ? 'Delete habit?' : 'Delete non-negotiable?'}
+      message={`"${confirmDelete?.name}" and all its history will be permanently removed. This can't be undone.`}
+      onConfirm={handleConfirmDelete}
+      onCancel={() => setConfirmDelete(null)}
+    />
+    </>
   );
 }

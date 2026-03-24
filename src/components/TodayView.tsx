@@ -72,8 +72,8 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
           -2px 33.3px, 33.3px -2px
         )`
       }}>
-        <div ref={line1Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(90,152,255,0.4) 0%, transparent 70%)' }} />
-        <div ref={line2Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(90,152,255,0.4) 0%, transparent 70%)' }} />
+        <div ref={line1Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)' }} />
+        <div ref={line2Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(197,165,90,0.4) 0%, transparent 70%)' }} />
       </div>
       {direction && (
         <p className="relative z-10 font-serif text-[1.85rem] font-light leading-[1.45] text-sa-cream tracking-[-0.01em]">
@@ -168,19 +168,19 @@ function SidebarCommandCenter({
         {statusMsg && <p className="text-[0.72rem] mt-3" style={{ color: statusColor }}>{statusMsg}</p>}
       </div>
 
-      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(90,152,255,0.15), transparent)' }} />
+      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
 
       {/* Category breakdown */}
       <div>
         <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint mb-3">Categories</p>
         <div className="space-y-2.5">
-          <CategoryMiniBar label="NNs" done={nnDone} total={nnTotal} color="#5A98FF" />
-          <CategoryMiniBar label="Habits" done={habitsDone} total={habitsTotal} color="#9B7BF5" />
-          <CategoryMiniBar label="Tasks" done={tasksDone} total={tasksTotal} color="#5A98FF" />
+          <CategoryMiniBar label="NNs" done={nnDone} total={nnTotal} color="#C5A55A" />
+          <CategoryMiniBar label="Habits" done={habitsDone} total={habitsTotal} color="#C5A55A" />
+          <CategoryMiniBar label="Tasks" done={tasksDone} total={tasksTotal} color="#C5A55A" />
         </div>
       </div>
 
-      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(90,152,255,0.15), transparent)' }} />
+      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
 
       {/* Stats grid */}
       <div className="grid grid-cols-3 gap-2">
@@ -207,7 +207,7 @@ function SidebarCommandCenter({
         </div>
       </div>
 
-      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(90,152,255,0.15), transparent)' }} />
+      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
 
       {/* 7-day heatmap */}
       <div>
@@ -218,7 +218,7 @@ function SidebarCommandCenter({
       {/* Current milestone */}
       {milestoneInfo && (
         <>
-          <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(90,152,255,0.15), transparent)' }} />
+          <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
           <button onClick={() => onNavigate?.('achievements')} className="w-full text-left group">
             <p className="text-[0.6rem] uppercase tracking-[0.15em] text-sa-cream-faint mb-2">Next Milestone</p>
             <p className="text-[0.8rem] text-sa-cream mb-2 group-hover:text-sa-gold transition-colors">{milestoneInfo.title}</p>
@@ -226,7 +226,7 @@ function SidebarCommandCenter({
               <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
                 <div className="h-full rounded-full transition-all duration-500" style={{
                   width: `${milestoneInfo.target > 0 ? Math.round((milestoneInfo.current / milestoneInfo.target) * 100) : 0}%`,
-                  backgroundColor: '#5A98FF',
+                  backgroundColor: '#C5A55A',
                 }} />
               </div>
               <span className="text-[0.65rem] tabular-nums text-sa-gold">{milestoneInfo.current}/{milestoneInfo.target}</span>
@@ -237,7 +237,7 @@ function SidebarCommandCenter({
       )}
 
       {/* Weekly review */}
-      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(90,152,255,0.15), transparent)' }} />
+      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(197,165,90,0.15), transparent)' }} />
       {isReviewDay ? (
         <button onClick={() => onNavigate?.('reviews', 'weekly')}
           className="relative w-full py-3 border border-sa-gold-border rounded-xl text-center overflow-hidden transition-all duration-300 hover:border-sa-gold hover:-translate-y-[1px] group">
@@ -503,7 +503,7 @@ export function TodayView({
 
   // ── Status message computation ──
   const { statusMsg, statusColor } = useMemo(() => {
-    if (totalItems === 0) return { statusMsg: '', statusColor: '#5A98FF' };
+    if (totalItems === 0) return { statusMsg: '', statusColor: '#C5A55A' };
     const nnRemaining = nnForDate.filter(n => !n.completed).length;
     const allNNsDone = nnForDate.length > 0 && nnForDate.every(n => n.completed);
     const habitsRemaining = habitsWithStatus.filter(h => !h.completed).length;
@@ -514,10 +514,10 @@ export function TodayView({
     if (!isToday && percentage > 0) return { statusMsg: `${completedItems}/${totalItems} completed ${dayName}.`, statusColor: percentage >= 80 ? '#6ECB8B' : '#C5A55A' };
     if (!isToday && percentage === 0) return { statusMsg: `No items completed ${dayName}.`, statusColor: 'var(--cream-faint)' };
     if (percentage >= 80) return { statusMsg: `${totalItems - completedItems} item${totalItems - completedItems !== 1 ? 's' : ''} remaining. Close it out.`, statusColor: '#6ECB8B' };
-    if (allNNsDone && (habitsRemaining > 0 || tasksRemaining > 0)) return { statusMsg: `NNs done. ${habitsRemaining + tasksRemaining} more to go.`, statusColor: '#5A98FF' };
+    if (allNNsDone && (habitsRemaining > 0 || tasksRemaining > 0)) return { statusMsg: `NNs done. ${habitsRemaining + tasksRemaining} more to go.`, statusColor: '#C5A55A' };
     if (nnRemaining > 0 && percentage > 0) return { statusMsg: `${nnRemaining} non-negotiable${nnRemaining !== 1 ? 's' : ''} incomplete.`, statusColor: '#E07070' };
-    if (percentage > 0) return { statusMsg: `${completedItems}/${totalItems} complete. Keep pushing.`, statusColor: '#5A98FF' };
-    return { statusMsg: `${totalItems} items waiting.`, statusColor: '#5A98FF' };
+    if (percentage > 0) return { statusMsg: `${completedItems}/${totalItems} complete. Keep pushing.`, statusColor: '#C5A55A' };
+    return { statusMsg: `${totalItems} items waiting.`, statusColor: '#C5A55A' };
   }, [percentage, totalItems, completedItems, nnForDate, habitsWithStatus, tasksForDate, isToday, dateLabel]);
 
   // Whether to show the command center
@@ -640,10 +640,10 @@ export function TodayView({
             if (!msg) return null;
             return (
               <div className="mb-10 px-5 py-3.5 rounded-sa border flex items-start gap-3" style={{
-                borderColor: 'rgba(90,152,255,0.25)', backgroundColor: 'rgba(90,152,255,0.06)',
+                borderColor: 'rgba(197,165,90,0.25)', backgroundColor: 'rgba(197,165,90,0.06)',
               }}>
-                <span className="text-sm flex-shrink-0 mt-px" style={{ color: '#5A98FF' }}>◆</span>
-                <p className="text-[0.82rem] leading-relaxed" style={{ color: '#5A98FF' }}>{msg}</p>
+                <span className="text-sm flex-shrink-0 mt-px" style={{ color: '#C5A55A' }}>◆</span>
+                <p className="text-[0.82rem] leading-relaxed" style={{ color: '#C5A55A' }}>{msg}</p>
               </div>
             );
           })()}
@@ -662,7 +662,7 @@ export function TodayView({
                     className={`group relative flex items-center gap-5 px-6 py-5 rounded-xl border-l-[3px] overflow-hidden transition-all duration-200 cursor-pointer ${
                       nn.completed
                         ? 'bg-sa-green-soft border-l-sa-green border border-sa-green-border/50'
-                        : 'bg-sa-bg-warm border-l-sa-gold border border-sa-gold-border hover:border-sa-gold-light hover:-translate-y-[1px] hover:shadow-[0_4px_20px_rgba(90,152,255,0.06)]'
+                        : 'bg-sa-bg-warm border-l-sa-gold border border-sa-gold-border hover:border-sa-gold-light hover:-translate-y-[1px] hover:shadow-[0_4px_20px_rgba(197,165,90,0.06)]'
                     }`}
                     onClick={() => onToggleNN(nn, dateStr)}
                   >
@@ -692,8 +692,8 @@ export function TodayView({
           {habitsWithStatus.length > 0 && (
             <section className="mb-11">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-5 h-px bg-sa-purple/60" />
-                <span className="text-[0.68rem] font-medium uppercase tracking-[0.16em] text-sa-purple">Keystone Habits</span>
+                <div className="w-5 h-px bg-sa-cream-faint/60" />
+                <span className="text-[0.68rem] font-medium uppercase tracking-[0.16em] text-sa-cream-muted">Keystone Habits</span>
                 <span className="text-[0.72rem] text-sa-cream-faint">{habitsWithStatus.filter(h => h.completed).length}/{habitsWithStatus.length}</span>
               </div>
               <div className="space-y-1.5">
@@ -707,7 +707,7 @@ export function TodayView({
                     onClick={() => onToggleHabit(habit, dateStr)}
                   >
                     <div className={`flex-shrink-0 w-[22px] h-[22px] rounded-full border-[1.5px] flex items-center justify-center transition-all ${
-                      habit.completed ? 'bg-sa-green border-sa-green' : 'border-sa-purple bg-transparent'
+                      habit.completed ? 'bg-sa-green border-sa-green' : 'border-sa-cream-faint bg-transparent'
                     }`}>
                       {habit.completed && <Check className="w-3 h-3 text-sa-bg-deep" strokeWidth={3} />}
                     </div>
@@ -773,7 +773,7 @@ export function TodayView({
                   </span>
                   {task.time && <span className="text-[0.75rem] text-sa-cream-faint">{task.time}</span>}
                   <button onClick={() => onDeleteTask(task.id)}
-                    className="p-1 text-sa-cream-faint opacity-0 group-hover:opacity-100 hover:text-sa-rose transition-all">
+                    className="p-1 text-sa-cream-faint md:opacity-0 md:group-hover:opacity-100 hover:text-sa-rose transition-all flex-shrink-0">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
