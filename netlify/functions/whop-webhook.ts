@@ -12,10 +12,10 @@ export const handler: Handler = async (event) => {
 
   const rawBody = event.body || "";
 
-  // 2. READ WHOP HEADERS (LOWERCASE — THIS IS CRITICAL)
-  const webhookId = event.headers["webhook-id"];
-  const webhookTimestamp = event.headers["webhook-timestamp"];
-  const webhookSignature = event.headers["webhook-signature"];
+  // 2. READ WHOP HEADERS — support both v1 (webhook-*) and v2 (svix-*) formats
+  const webhookId = event.headers["webhook-id"] || event.headers["svix-id"];
+  const webhookTimestamp = event.headers["webhook-timestamp"] || event.headers["svix-timestamp"];
+  const webhookSignature = event.headers["webhook-signature"] || event.headers["svix-signature"];
 
   console.log("[Whop Webhook] Incoming request", {
     hasBody: rawBody.length > 0,
@@ -44,7 +44,13 @@ export const handler: Handler = async (event) => {
   // 5. Build signing string EXACTLY as Whop expects
   const signingString = `${webhookId}.${webhookTimestamp}.${rawBody}`;
 
-  const expectedSignature = createHmac("sha256", WHOP_WEBHOOK_SECRET)
+  // Handle v2 secrets that start with whsec_ (base64 encoded)
+  let secretKey: string | Buffer = WHOP_WEBHOOK_SECRET;
+  if (WHOP_WEBHOOK_SECRET.startsWith("whsec_")) {
+    secretKey = Buffer.from(WHOP_WEBHOOK_SECRET.slice(6), "base64");
+  }
+
+  const expectedSignature = createHmac("sha256", secretKey)
     .update(signingString)
     .digest("base64");
 
