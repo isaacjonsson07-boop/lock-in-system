@@ -26,6 +26,13 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
       dimsRef.current = { w: r.width, h: r.height };
     }
     measure();
+
+    // Use ResizeObserver for reliable mobile dimension tracking
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(measure);
+      ro.observe(container);
+    }
     window.addEventListener('resize', measure);
 
     function animate() {
@@ -51,7 +58,7 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
     }
 
     animRef.current = requestAnimationFrame(animate);
-    return () => { cancelAnimationFrame(animRef.current); window.removeEventListener('resize', measure); };
+    return () => { cancelAnimationFrame(animRef.current); window.removeEventListener('resize', measure); if (ro) ro.disconnect(); };
   }, []);
 
   return (
@@ -62,14 +69,14 @@ function DirectionFrame({ direction, identity }: { direction: string; identity: 
       <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-sa-gold/25 z-10" />
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{
         clipPath: `polygon(
-          33.3px -2px, calc(100% - 33.3px) -2px,
-          calc(100% - 33.3px) -2px, calc(100% + 2px) 33.3px,
-          calc(100% + 2px) 33.3px, calc(100% + 2px) calc(100% - 33.3px),
-          calc(100% + 2px) calc(100% - 33.3px), calc(100% - 33.3px) calc(100% + 2px),
-          calc(100% - 33.3px) calc(100% + 2px), 33.3px calc(100% + 2px),
-          33.3px calc(100% + 2px), -2px calc(100% - 33.3px),
-          -2px calc(100% - 33.3px), -2px 33.3px,
-          -2px 33.3px, 33.3px -2px
+          30px -2px, calc(100% - 30px) -2px,
+          calc(100% - 30px) -2px, calc(100% + 2px) 30px,
+          calc(100% + 2px) 30px, calc(100% + 2px) calc(100% - 30px),
+          calc(100% + 2px) calc(100% - 30px), calc(100% - 30px) calc(100% + 2px),
+          calc(100% - 30px) calc(100% + 2px), 30px calc(100% + 2px),
+          30px calc(100% + 2px), -2px calc(100% - 30px),
+          -2px calc(100% - 30px), -2px 30px,
+          -2px 30px, 30px -2px
         )`
       }}>
         <div ref={line1Ref} className="absolute top-0 left-0 will-change-transform" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(90,152,255,0.4) 0%, transparent 70%)' }} />
