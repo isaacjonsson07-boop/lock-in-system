@@ -187,6 +187,7 @@ export const handler: Handler = async (event) => {
         body: JSON.stringify({
           email: email.toLowerCase(),
           plan: plan,
+          source: "lis",
           created_at: new Date().toISOString(),
         }),
       }
@@ -212,6 +213,7 @@ export const handler: Handler = async (event) => {
       },
       body: JSON.stringify({
         plan: plan,
+        source: "lis",
         updated_at: new Date().toISOString(),
       }),
     }
@@ -236,6 +238,7 @@ export const handler: Handler = async (event) => {
         body: JSON.stringify({
           id: userId,
           plan: plan,
+          source: "lis",
           updated_at: new Date().toISOString(),
         }),
       }
