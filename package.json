@@ -1,5 +1,5 @@
 {
-  "name": "daily-achievement-tracker",
+  "name": "lock-in-system",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -7,13 +7,13 @@
   "keywords": ["productivity", "habits", "goals", "tracking", "pwa"],
   "author": "Your Name",
   "license": "MIT",
-  "homepage": "https://github.com/yourusername/daily-achievement-tracker",
+  "homepage": "https://github.com/isaacjonsson07-boop/lock-in-system",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/daily-achievement-tracker.git"
+    "url": "https://github.com/isaacjonsson07-boop/lock-in-system.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/daily-achievement-tracker/issues"
+    "url": "https://github.com/isaacjonsson07-boop/lock-in-system/issues"
   },
   "scripts": {
     "dev": "vite",
